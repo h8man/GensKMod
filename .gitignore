@@ -1,2 +1,7 @@
 src/Gens/bios/
+src/Gens/Release/
+src/Gens/Debug/
 src/Starscream/Main68k/Release/
+src/Starscream/Main68k/Debug/
+src/Starscream/Sub68k/Release/
+src/Starscream/Sub68k/Debug/

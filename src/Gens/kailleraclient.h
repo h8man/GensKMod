@@ -21,7 +21,7 @@
 #define KAILLERA_CLIENT_API_VERSION "0.8"
 
 #ifdef KAILLERA_DLL
-#define DLLEXP __declspec(dllexport) WINAPI
+#define DLLEXP __declspec(DLLEXPort) WINAPI
 #else
 #define DLLEXP __declspec(dllimport) WINAPI
 #endif
@@ -47,17 +47,17 @@ extern "C" {
      Call this method to retrieve kailleraclient.dll's version
      - version must point to a char[16] buffer
   */
-  DLLEXP kailleraGetVersion(char *version);
+  int DLLEXP kailleraGetVersion(char *version);
   /*
      kailleraInit:
      Call this method when your program starts
   */
-  DLLEXP kailleraInit();
+  int DLLEXP kailleraInit();
   /*
      kailleraShutdown:
      Call this method when your program ends
   */
-  DLLEXP kailleraShutdown();
+  int DLLEXP kailleraShutdown();
   /*
      kailleraSetInfos:
      Use this method for setting up various infos:
@@ -80,12 +80,12 @@ extern "C" {
        "More infos about this game..." in the game list context menu.
        Set it to NULL if you don't need/want this feature.
   */
-  DLLEXP kailleraSetInfos(kailleraInfos *infos);
+  int DLLEXP kailleraSetInfos(kailleraInfos *infos);
   /*
      kailleraSelectServerDialog:
      Use this method for launching the Kaillera server dialog
   */
-  DLLEXP kailleraSelectServerDialog(HWND parent);
+  int DLLEXP kailleraSelectServerDialog(HWND parent);
 
   /* 
      kailleraModifyPlayValues:
@@ -114,19 +114,19 @@ extern "C" {
 
      returns: length received or -1 on network error (player no more in the game)
   */
-  DLLEXP kailleraModifyPlayValues(void *values, int size);
+  int DLLEXP kailleraModifyPlayValues(void *values, int size);
 
   /*
       kailleraChatSend
       Use this function to send a line of chat text during a game
   */
-  DLLEXP kailleraChatSend(char *text);
+  int DLLEXP kailleraChatSend(char *text);
 
   /*
       kailleraEndGame:
       Your emulation thread must call this method when the user stops the emulation
   */
-  DLLEXP kailleraEndGame();
+  int DLLEXP kailleraEndGame();
 
 #ifdef __cplusplus
 };

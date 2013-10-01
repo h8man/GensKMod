@@ -1,0 +1,401 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <SccProjectName />
+    <SccLocalPath />
+    <ProjectGuid>{8743EF5F-2A4B-4355-BFEA-1A0C74E392AE}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\Debug\</OutDir>
+    <IntDir>.\Debug\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>D:\perso\dev\projets\megadrive\gensKMod\src\dx70_min\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\perso\dev\projets\megadrive\gensKMod\src\dx70_min\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>.\Release\</OutDir>
+    <IntDir>.\Release\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>D:\perso\dev\projets\megadrive\gensKMod\src\dx70_min\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\perso\dev\projets\megadrive\gensKMod\src\dx70_min\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <Optimization>Disabled</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;ZLIB_DLL;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\Debug\</AssemblerListingLocation>
+      <BrowseInformation>true</BrowseInformation>
+      <PrecompiledHeaderOutputFile>.\Debug\gens.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader />
+      <ObjectFileName>.\Debug\</ObjectFileName>
+      <ProgramDataBaseFileName>.\Debug\</ProgramDataBaseFileName>
+    </ClCompile>
+    <Midl>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\Debug\gens.tlb</TypeLibraryName>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <RedirectOutputAndErrors>NUL</RedirectOutputAndErrors>
+      <TargetEnvironment>Win32</TargetEnvironment>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x040c</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Debug\gens.bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>.\Debug\gens.exe</OutputFile>
+      <AdditionalDependencies>wsock32.lib;COMCTL32.LIB;ddraw.lib;dsound.lib;dinput.lib;dxguid.lib;winmm.lib;Vfw32.lib;libs\zlibwapi.lib;libs\htmlhelp.lib;Release\main68k.obj;Release\sub68k.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <StringPooling>true</StringPooling>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>MaxSpeed</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;ZLIB_DLL;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\Release\gens.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader />
+      <ObjectFileName>.\Release\</ObjectFileName>
+      <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
+    </ClCompile>
+    <Midl>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\Release\gens.tlb</TypeLibraryName>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <RedirectOutputAndErrors>NUL</RedirectOutputAndErrors>
+      <TargetEnvironment>Win32</TargetEnvironment>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x040c</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Release\gens.bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>.\Release\gens.exe</OutputFile>
+      <AdditionalDependencies>wsock32.lib;COMCTL32.LIB;ddraw.lib;dsound.lib;dinput.lib;dxguid.lib;winmm.lib;Vfw32.lib;libs\zlibwapi.lib;libs\htmlhelp.lib;Release\main68k.obj;Release\sub68k.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="mp3_dec\common.c" />
+    <ClCompile Include="mp3_dec\dct64_i386.c" />
+    <ClCompile Include="mp3_dec\decode_i386.c" />
+    <ClCompile Include="mp3_dec\interface.c" />
+    <ClCompile Include="mp3_dec\layer3.c" />
+    <ClCompile Include="mp3_dec\tabinit.c" />
+    <ClCompile Include="CCnet.c" />
+    <ClCompile Include="cd_aspi.cpp" />
+    <ClCompile Include="cd_file.c" />
+    <ClCompile Include="cd_sys.c" />
+    <ClCompile Include="cdda_mp3.c" />
+    <ClCompile Include="Cpu_68k.c" />
+    <ClCompile Include="Cpu_SH2.c" />
+    <ClCompile Include="Cpu_Z80.c" />
+    <ClCompile Include="Debug.cpp" />
+    <ClCompile Include="G_ddraw.cpp" />
+    <ClCompile Include="G_dinput.cpp" />
+    <ClCompile Include="G_dsound.cpp" />
+    <ClCompile Include="G_main.cpp" />
+    <ClCompile Include="Gens.cpp" />
+    <ClCompile Include="ggenie.cpp" />
+    <ClCompile Include="kmod.c" />
+    <ClCompile Include="LC89510.c" />
+    <ClCompile Include="M68KD.c" />
+    <ClCompile Include="net.cpp" />
+    <ClCompile Include="parser.c" />
+    <ClCompile Include="pcm.c" />
+    <ClCompile Include="psg.c" />
+    <ClCompile Include="Rom.cpp" />
+    <ClCompile Include="save.cpp" />
+    <ClCompile Include="scrshot.cpp" />
+    <ClCompile Include="SH2.c" />
+    <ClCompile Include="SH2D.c" />
+    <ClCompile Include="unzip.c" />
+    <ClCompile Include="wave.c" />
+    <ClCompile Include="ym2612.c" />
+    <ClCompile Include="z80dis.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="blit.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="gfx_cd.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="io.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Mem_M68k.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">mem_m68k_32x.inc;mem_m68k_cd.inc;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">mem_m68k_32x.inc;mem_m68k_cd.inc;%(AdditionalInputs)</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="Mem_M68K_32X.inc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuild>
+    <CustomBuild Include="Mem_M68K_CD.inc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuild>
+    <CustomBuild Include="Mem_S68k.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Mem_SH2.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Mem_Z80.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Misc.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="nasmhead.inc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuild>
+    <CustomBuild Include="pwm.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="SH2_IO.inc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuild>
+    <CustomBuild Include="SH2a.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SH2_IO.inc;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">SH2_IO.inc;%(AdditionalInputs)</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="vdp_32X.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="vdp_io.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="vdp_rend.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="z80.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="resource\debug_S.zip" />
+    <CustomBuild Include="resource\rcdata1.bin" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="mp3_dec\huffman.h" />
+    <ClInclude Include="mp3_dec\mpg123.h" />
+    <ClInclude Include="mp3_dec\mpglib.h" />
+    <ClInclude Include="blit.h" />
+    <ClInclude Include="CCnet.h" />
+    <ClInclude Include="cd_aspi.h" />
+    <ClInclude Include="cd_file.h" />
+    <ClInclude Include="Cd_sys.h" />
+    <ClInclude Include="cdda_mp3.h" />
+    <ClInclude Include="Cpu_68k.h" />
+    <ClInclude Include="Cpu_SH2.h" />
+    <ClInclude Include="Cpu_Z80.h" />
+    <ClInclude Include="Debug.h" />
+    <ClInclude Include="G_ddraw.h" />
+    <ClInclude Include="G_dsound.h" />
+    <ClInclude Include="G_Input.h" />
+    <ClInclude Include="G_main.h" />
+    <ClInclude Include="gens.h" />
+    <ClInclude Include="gfx_cd.h" />
+    <ClInclude Include="ggenie.h" />
+    <ClInclude Include="htmlhelp.h" />
+    <ClInclude Include="io.h" />
+    <ClInclude Include="kailleraclient.h" />
+    <ClInclude Include="keycode.h" />
+    <ClInclude Include="Kmod.h" />
+    <ClInclude Include="LC89510.h" />
+    <ClInclude Include="M68KD.h" />
+    <ClInclude Include="Mem_M68k.h" />
+    <ClInclude Include="Mem_S68k.h" />
+    <ClInclude Include="Mem_SH2.h" />
+    <ClInclude Include="Mem_Z80.h" />
+    <ClInclude Include="Misc.h" />
+    <ClInclude Include="net.h" />
+    <ClInclude Include="parser.h" />
+    <ClInclude Include="pcm.h" />
+    <ClInclude Include="psg.h" />
+    <ClInclude Include="pwm.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="resrc1.h" />
+    <ClInclude Include="Rom.h" />
+    <ClInclude Include="save.h" />
+    <ClInclude Include="scrshot.h" />
+    <ClInclude Include="SH2.h" />
+    <ClInclude Include="SH2D.h" />
+    <ClInclude Include="Star_68k.h" />
+    <ClInclude Include="unzip.h" />
+    <ClInclude Include="vdp_32X.h" />
+    <ClInclude Include="vdp_io.h" />
+    <ClInclude Include="vdp_rend.h" />
+    <ClInclude Include="wave.h" />
+    <ClInclude Include="ym2612.h" />
+    <ClInclude Include="z80.h" />
+    <ClInclude Include="z80dis.h" />
+    <ClInclude Include="zconf.h" />
+    <ClInclude Include="zlib.h" />
+    <ClInclude Include="..\..\Program Files\Microsoft Visual Studio\Vc98\Include\Basetsd.h" />
+    <ClInclude Include="..\..\Program Files\Microsoft Visual Studio\Vc98\Include\Io.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="gens.ico" />
+    <Image Include="resource\Gens2.ico" />
+    <Image Include="resource\sonic.ico" />
+    <Image Include="resource\bitmap1.bmp" />
+    <Image Include="resource\bmp00000.bmp" />
+    <Image Include="resource\bmp00001.bmp" />
+    <Image Include="resource\bmp00002.bmp" />
+    <Image Include="resource\bmp00003.bmp" />
+    <Image Include="resource\bmp00004.bmp" />
+    <Image Include="resource\bmp00005.bmp" />
+    <Image Include="resource\bmp00006.bmp" />
+    <Image Include="resource\gens_big.bmp" />
+    <Image Include="resource\gens_small.bmp" />
+    <Image Include="resource\raw\algo0.bmp" />
+    <Image Include="resource\raw\algo1.bmp" />
+    <Image Include="resource\raw\algo2.bmp" />
+    <Image Include="resource\raw\algo3.bmp" />
+    <Image Include="resource\raw\algo4.bmp" />
+    <Image Include="resource\raw\algo5.bmp" />
+    <Image Include="resource\raw\algo6.bmp" />
+    <Image Include="resource\raw\algo7.bmp" />
+    <Image Include="resource\bmp17258.bmp" />
+    <Image Include="resource\down.bmp" />
+    <Image Include="resource\up.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Gens.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

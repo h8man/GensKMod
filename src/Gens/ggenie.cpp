@@ -144,7 +144,8 @@ static void hex_decode(const char *code, struct patch *result)
 void decode(const char* code, struct patch* result)
 {
   int len = strlen(code), i, j;
-  char code_to_pass[16], *x;
+  char code_to_pass[16];
+  const char *x;
   const char *ad, *da;
   int adl, dal;
 
