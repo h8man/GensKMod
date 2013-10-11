@@ -5,3 +5,10 @@ src/Starscream/Main68k/Release/
 src/Starscream/Main68k/Debug/
 src/Starscream/Sub68k/Release/
 src/Starscream/Sub68k/Debug/
+src/**.suo
+src/**.sdf
+src/**.opensdf
+src/**.ncb
+src/**.opt
+src/**.plg
+src/**.vcxproj.filters
