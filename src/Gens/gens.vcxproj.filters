@@ -436,4 +436,12 @@
     <CustomBuild Include="resource\debug_S.zip" />
     <CustomBuild Include="resource\rcdata1.bin" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Starscream\Main68k\Release\main68k.asm">
+      <Filter>ASM Sources</Filter>
+    </None>
+    <None Include="..\Starscream\Sub68k\Release\sub68k.asm">
+      <Filter>ASM Sources</Filter>
+    </None>
+  </ItemGroup>
 </Project>

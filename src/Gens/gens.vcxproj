@@ -89,7 +89,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OutputFile>.\Debug\gens.exe</OutputFile>
-      <AdditionalDependencies>wsock32.lib;COMCTL32.LIB;ddraw.lib;dsound.lib;dinput.lib;dxguid.lib;winmm.lib;Vfw32.lib;libs\zlibwapi.lib;libs\htmlhelp.lib;Release\main68k.obj;Release\sub68k.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wsock32.lib;COMCTL32.LIB;ddraw.lib;dsound.lib;dinput.lib;dxguid.lib;winmm.lib;Vfw32.lib;libs\zlibwapi.lib;libs\htmlhelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
   </ItemDefinitionGroup>
@@ -129,7 +129,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Windows</SubSystem>
       <OutputFile>.\Release\gens.exe</OutputFile>
-      <AdditionalDependencies>wsock32.lib;COMCTL32.LIB;ddraw.lib;dsound.lib;dinput.lib;dxguid.lib;winmm.lib;Vfw32.lib;libs\zlibwapi.lib;libs\htmlhelp.lib;Release\main68k.obj;Release\sub68k.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wsock32.lib;COMCTL32.LIB;ddraw.lib;dsound.lib;dinput.lib;dxguid.lib;winmm.lib;Vfw32.lib;libs\zlibwapi.lib;libs\htmlhelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
   </ItemDefinitionGroup>
@@ -304,6 +304,25 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
+	
+    <CustomBuild Include="..\Starscream\Main68k\Release\main68k.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+    </CustomBuild>
+	
+	<CustomBuild Include="..\Starscream\Sub68k\Release\sub68k.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
+    </CustomBuild>
+	
     <CustomBuild Include="resource\debug_S.zip" />
     <CustomBuild Include="resource\rcdata1.bin" />
   </ItemGroup>
@@ -394,6 +413,10 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Gens.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Starscream\Main68k\Release\main68k.asm" />
+    <None Include="..\Starscream\Sub68k\Release\sub68k.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
