@@ -60,7 +60,7 @@
       <Optimization>Disabled</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WIN32;ZLIB_DLL;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;ZLIB_DLL;NDEBUG;_CRT_NONSTDC_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
       <PrecompiledHeaderOutputFile>.\Debug\gens.pch</PrecompiledHeaderOutputFile>
@@ -102,7 +102,7 @@
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WIN32;ZLIB_DLL;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;ZLIB_DLL;NDEBUG;_CRT_NONSTDC_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Release\gens.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeader />
@@ -174,35 +174,35 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="blit.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="gfx_cd.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="io.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Mem_M68k.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">mem_m68k_32x.inc;mem_m68k_cd.inc;%(AdditionalInputs)</AdditionalInputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">mem_m68k_32x.inc;mem_m68k_cd.inc;%(AdditionalInputs)</AdditionalInputs>
@@ -216,34 +216,34 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuild>
     <CustomBuild Include="Mem_S68k.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Mem_SH2.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Mem_Z80.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="Misc.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
@@ -251,10 +251,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuild>
     <CustomBuild Include="pwm.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
@@ -263,66 +263,63 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuild>
     <CustomBuild Include="SH2a.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SH2_IO.inc;%(AdditionalInputs)</AdditionalInputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">SH2_IO.inc;%(AdditionalInputs)</AdditionalInputs>
     </CustomBuild>
     <CustomBuild Include="vdp_32X.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="vdp_io.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="vdp_rend.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="z80.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
-	
     <CustomBuild Include="..\Starscream\Main68k\Release\main68k.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
-	
-	<CustomBuild Include="..\Starscream\Sub68k\Release\sub68k.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+    <CustomBuild Include="..\Starscream\Sub68k\Release\sub68k.asm">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\nasmw -w-orphan-labels -i %(RootDir)%(Directory) %(RootDir)%(Directory)\%(Filename).asm -f win32 -o $(OutDir)%(Filename).obj</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Filename).asm</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
-	
     <CustomBuild Include="resource\debug_S.zip" />
     <CustomBuild Include="resource\rcdata1.bin" />
   </ItemGroup>
