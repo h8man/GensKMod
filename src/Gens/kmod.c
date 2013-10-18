@@ -201,6 +201,7 @@
  **
  ** Mod to do
  **
+ ** - Possibility to turn of sound channels (either PSG or YM2612) like in Dgen. (TmEE)
  ** - bug : Timer not working
  ** - bug : Fifa comes as MD not 32X 
  ** - 32x VDP modes handle
@@ -208,7 +209,6 @@
  ** - optimize CD GFX and VDP (a memory DC bitblt to screen when curTile = 0)
  ** - config GYM dumping (only dac, only PSG,...)
  ** - debug Genesis - Scroll (editable on pause)
- ** - Possibility to turn of sound channels (either PSG or YM2612) like in Dgen. (TmEE)
  ** - memory viewer/editor (haroldoop)
  ** - GENS source code comments (!!)
  ** - spy DMA (68k->VRAm) while Z80 running
@@ -553,10 +553,13 @@ struct ConfigKMod_struct KConf;
 char szWatchDir[MAX_PATH];
 char szKModLog[MAX_PATH];
 
-UCHAR debug_string[1024];
+CHAR debug_string[1024];
 
 int AutoPause_KMod;
 int AutoShot_KMod;
+
+//TODO could be handle by typedef struct channel__ .enabled ?
+BOOL	EnabledChannels[5];
 
 // defined on VDP_REND.ASM
 //UCHAR ActiveLayer; /* 0003 ABSW */
@@ -882,7 +885,7 @@ void MsgInit_KMod( HWND hwnd )
 
 BOOL CALLBACK MsgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	HFONT hFont;
+	HFONT hFont = NULL;
 
 	switch(Message)
     {
@@ -915,8 +918,12 @@ BOOL CALLBACK MsgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case WM_DESTROY:
-			if (KMsgLog)	CloseHandle( KMsgLog );
-			DeleteObject( (HGDIOBJ) hFont );
+			if (KMsgLog)
+				CloseHandle( KMsgLog );
+
+			if (hFont != NULL)
+				DeleteObject( (HGDIOBJ) hFont );
+
 			DestroyWindow( hDMsg );
 			PostQuitMessage(0);
 			break;
@@ -1644,7 +1651,7 @@ void ImportStructures_KMod( HANDLE hFr )
 {
 	DWORD i;
 
-	UCHAR type[6], name[20];
+	CHAR type[6], name[20];
 	BOOL	inStruct=FALSE;
 	CHAR	curStruct=0, curElement = 0;
 
@@ -7297,6 +7304,7 @@ void UpdateYM2612_KMod( )
 	UCHAR curSel, op, chan, part, algo;
 	UCHAR tmp_string[30], i, j;
 	HBITMAP hBitmap;
+	TCITEM tab;
 
 	switch( YM2612.REG[0][0x28]&0x07 )
 	{
@@ -7351,6 +7359,10 @@ void UpdateYM2612_KMod( )
 
 
 	curSel = TabCtrl_GetCurSel(hTabYM2612);
+	//tab.mask = TCIF_IMAGE;
+	//tab.iImage = 1;
+	//TabCtrl_SetItem(hTabYM2612, curSel, &tab);
+
 	part = 0;
 	chan = curSel % 3;
 	if (curSel >= 3)	part = 1;
@@ -7670,12 +7682,14 @@ void DumpYM2612_KMod( HWND hwnd )
 
 BOOL CALLBACK YM2612DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	TCITEM tie; 
-	int i;
-
 	switch(Message)
     {
 		case WM_INITDIALOG:
+			{
+			HIMAGELIST himl = NULL;
+			TCITEM tie; 
+			int i;
+
 			curAlgo = 0;
 			KDAC_ticks = 0;
 			KDAC_freq = 0;
@@ -7685,33 +7699,44 @@ BOOL CALLBACK YM2612DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
 			TabCtrl_DeleteAllItems(hTabYM2612);
 
-			tie.mask = TCIF_TEXT; 
+			tie.mask = TCIF_TEXT | TCIF_IMAGE;
+			tie.iImage  = 0; 
 			tie.pszText = "Channel 1";
 			i = TabCtrl_InsertItem(hTabYM2612, 0, &tie);
 
-			tie.mask = TCIF_TEXT;
+			tie.mask = TCIF_TEXT | TCIF_IMAGE;
+			tie.iImage  = 0;
 			tie.pszText = "Channel 2";
 			i = TabCtrl_InsertItem(hTabYM2612, 1, &tie);
 
-			tie.mask = TCIF_TEXT;
+			tie.mask = TCIF_TEXT | TCIF_IMAGE;
+			tie.iImage  = 0;
 			tie.pszText = "Channel 3";
 			i = TabCtrl_InsertItem(hTabYM2612, 2, &tie);
 
-			tie.mask = TCIF_TEXT;
+			tie.mask = TCIF_TEXT | TCIF_IMAGE;
+			tie.iImage  = 0;
 			tie.pszText = "Channel 4";
 			i = TabCtrl_InsertItem(hTabYM2612, 3, &tie);
 
-			tie.mask = TCIF_TEXT;
+			tie.mask = TCIF_TEXT | TCIF_IMAGE;
+			tie.iImage  = 0;
 			tie.pszText = "Channel 5";
 			i = TabCtrl_InsertItem(hTabYM2612, 4, &tie);
 
-			tie.mask = TCIF_TEXT;
+			tie.mask = TCIF_TEXT | TCIF_IMAGE;
+			tie.iImage  = 0;
 			tie.pszText = "Channel 6";
 			i = TabCtrl_InsertItem(hTabYM2612, 5, &tie);
 
 
 /*			GetWindowRect( GetDlgItem(hwnd, IDC_YM2612_ALGO), &rcAlgo );*/
+			himl = ImageList_LoadImage(ghInstance, MAKEINTRESOURCE(IDB_YM2612_IMAGELIST), 16, 0, IMAGE_BITMAP, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_LOADTRANSPARENT);
+			if (himl == NULL)
+				return -1;
 
+			TabCtrl_SetImageList(hTabYM2612, himl);
+			}
 			break;
 
 		case WM_COMMAND:
@@ -7841,7 +7866,7 @@ BOOL CALLBACK PSGDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 /************ Config **************/
 void SaveConfig_KMod( )
 {
-	unsigned char Conf_File[MAX_PATH];
+	char Conf_File[MAX_PATH];
 
 	SetCurrentDirectory(Gens_Path);
 	strcpy(Conf_File, Gens_Path);
@@ -8167,6 +8192,13 @@ void ResetDebug_KMod(  )
 			CloseWindow_KMod( (UCHAR) (mode+1) );
 		}
 	}
+
+	
+	//reset ym2612 channel
+	for(i=0; i<5; i++)
+	{
+		EnabledChannels[i] = TRUE;
+	}
 	
 	//start_tiles = 0;
 	ListView_DeleteAllItems(GetDlgItem(hWatchers, IDC_WATCHER_LIST));
@@ -8187,6 +8219,7 @@ void ResetDebug_KMod(  )
 			notes[i][j] = BST_UNCHECKED;
 		}
 	}
+
 		
 	Put_Info("Debug reset", 1500);
 }

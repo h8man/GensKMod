@@ -4,7 +4,7 @@
 
 #define GENS_KMOD 	1		// define it to enable Kaneda mod
 							// define it ALSO on nasmhead.inc
-#define NO_MEMORY_LIMIT	1
+#define NO_MEMORY_LIMIT	0
 
 
 #ifdef __cplusplus
@@ -68,6 +68,7 @@ extern struct ConfigKMod_struct KConf;
 extern UCHAR ActiveLayer;
 extern UCHAR ActivePal;
 extern int AutoShot_KMod;
+extern BOOL	EnabledChannels[5];
 
 #endif //GENS_KMOD
 

@@ -2364,12 +2364,28 @@ void YM2612_Update(int **buf, int length)
 		algo_type |= 8;
 	}
 
+#ifdef GENS_KMOD
+	if (EnabledChannels[0] )
+		UPDATE_CHAN[YM2612.CHANNEL[0].ALGO + algo_type](&(YM2612.CHANNEL[0]), buf, length);
+	if (EnabledChannels[1] )
+	UPDATE_CHAN[YM2612.CHANNEL[1].ALGO + algo_type](&(YM2612.CHANNEL[1]), buf, length);
+	if (EnabledChannels[2] )
+	UPDATE_CHAN[YM2612.CHANNEL[2].ALGO + algo_type](&(YM2612.CHANNEL[2]), buf, length);
+	if (EnabledChannels[3] )
+	UPDATE_CHAN[YM2612.CHANNEL[3].ALGO + algo_type](&(YM2612.CHANNEL[3]), buf, length);
+	if (EnabledChannels[4] )
+	UPDATE_CHAN[YM2612.CHANNEL[4].ALGO + algo_type](&(YM2612.CHANNEL[4]), buf, length);
+	if (EnabledChannels[5] && !(YM2612.DAC))
+		UPDATE_CHAN[YM2612.CHANNEL[5].ALGO + algo_type](&(YM2612.CHANNEL[5]), buf, length);
+#else
 	UPDATE_CHAN[YM2612.CHANNEL[0].ALGO + algo_type](&(YM2612.CHANNEL[0]), buf, length);
 	UPDATE_CHAN[YM2612.CHANNEL[1].ALGO + algo_type](&(YM2612.CHANNEL[1]), buf, length);
 	UPDATE_CHAN[YM2612.CHANNEL[2].ALGO + algo_type](&(YM2612.CHANNEL[2]), buf, length);
 	UPDATE_CHAN[YM2612.CHANNEL[3].ALGO + algo_type](&(YM2612.CHANNEL[3]), buf, length);
 	UPDATE_CHAN[YM2612.CHANNEL[4].ALGO + algo_type](&(YM2612.CHANNEL[4]), buf, length);
 	if (!(YM2612.DAC)) UPDATE_CHAN[YM2612.CHANNEL[5].ALGO + algo_type](&(YM2612.CHANNEL[5]), buf, length);
+#endif
+
 
 	YM2612.Inter_Cnt = int_cnt;
 

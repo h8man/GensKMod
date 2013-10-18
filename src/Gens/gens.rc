@@ -1082,6 +1082,8 @@ IDB_ALGO5               BITMAP  DISCARDABLE     "resource\\raw\\algo5.bmp"
 IDB_ALGO6               BITMAP  DISCARDABLE     "resource\\raw\\algo6.bmp"
 IDB_ALGO7               BITMAP  DISCARDABLE     "resource\\raw\\algo7.bmp"
 
+IDB_YM2612_IMAGELIST    BITMAP  DISCARDABLE     "resource\\tab_image.bmp"
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog Info

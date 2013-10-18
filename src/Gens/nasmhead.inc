@@ -1,5 +1,5 @@
 %define GENS_KMOD
-%define NO_MEMORY_LIMIT
+; %define NO_MEMORY_LIMIT
 
 %define ALIGN4 times ($$-$) & 3 nop
 %define ALIGN32 times ($$-$) & 31 nop

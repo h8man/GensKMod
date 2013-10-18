@@ -11,4 +11,5 @@ src/**.opensdf
 src/**.ncb
 src/**.opt
 src/**.plg
+src/**.aps
 src/**.vcxproj.filters

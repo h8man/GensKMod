@@ -374,6 +374,7 @@
 #define IDB_ALGO7                       408
 #define IDB_UP                          409
 #define IDB_DOWN                        410
+#define IDB_YM2612_IMAGELIST            411
 
 #define IDC_68K_DISAM           50001
 #define IDC_68K_STATUS_SR       50002
