@@ -32,10 +32,10 @@ CAPTION "About Gens"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "OK",IDOK,59,135,50,14
-    CTEXT           "Gens v2.12a KMod 0.7c\n\nSega Genesis / Megadrive,\nSega CD / Mega CD,\nSega 32X emulator\n\nWin 9X / ME / 2000 / XP",
+    CTEXT           "Gens v2.12a KMod 0.7.1\n\nSega Genesis / Megadrive,\nSega CD / Mega CD,\nSega 32X emulator\n\nWin 9X / ME / 2000 / XP",
                     IDC_STATIC,87,3,88,58
     CONTROL         142,IDC_STATIC,"Static",SS_BITMAP | WS_BORDER,0,0,87,60
-    CTEXT           "(c) 1999/2003 by Stéphane Dallongeville\n\nUse the Gens forum for support\nHomepage : http://gens.consolemul.com\n\nEnhanced Debugger\n(c) 2004-7 Kaneda\nHomepage : http://www.spritesmind.net",
+    CTEXT           "(c) 1999/2003 by Stéphane Dallongeville\n\nUse the Gens forum for support\nHomepage : http://www.gens.me\n\nEnhanced Debugger\n(c) 2004/2013 Kaneda\nHomepage : http://gendev.spritesmind.net",
                     IDC_STATIC,1,63,174,69,0,WS_EX_STATICEDGE
 END
 
@@ -520,9 +520,9 @@ BEGIN
                     IDC_YM2612_OP3,217,42,54,97
     GROUPBOX        "Operator 4",IDC_STATIC,275,29,61,113
     LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode ?\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
-                    IDC_YM2612_OP4,281,42,53,97
+                    IDC_YM2612_OP4,281,42,52,97
     LTEXT           "Frequency\nOctave\nFrequency CH3\nOctave CH3",
-                    IDC_STATIC,31,153,51,34
+                    IDC_STATIC,31,154,51,34
     LTEXT           "Frequency\nOctave\nFrequency CH3\nOctave CH3",
                     IDC_YM2612_FREQ,91,154,62,34
     LTEXT           "AMS\nFMS",IDC_STATIC,31,194,20,18
@@ -532,6 +532,7 @@ BEGIN
     CONTROL         "Right",IDC_YM2612_RIGHT,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,211,170,35,10
     LTEXT           "Feedback",IDC_STATIC,170,155,33,8
+    LTEXT           "Feedback",IDC_YM2612_FBACK,210,155,33,8
     CONTROL         103,IDC_YM2612_ALGO,"Static",SS_BITMAP,254,146,79,73
     GROUPBOX        "Global",IDC_STATIC,7,230,332,84
     CONTROL         "LFO",IDC_YM2612_LFO,"Button",BS_AUTOCHECKBOX | 
@@ -604,10 +605,11 @@ BEGIN
     PUSHBUTTON      "Dump Channel",IDC_YM2612_DUMP,174,195,64,24
     CONTROL         "",IDC_YM2612_TAB,"SysTabControl32",TCS_BUTTONS,7,7,332,
                     16
-    LTEXT           "Feedback",IDC_YM2612_FBACK,210,155,33,8
     LTEXT           "TimerA\nTimerB",IDC_YM2612_TIMER,143,239,34,18
     CTEXT           "Channel 3 Mode",IDC_YM2612_C3MODE,263,248,53,8,
                     SS_CENTERIMAGE
+    CONTROL         "Enabled",IDC_YM2612_MUTE,"Button",BS_AUTOCHECKBOX | 
+                    BS_RIGHTBUTTON | WS_TABSTOP,290,208,42,10
 END
 
 IDD_DEBUGPSG DIALOG DISCARDABLE  0, 0, 194, 146
@@ -1137,8 +1139,8 @@ IDR_DEBUGZIP            RCDATA  DISCARDABLE     "resource\\debug_S.zip"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,7,0,2
- PRODUCTVERSION 0,7,0,2
+ FILEVERSION 0,7,1,0
+ PRODUCTVERSION 0,7,1,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1156,14 +1158,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "SpritesMind\0"
             VALUE "FileDescription", "Gens KMod\0"
-            VALUE "FileVersion", "0, 7, 0, 2\0"
+            VALUE "FileVersion", "0, 7, 1, 0\0"
             VALUE "InternalName", "Gens KMod\0"
-            VALUE "LegalCopyright", "Copyright © 2007\0"
+            VALUE "LegalCopyright", "Copyright © 2013\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "gens.exe\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "Gens KMod\0"
-            VALUE "ProductVersion", "0, 7, 0, 2\0"
+            VALUE "ProductVersion", "0, 7, 1, 0\0"
             VALUE "SpecialBuild", "\0"
         END
     END

@@ -195,15 +195,18 @@
  ** - resizable watchers window
  ** - structures handling (keywords supported : STRUCT, CHAR, SHORT, LONG, END
  **
+ ****** 0.7.1
+ ** - VS2012 compile
+ ** - enable/disable YM2612 sound channel (TmEE)
  *********************************************/
 
 /*********************************************
  **
  ** Mod to do
  **
- ** - Possibility to turn of sound channels (either PSG or YM2612) like in Dgen. (TmEE)
  ** - bug : Timer not working
  ** - bug : Fifa comes as MD not 32X 
+ ** - bug : SH2 disassembler in 0.7c has the registers "shifted" one step. So the value displayed for R0 is actually the value of R1, the value displayed for R1 is the value of R2, and so on. (ob1,_mic)
  ** - 32x VDP modes handle
  ** - add "jump to"/PC in mem/disasm views
  ** - optimize CD GFX and VDP (a memory DC bitblt to screen when curTile = 0)
@@ -958,7 +961,7 @@ void SpyReg( unsigned char a, unsigned char b)
 	switch(a)
 	{
 		case 0:
-			if ( b&0x04 == 0)
+			if ( (b&0x04) == 0)
 			{
 				wsprintf(debug_string,"%.5X Reg. %d : bit 2 must be 1", main68k_context.pc, a);
 				Spy_KMod( debug_string );
@@ -972,7 +975,7 @@ void SpyReg( unsigned char a, unsigned char b)
 			break;
 
 		case 1:
-			if ( b&0x04 == 0)
+			if ( (b&0x04) == 0)
 			{
 				wsprintf(debug_string,"%.5X Reg. %d : bit 2 must be 1", a);
 				Spy_KMod( debug_string );
@@ -1076,7 +1079,7 @@ void SpyReg( unsigned char a, unsigned char b)
 				Spy_KMod( debug_string );
 			}
 
-			if ( b&0x03 == 0x01 )
+			if ( (b&0x03) == 0x01 )
 			{
 				wsprintf(debug_string,"%.5X Reg. %d : wrong HSCroll mode (0x01)", main68k_context.pc, a);
 				Spy_KMod( debug_string );
@@ -1090,13 +1093,13 @@ void SpyReg( unsigned char a, unsigned char b)
 				Spy_KMod( debug_string );
 			}
 
-			if ( (b&0x81 == 0x10) || (b&0x81 == 0x01) )
+			if ( ((b&0x81) == 0x10) || ((b&0x81) == 0x01) )
 			{
 				wsprintf(debug_string,"%.5X Reg. %d : wrong H cell mode (%.2X)", main68k_context.pc, a, b&0x81);
 				Spy_KMod( debug_string );
 			}
 
-			if ( b&0x06 == 0x40 )
+			if ( (b&0x06) == 0x40 )
 			{
 				wsprintf(debug_string,"%.5X Reg. %d : wrong interlace mode (2)", main68k_context.pc, a);
 				Spy_KMod( debug_string );
@@ -1134,13 +1137,13 @@ void SpyReg( unsigned char a, unsigned char b)
 				Spy_KMod( debug_string );
 			}
 
-			if ( b&0x03 == 0x02 )
+			if ( (b&0x03) == 0x02 )
 			{
 				wsprintf(debug_string,"%.5X Reg. %d : wrong H scroll mode (2)", main68k_context.pc, a);
 				Spy_KMod( debug_string );
 			}			
 
-			if ( b&0x30 == 0x20 )
+			if ( (b&0x30) == 0x20 )
 			{
 				wsprintf(debug_string,"%.5X Reg. %d : wrong V scroll mode (2)", main68k_context.pc, a);
 				Spy_KMod( debug_string );
@@ -7297,14 +7300,14 @@ void SpyYM2612DAC( )
 
 }
 
-
+//called every frame
 void UpdateYM2612_KMod( )
 {
 	int timer;
 	UCHAR curSel, op, chan, part, algo;
-	UCHAR tmp_string[30], i, j;
+	UCHAR i, j;
+	CHAR tmp_string[30];
 	HBITMAP hBitmap;
-	TCITEM tab;
 
 	switch( YM2612.REG[0][0x28]&0x07 )
 	{
@@ -7359,13 +7362,12 @@ void UpdateYM2612_KMod( )
 
 
 	curSel = TabCtrl_GetCurSel(hTabYM2612);
-	//tab.mask = TCIF_IMAGE;
-	//tab.iImage = 1;
-	//TabCtrl_SetItem(hTabYM2612, curSel, &tab);
+
 
 	part = 0;
 	chan = curSel % 3;
 	if (curSel >= 3)	part = 1;
+
 
 
 	/* Operators */
@@ -7528,11 +7530,45 @@ void UpdateYM2612_KMod( )
 }
 
 
+void YM2612_ChangeChannel( HWND hwnd )
+{
+	int curSel = TabCtrl_GetCurSel(hTabYM2612);
+
+	/* enabled */
+	if ( EnabledChannels[curSel] == TRUE)
+		CheckDlgButton(hYM2612, IDC_YM2612_MUTE,BST_CHECKED);
+	else
+		CheckDlgButton(hYM2612, IDC_YM2612_MUTE,BST_UNCHECKED);
+
+	UpdateYM2612_KMod( );
+}
+
+void YM2612_ToggleMute_KMod( HWND hwnd )
+{
+	int tabIndex;
+	TCITEM tab;
+
+	tabIndex = TabCtrl_GetCurSel(hTabYM2612);
+
+	tab.mask = TCIF_IMAGE;
+	if ( IsDlgButtonChecked(hYM2612, IDC_YM2612_MUTE) == BST_CHECKED )
+	{
+		EnabledChannels[tabIndex] = TRUE;
+		tab.iImage = 0;
+	}
+	else
+	{
+		EnabledChannels[tabIndex] = FALSE;
+		tab.iImage = 1;		
+	}
+
+	TabCtrl_SetItem(hTabYM2612, tabIndex, &tab);
+}
 
 void DumpYM2612_KMod( HWND hwnd )
 {
 	OPENFILENAME		szFile;
-    char				szFileName[MAX_PATH];
+    CHAR				szFileName[MAX_PATH];
 	HANDLE				hFr;
     DWORD				dwBytesToWrite, dwBytesWritten ;
 	UCHAR				curSel, op, chan, part, tmp;
@@ -7736,19 +7772,24 @@ BOOL CALLBACK YM2612DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				return -1;
 
 			TabCtrl_SetImageList(hTabYM2612, himl);
+
+			//enabled by default
+			CheckDlgButton(hwnd, IDC_YM2612_MUTE,BST_CHECKED);
 			}
 			break;
 
 		case WM_COMMAND:
 			if ( LOWORD(wParam) == IDC_YM2612_DUMP )
 				DumpYM2612_KMod( hwnd );
+			else if ( LOWORD(wParam) == IDC_YM2612_MUTE )
+				YM2612_ToggleMute_KMod( hwnd );
 			break;
 
 		case WM_NOTIFY: 
             switch (((NMHDR *)lParam)->code)
 			{ 
-				case TCN_SELCHANGE:						
-					UpdateYM2612_KMod( );
+				case TCN_SELCHANGE:		
+					YM2612_ChangeChannel( hwnd );
                     break; 
 
 			}
