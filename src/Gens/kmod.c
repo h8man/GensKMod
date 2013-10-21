@@ -987,7 +987,7 @@ void SpyReg( unsigned char a, unsigned char b)
 				Spy_KMod( debug_string );
 			}
 
-			if ((b&0x08) && ( VDPS&1 == 0))
+			if ((b&0x08) && ( (VDPS&1) == 0))
 			{
 				wsprintf(debug_string,"%.5X Reg. %d : V30 cell mode (0x08) impossible in NTSC mode", main68k_context.pc, a);
 				Spy_KMod( debug_string );
@@ -7084,14 +7084,13 @@ void DrawSpriteZoom_KMod( LPDRAWITEMSTRUCT hlDIS  )
 
 void DumpSprite_KMod( HWND hwnd )
 {
-
 	BITMAPFILEHEADER	bmfh;
 	BITMAPINFOHEADER	bmiHeader;
 	RGBQUAD				bmiColors[16];
 	LPBYTE				pBits ;
 
 	OPENFILENAME		szFile;
-    char				szFileName[MAX_PATH];
+    CHAR				szFileName[MAX_PATH];
 	HANDLE				hFr;
     DWORD				dwBytesToWrite, dwBytesWritten ;
 
