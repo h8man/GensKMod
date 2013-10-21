@@ -198,6 +198,7 @@
  ****** 0.7.1
  ** - VS2012 compile
  ** - enable/disable YM2612 sound channel (TmEE)
+ ** - bug : SH2 disassembler in 0.7c has the registers "shifted" one step. So the value displayed for R0 is actually the value of R1, the value displayed for R1 is the value of R2, and so on. (ob1,_mic)
  *********************************************/
 
 /*********************************************
@@ -206,12 +207,12 @@
  **
  ** - bug : Timer not working
  ** - bug : Fifa comes as MD not 32X 
- ** - bug : SH2 disassembler in 0.7c has the registers "shifted" one step. So the value displayed for R0 is actually the value of R1, the value displayed for R1 is the value of R2, and so on. (ob1,_mic)
+ ** - better message view (hangs if too much messages!)
+ ** - debug Genesis - Scroll (editable on pause)
  ** - 32x VDP modes handle
  ** - add "jump to"/PC in mem/disasm views
  ** - optimize CD GFX and VDP (a memory DC bitblt to screen when curTile = 0)
  ** - config GYM dumping (only dac, only PSG,...)
- ** - debug Genesis - Scroll (editable on pause)
  ** - memory viewer/editor (haroldoop)
  ** - GENS source code comments (!!)
  ** - spy DMA (68k->VRAm) while Z80 running
@@ -5177,7 +5178,7 @@ void UpdateMSH2_KMod( )
 	wsprintf(debug_string, "T=%d S=%d Q=%d M=%d I=%.1X SR=%.4X Status=%.4X",SH2_Get_SR(&M_SH2) & 1, (SH2_Get_SR(&M_SH2) >> 1) & 1, (SH2_Get_SR(&M_SH2) >> 8) & 1, (SH2_Get_SR(&M_SH2) >> 9) & 1, (SH2_Get_SR(&M_SH2) >> 4) & 0xF,SH2_Get_SR(&M_SH2), M_SH2.Status & 0xFFFF);
 	SendDlgItemMessage(hMSH2 , IDC_MSH2_STATUS_SR, WM_SETTEXT, 0 , (LPARAM)debug_string);
 
-	wsprintf(debug_string, "R0=%.8X R1=%.8X R2=%.8X R3=%.8X\nR4=%.8X R5=%.8X R6=%.8X R7=%.8X\nR8=%.8X R9=%.8X RA=%.8X RB=%.8X\nRC=%.8X RD=%.8X RE=%.8X RF=%.8X", SH2_Get_R(&M_SH2, 1), SH2_Get_R(&M_SH2, 2), SH2_Get_R(&M_SH2, 3), SH2_Get_R(&M_SH2, 4), SH2_Get_R(&M_SH2, 5), SH2_Get_R(&M_SH2, 6), SH2_Get_R(&M_SH2, 7), SH2_Get_R(&M_SH2, 8), SH2_Get_R(&M_SH2, 9), SH2_Get_R(&M_SH2, 0xA), SH2_Get_R(&M_SH2, 0xB), SH2_Get_R(&M_SH2, 0xC), SH2_Get_R(&M_SH2, 0xD), SH2_Get_R(&M_SH2, 0xE), SH2_Get_R(&M_SH2, 0xF));
+	wsprintf(debug_string, "R0=%.8X R1=%.8X R2=%.8X R3=%.8X\nR4=%.8X R5=%.8X R6=%.8X R7=%.8X\nR8=%.8X R9=%.8X RA=%.8X RB=%.8X\nRC=%.8X RD=%.8X RE=%.8X RF=%.8X", SH2_Get_R(&M_SH2, 0), SH2_Get_R(&M_SH2, 1), SH2_Get_R(&M_SH2, 2), SH2_Get_R(&M_SH2, 3), SH2_Get_R(&M_SH2, 4), SH2_Get_R(&M_SH2, 5), SH2_Get_R(&M_SH2, 6), SH2_Get_R(&M_SH2, 7), SH2_Get_R(&M_SH2, 8), SH2_Get_R(&M_SH2, 9), SH2_Get_R(&M_SH2, 0xA), SH2_Get_R(&M_SH2, 0xB), SH2_Get_R(&M_SH2, 0xC), SH2_Get_R(&M_SH2, 0xD), SH2_Get_R(&M_SH2, 0xE), SH2_Get_R(&M_SH2, 0xF));
 	SendDlgItemMessage(hMSH2 , IDC_MSH2_STATUS_ADR, WM_SETTEXT, 0 , (LPARAM)debug_string);
 
 	wsprintf(debug_string, "GBR=%.8X VBR=%.8X PR=%.8X\nMACH=%.8X MACL=%.8X\nIL=%.2X IV=%.2X", SH2_Get_GBR(&M_SH2), SH2_Get_VBR(&M_SH2), SH2_Get_PR(&M_SH2), SH2_Get_MACH(&M_SH2), SH2_Get_MACL(&M_SH2), M_SH2.INT.Prio,M_SH2.INT.Vect);
@@ -5387,7 +5388,7 @@ BOOL CALLBACK MSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			SendDlgItemMessage(hwnd, IDC_MSH2_STATUS_DATA, WM_SETFONT, (WPARAM)hFont, TRUE);
 			MSH2_ViewMode = 0x7; //disasm ROM
 			MSH2_StartLineROMDisasm= MSH2_StartLineROM= MSH2_StartLineRAMDisasm = MSH2_StartLineRAM= MSH2_StartLineCache=0;
-			SwitchMSH2ViewMode_KMod( 0 ); // init with wrong values (since no game loaded by default)
+			SwitchMSH2ViewMode_KMod( ); // init with wrong values (since no game loaded by default)
 			break;
 
 		case WM_SHOWWINDOW:
@@ -5614,7 +5615,7 @@ void UpdateSSH2_KMod( )
 	wsprintf(debug_string, "T=%d S=%d Q=%d M=%d I=%.1X SR=%.4X Status=%.4X",SH2_Get_SR(&S_SH2) & 1, (SH2_Get_SR(&S_SH2) >> 1) & 1, (SH2_Get_SR(&S_SH2) >> 8) & 1, (SH2_Get_SR(&S_SH2) >> 9) & 1, (SH2_Get_SR(&S_SH2) >> 4) & 0xF,SH2_Get_SR(&S_SH2), S_SH2.Status & 0xFFFF);
 	SendDlgItemMessage(hSSH2 , IDC_SSH2_STATUS_SR, WM_SETTEXT, 0 , (LPARAM)debug_string);
 
-	wsprintf(debug_string, "R0=%.8X R1=%.8X R2=%.8X R3=%.8X\nR4=%.8X R5=%.8X R6=%.8X R7=%.8X\nR8=%.8X R9=%.8X RA=%.8X RB=%.8X\nRC=%.8X RD=%.8X RE=%.8X RF=%.8X", SH2_Get_R(&S_SH2, 1), SH2_Get_R(&S_SH2, 2), SH2_Get_R(&S_SH2, 3), SH2_Get_R(&S_SH2, 4), SH2_Get_R(&S_SH2, 5), SH2_Get_R(&S_SH2, 6), SH2_Get_R(&S_SH2, 7), SH2_Get_R(&S_SH2, 8), SH2_Get_R(&S_SH2, 9), SH2_Get_R(&S_SH2, 0xA), SH2_Get_R(&S_SH2, 0xB), SH2_Get_R(&S_SH2, 0xC), SH2_Get_R(&S_SH2, 0xD), SH2_Get_R(&S_SH2, 0xE), SH2_Get_R(&S_SH2, 0xF));
+	wsprintf(debug_string, "R0=%.8X R1=%.8X R2=%.8X R3=%.8X\nR4=%.8X R5=%.8X R6=%.8X R7=%.8X\nR8=%.8X R9=%.8X RA=%.8X RB=%.8X\nRC=%.8X RD=%.8X RE=%.8X RF=%.8X", SH2_Get_R(&S_SH2, 0), SH2_Get_R(&S_SH2, 1), SH2_Get_R(&S_SH2, 2), SH2_Get_R(&S_SH2, 3), SH2_Get_R(&S_SH2, 4), SH2_Get_R(&S_SH2, 5), SH2_Get_R(&S_SH2, 6), SH2_Get_R(&S_SH2, 7), SH2_Get_R(&S_SH2, 8), SH2_Get_R(&S_SH2, 9), SH2_Get_R(&S_SH2, 0xA), SH2_Get_R(&S_SH2, 0xB), SH2_Get_R(&S_SH2, 0xC), SH2_Get_R(&S_SH2, 0xD), SH2_Get_R(&S_SH2, 0xE), SH2_Get_R(&S_SH2, 0xF));
 	SendDlgItemMessage(hSSH2 , IDC_SSH2_STATUS_ADR, WM_SETTEXT, 0 , (LPARAM)debug_string);
 
 	wsprintf(debug_string, "GBR=%.8X VBR=%.8X PR=%.8X\nMACH=%.8X MACL=%.8X\nIL=%.2X IV=%.2X", SH2_Get_GBR(&S_SH2), SH2_Get_VBR(&S_SH2), SH2_Get_PR(&S_SH2), SH2_Get_MACH(&S_SH2), SH2_Get_MACL(&S_SH2), S_SH2.INT.Prio,S_SH2.INT.Vect);
@@ -5745,7 +5746,7 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			SendDlgItemMessage(hwnd, IDC_SSH2_STATUS_DATA, WM_SETFONT, (WPARAM)hFont, TRUE);
 			SSH2_ViewMode = 0x7; //disasm ROM
 			SSH2_StartLineROMDisasm= SSH2_StartLineROM= SSH2_StartLineRAMDisasm = SSH2_StartLineRAM= SSH2_StartLineCache=0;
-			SwitchSSH2ViewMode_KMod( 0 ); // init with wrong values (since no game loaded by default)
+			SwitchSSH2ViewMode_KMod( ); // init with wrong values (since no game loaded by default)
 			break;
 
 		case WM_SHOWWINDOW:
@@ -6253,7 +6254,7 @@ void _32X_RegInit_KMod( HWND hwnd)
 
 	lvColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT /*| LVCF_SUBITEM*/;
 	lvColumn.fmt = LVCFMT_LEFT;
-	lvColumn.cx = 130;
+	lvColumn.cx = 140;
 	lvColumn.pszText = szString[0];
 	ListView_InsertColumn(h32XRegList, 0, &lvColumn);
 
@@ -6273,7 +6274,7 @@ void _32X_RegInit_KMod( HWND hwnd)
 	lvColumn.pszText = szString[4];
 	ListView_InsertColumn(h32XRegList, 4, &lvColumn);
 
-	lvColumn.cx = 130;
+	lvColumn.cx = 140;
 	lvColumn.pszText = szString[5];
 	ListView_InsertColumn(h32XRegList, 5, &lvColumn);
 	
