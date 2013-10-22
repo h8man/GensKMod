@@ -6,7 +6,8 @@ Open the GensKMod project with VS2012 and build, that's all :)
 It will build the 68000 cores, compile them and then build gensKmod.exe.
 
 
-GensKMod for VS2012 uses DirectX 7.0 Runtime library and NASM.
+GensKMod for VS2012 uses DirectX 7.0 Runtime library and NASM (old version).
+It is also based on the newest zlibwapi, so be sure to include zlibwapi.dll in gens directory.
 GensKMod is based on Gens and so uses the Starcream 680x0 library emulation for the genesis and Sega CD 68000 CPU emulation, the core has been customised and optimised for Gens.
 
 Gens original project is structured as follow :
