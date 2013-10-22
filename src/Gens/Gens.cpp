@@ -804,6 +804,7 @@ int Do_Genesis_Frame()
 	int *buf[2];
 	int HInt_Counter;
 
+
 	if ((CPU_Mode) && (VDP_Reg.Set2 & 0x8))	VDP_Num_Vis_Lines = 240;
 	else VDP_Num_Vis_Lines = 224;
 

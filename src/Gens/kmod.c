@@ -198,6 +198,7 @@
  ****** 0.7.1
  ** - VS2012 compile
  ** - enable/disable YM2612 sound channel (TmEE)
+ ** - better message view (hangs if too much messages!)
  ** - bug : SH2 disassembler in 0.7c has the registers "shifted" one step. So the value displayed for R0 is actually the value of R1, the value displayed for R1 is the value of R2, and so on. (ob1,_mic)
  *********************************************/
 
@@ -207,7 +208,6 @@
  **
  ** - bug : Timer not working
  ** - bug : Fifa comes as MD not 32X 
- ** - better message view (hangs if too much messages!)
  ** - debug Genesis - Scroll (editable on pause)
  ** - 32x VDP modes handle
  ** - add "jump to"/PC in mem/disasm views
@@ -627,7 +627,8 @@ char	*errorText_KMod="** Too many messages **";
 BOOL Msg_KMod( char *msg)
 {
 	CHAR *editText;
-	UINT nSize;
+	CHAR *editCutText;
+	UINT nSize, nSizeToAdd, nMaxSize;
 	DWORD dwBytesToWrite, dwBytesWritten;
 
 	if (KMsgLog)
@@ -636,22 +637,31 @@ BOOL Msg_KMod( char *msg)
 		if (dwBytesToWrite)		WriteFile(KMsgLog, msg, dwBytesToWrite, &dwBytesWritten, NULL) ;
 	}
 
-
+	nSizeToAdd = strlen(msg);
 	nSize = (UINT) SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, WM_GETTEXTLENGTH, (WPARAM) 0, (LPARAM) 0);
-	nSize += strlen(msg);
-	nSize ++; // 0
+	nMaxSize =  (UINT) SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLIMITTEXT, (WPARAM) 0, (LPARAM) 0);
 
-	if ( nSize >= (UINT) SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLIMITTEXT, (WPARAM) 0, (LPARAM) 0) )	return FALSE;
-	
+	nSize += nSizeToAdd+1;
 	editText = (CHAR *) LocalAlloc( LPTR, nSize);
 	if (editText == NULL)	return FALSE;
 
-	GetDlgItemText(hDMsg, IDC_MSG_EDIT, editText, nSize);
-
+	GetDlgItemText(hDMsg, IDC_MSG_EDIT, editText, nSize);	
 	strcat(editText, msg);
-	SetDlgItemText(hDMsg, IDC_MSG_EDIT, editText);
+	
+	nSize = strlen(editText);
+	editCutText = editText;
+	while ( nSize >=  nMaxSize)	
+	{
+		editCutText = strstr(editText, "\r\n");
+		editCutText+=2;
+		nSize = strlen(editCutText);
+	}
+
+	SetDlgItemText(hDMsg, IDC_MSG_EDIT, editCutText);
 	SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_LINESCROLL, (WPARAM) 0, (LPARAM) SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLINECOUNT, (WPARAM) 0, (LPARAM) 0) );
 	LocalFree( (HLOCAL) editText );
+	editText = NULL;
+
 	return TRUE;
 }
 
@@ -768,7 +778,7 @@ void SpecialReg( unsigned char a, unsigned char b)
 		case 30:
 			if (b == 0)
 			{
-				if (msgIdx_KMod)
+				if (msgIdx_KMod > 0)
 				{
 					wsprintf(debug_string,"Message : %s\r\n", msg_KMod);
 					Msg_KMod(debug_string);
@@ -784,7 +794,8 @@ void SpecialReg( unsigned char a, unsigned char b)
 			else
 			{
 				msg_KMod[msgIdx_KMod++] = b;
-				if (msgIdx_KMod == 255)	SpecialReg(0x30, 0); /* flush to msgbox */
+				if (msgIdx_KMod == 255)	
+					SpecialReg(30, 0); /* flush to msgbox */
 			}
 			break;
 
