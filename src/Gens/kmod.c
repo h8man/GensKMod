@@ -199,6 +199,7 @@
  ** - VS2012 compile
  ** - enable/disable YM2612 sound channel (TmEE)
  ** - better message view (hangs if too much messages!)
+ ** - message logged on <rom>.log, not kmod.log
  ** - bug : SH2 disassembler in 0.7c has the registers "shifted" one step. So the value displayed for R0 is actually the value of R1, the value displayed for R1 is the value of R2, and so on. (ob1,_mic)
  *********************************************/
 
@@ -869,7 +870,8 @@ void MsgOpen_KMod( HWND hwnd )
 }
 
 void MsgInit_KMod( HWND hwnd )
-{
+{	
+	/*
 	unsigned char Conf_File[MAX_PATH];
 
 	SetCurrentDirectory(Gens_Path);
@@ -878,8 +880,10 @@ void MsgInit_KMod( HWND hwnd )
 
 	GetPrivateProfileString("Log", "file", szKModLog, KConf.logfile, MAX_PATH, Conf_File);
 	WritePrivateProfileString("Debug", "file", KConf.logfile, Conf_File);	
+	*/
 
 	if (KMsgLog)	CloseHandle( KMsgLog );
+
 	//FILE_SHARE_READ pour pouvoir l'ouvrir dans notepad
 	KMsgLog = CreateFile (szKModLog, GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL) ;
     if (KMsgLog != INVALID_HANDLE_VALUE)	SetFilePointer(KMsgLog, 0, 0, FILE_END);
@@ -908,7 +912,7 @@ BOOL CALLBACK MsgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			hFont = (HFONT) GetStockObject(OEM_FIXED_FONT);
 		//	SendDlgItemMessage(hwnd, IDC_MSG_EDIT, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-			MsgInit_KMod( hwnd );
+			//MsgInit_KMod( hwnd );
 			break;
 		
 		case WM_COMMAND:
@@ -8140,8 +8144,8 @@ void Init_KMod( )
 	CreateDirectory( szWatchDir, NULL);
 	
 	// fichier log par defaut
-	strcpy(szKModLog,Gens_Path);
-	strcat(szKModLog,"gens_KMod.log");
+	//strcpy(szKModLog,Gens_Path);
+	//strcat(szKModLog,"gens_KMod.log");
 
 	LoadConfig_KMod( );
 
@@ -8184,7 +8188,7 @@ void Init_KMod( )
 	HandleWindow_KMod[16] = hCD_Reg;
 	HandleWindow_KMod[17] = h32X_Reg;
 
-	ResetDebug_KMod( );
+	//ResetDebug_KMod( );
 
 }
 
@@ -8235,6 +8239,10 @@ void ResetDebug_KMod(  )
 	UCHAR mode;
 	UCHAR i,j;
 
+	// fichier log par defaut
+	strcpy(szKModLog, Gens_Path);
+	strcat(szKModLog, Rom_Name);
+	strcat(szKModLog, ".log");
 
 
 	for (mode = 0; mode < WIN_NUMBER; mode++)
