@@ -136,6 +136,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="G_gdi.cpp" />
+    <ClCompile Include="G_gfx.cpp" />
     <ClCompile Include="mp3_dec\common.c" />
     <ClCompile Include="mp3_dec\dct64_i386.c" />
     <ClCompile Include="mp3_dec\decode_i386.c" />
@@ -326,6 +328,8 @@
     <CustomBuild Include="resource\rcdata1.bin" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="G_gdi.h" />
+    <ClInclude Include="G_gfx.h" />
     <ClInclude Include="mp3_dec\huffman.h" />
     <ClInclude Include="mp3_dec\mpg123.h" />
     <ClInclude Include="mp3_dec\mpglib.h" />

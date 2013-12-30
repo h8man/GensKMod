@@ -6,7 +6,7 @@
 #include "resource.h"
 #include "G_main.h"
 #include "keycode.h"
-#include "G_ddraw.h" // for Put_Info
+#include "G_gfx.h" // for Put_Info
 #include "Misc.h" // for byte swap
 
 #include "M68KD.h"

@@ -1,6 +1,6 @@
 #include <windows.h>
 #include "G_Main.h"
-#include "G_ddraw.h"
+#include "G_gfx.h"
 #include "rom.h"
 
 

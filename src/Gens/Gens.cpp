@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "gens.h"
 #include "G_main.h"
-#include "G_ddraw.h"
+#include "G_gfx.h"
 #include "G_dsound.h"
 #include "G_input.h"
 #include "rom.h"

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "G_main.h"
-#include "G_ddraw.h"
+#include "G_gfx.h"
 #include "G_dsound.h"
 #include "G_Input.h"
 #include "Debug.h"
@@ -142,7 +142,7 @@ int Change_VSync(HWND hWnd)
 	
 	if (Full_Screen)
 	{
-		End_DDraw();
+		End_GFX();
 		p_vsync = &FS_VSync;
 	}
 	else p_vsync = &W_VSync;
@@ -153,7 +153,7 @@ int Change_VSync(HWND hWnd)
 	else MESSAGE_L("Vertical Sync Disabled", "Vertical Sync Disabled", 1000)
 
 	Build_Main_Menu();
-	if (Full_Screen) return Init_DDraw(HWnd);
+	if (Full_Screen) Init_GFX(HWnd);
 	else return 1;
 }
 
@@ -490,11 +490,13 @@ int Set_Render(HWND hWnd, int Full, int Num, int Force)
 			break;
 	}
 
+    GFX_SetBlit(hWnd, (GFX_BLIT_MODE)*Rend);
+
 	if (!((Full == Full_Screen) && ((Num >=2) && (Old_Rend >= 2)) && (!Force)))
 	{
 		RECT r;
 
-		End_DDraw();
+		End_GFX();
 
 		if (Sound_Initialised) Clear_Sound_Buffer();
 
@@ -503,8 +505,9 @@ int Set_Render(HWND hWnd, int Full, int Num, int Force)
 			while (ShowCursor(true) < 1);
 			while (ShowCursor(false) >= 0);
 
-			SetWindowPos(hWnd, NULL, 0, 0, 320 * ((*Rend == 0)?1:2), 240 * ((*Rend == 0)?1:2), SWP_NOZORDER | SWP_NOACTIVATE);
-			SetWindowLong(hWnd, GWL_STYLE, NULL);
+			// SetWindowPos(hWnd, NULL, 0, 0, 320 * ((*Rend == 0)?1:2), 240 * ((*Rend == 0)?1:2), SWP_NOZORDER | SWP_NOACTIVATE);
+            SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CXSCREEN), SWP_SHOWWINDOW);
+            SetWindowLong(hWnd, GWL_STYLE, WS_VISIBLE);
 		}
 		else
 		{
@@ -515,7 +518,7 @@ int Set_Render(HWND hWnd, int Full, int Num, int Force)
 			dm.dmBitsPerPel = 16;
 			dm.dmFields = DM_BITSPERPEL;
 
-			ChangeDisplaySettings(&dm, 0);
+			// ChangeDisplaySettings(&dm, 0);
 
 			while (ShowCursor(false) >= 0);
 			while (ShowCursor(true) < 1);
@@ -527,7 +530,7 @@ int Set_Render(HWND hWnd, int Full, int Num, int Force)
 		}
 	
 		Build_Main_Menu();
-		return(Init_DDraw(HWnd));
+		return(Init_GFX(HWnd));
 	}
 
 	Build_Main_Menu();
@@ -1170,7 +1173,7 @@ int WINAPI Play_Net_Game(char *game, int player, int maxplayers)
 		}
 		else
 		{
-			Flip(HWnd);
+			Flip_GFX(HWnd);
 			Sleep(100);
 		}
 	}
@@ -1528,7 +1531,7 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 	if (!Init_Input(hInst, HWnd))
 	{
 		End_Sound();
-		End_DDraw();
+        End_GFX();
 		return FALSE;
 	}
 
@@ -1573,7 +1576,7 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 void End_All(void)
 {
 	Free_Rom(Game);
-	End_DDraw();
+    End_GFX();
 	End_Input();
 	YM2612_End();
 	End_Sound();
@@ -1694,7 +1697,7 @@ int PASCAL WinMain(HINSTANCE hInst,	HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 				Do_VDP_Only();
 				if (Paused)	Pause_Screen( );
 #endif
-				Flip(HWnd);
+				Flip_GFX(HWnd);
 				Sleep(100);
 			}
 		}
@@ -1716,13 +1719,13 @@ int PASCAL WinMain(HINSTANCE hInst,	HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 		else if (Intro_Style == 3)		// GENESIS BIOS
 		{
 			Do_Genesis_Frame();
-			Flip(HWnd);
+			Flip_GFX(HWnd);
 			Sleep(20);
 		}
 		else							// BLANK SCREEN (MAX IDLE)
 		{
 			Clear_Back_Screen(HWnd);
-			Flip(HWnd);
+			Flip_GFX(HWnd);
 			Sleep(200);
 		}
 	}
@@ -1826,7 +1829,7 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		
 		case WM_PAINT:
 			Clear_Primary_Screen(HWnd);
-			Flip(hWnd);
+			Flip_GFX(hWnd);
 			break;
 		
 		case WM_COMMAND:

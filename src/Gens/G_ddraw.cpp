@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "G_ddraw.h"
+#include "G_gfx.h"
 #include "G_dsound.h"
 #include "G_Input.h"
 #include "G_main.h"
@@ -29,8 +30,6 @@ clock_t Used_Time = 0;
 
 int Flag_Clr_Scr = 0;
 int Sleep_Time;
-int FS_VSync;
-int W_VSync;
 int Stretch;
 int Blit_Soft;
 int Effect_Color = 7;
@@ -38,25 +37,8 @@ int FPS_Style = EMU_MODE | BLANC;
 int Message_Style = EMU_MODE | BLANC | SIZE_X2;
 int Kaillera_Error = 0;
 
-static char Info_String[1024] = "";
-static int Message_Showed = 0;
-static unsigned int Info_Time = 0;
-
-void (*Blit_FS)(unsigned char *Dest, int pitch, int x, int y, int offset);
-void (*Blit_W)(unsigned char *Dest, int pitch, int x, int y, int offset);
 int (*Update_Frame)();
 int (*Update_Frame_Fast)();
-
-
-void Put_Info(char *Message, int Duree)
-{
-	if (Show_Message)
-	{
-		strcpy(Info_String, Message);
-		Info_Time = GetTickCount() + Duree;
-		Message_Showed = 1;
-	}
-}
 
 
 int Init_Fail(HWND hwnd, char *err)
@@ -250,7 +232,7 @@ HRESULT RestoreGraphics()
 }
 
 
-int Clear_Primary_Screen(HWND hWnd)
+int Clear_Primary_Screen_DDraw(HWND hWnd)
 {
 	DDSURFACEDESC2 ddsd;
 	DDBLTFX ddbltfx;
@@ -298,7 +280,7 @@ int Clear_Primary_Screen(HWND hWnd)
 }
 
 
-int Clear_Back_Screen(HWND hWnd)
+int Clear_Back_Screen_DDraw(HWND hWnd)
 {
 	DDSURFACEDESC2 ddsd;
 	DDBLTFX ddbltfx;
@@ -326,86 +308,16 @@ void Restore_Primary(void)
 }
 
 
-int Flip(HWND hWnd)
+int Flip_DDraw(HWND hWnd)
 {
 	HRESULT rval;
 	DDSURFACEDESC2 ddsd;
 	RECT RectDest, RectSrc;
 	POINT p;
 	float Ratio_X, Ratio_Y;
-	int Dep, i;
-	static float FPS = 0.0f, frames[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-	static unsigned int old_time = 0, view_fps = 0, index_fps = 0, freq_cpu[2] = {0, 0};
-	unsigned int new_time[2];
+	int Dep;
 
 	ddsd.dwSize = sizeof(ddsd);
-
-	if (Message_Showed)
-	{
-		if (GetTickCount() > Info_Time)
-		{
-			Message_Showed = 0;
-			strcpy(Info_String, "");
-		}
-		else Print_Text(Info_String, strlen(Info_String), 10, 210, Message_Style);
-
-	}
-	else if (Show_FPS)
-	{	
-		if (freq_cpu[0] > 1)				// accurate timer ok
-		{
-			if (++view_fps >= 16)
-			{
-				QueryPerformanceCounter((union _LARGE_INTEGER *) new_time);
-
-				if (new_time[0] != old_time)
-				{					
-					FPS = (float) (freq_cpu[0]) * 16.0f / (float) (new_time[0] - old_time);
-					sprintf(Info_String, "%.1f", FPS);
-				}
-				else
-				{
-					sprintf(Info_String, "too much...");
-				}
-
-				old_time = new_time[0];
-				view_fps = 0;
-			}
-		}
-		else if (freq_cpu[0] == 1)			// accurate timer not supported
-		{
-			if (++view_fps >= 10)
-			{
-				new_time[0] = GetTickCount();
-		
-				if (new_time[0] != old_time) frames[index_fps] = 10000 / (float)(new_time[0] - old_time);
-				else frames[index_fps] = 2000;
-
-				index_fps++;
-				index_fps &= 7;
-				FPS = 0.0f;
-
-				for(i = 0; i < 8; i++) FPS += frames[i];
-
-				FPS /= 8.0f;
-				old_time = new_time[0];
-				view_fps = 0;
-			}
-
-			sprintf(Info_String, "%.1f", FPS);
-		}
-		else
-		{
-			QueryPerformanceFrequency((union _LARGE_INTEGER *) freq_cpu);
-			if (freq_cpu[0] == 0) freq_cpu[0] = 1;
-
-			sprintf(Info_String, "", FPS);
-		}
-
-		Print_Text(Info_String, strlen(Info_String), 10, 210, FPS_Style);
-	}
-
-	if (Fast_Blur) Half_Blur();
 
 	if (Full_Screen)
 	{
@@ -659,13 +571,13 @@ int Update_Gens_Logo(HWND hWnd)
 
 		Logo = LoadBitmap(ghInstance,  MAKEINTRESOURCE(IDB_LOGO_BIG));
 		GetBitmapBits(Logo, 64000 * 2, tab);
-		pas = 0.05;
+		pas = 0.05f;
 		Init = 1;
 	}
 
 	renv += pas;
 	zoom_x = sin(renv);
-	if (zoom_x == 0.0) zoom_x = 0.0000001;
+	if (zoom_x == 0.0f) zoom_x = 0.0000001f;
 	zoom_x = (1 / zoom_x) * 1;
 	zoom_y = 1;
 
@@ -705,7 +617,7 @@ int Update_Gens_Logo(HWND hWnd)
 	}
 
 	Half_Blur();
-	Flip(hWnd);
+    Flip_GFX(hWnd);
 
 	return 1;
 }
@@ -793,7 +705,7 @@ int Update_Crazy_Effect(HWND hWnd)
 		}
 	}
 
-	Flip(hWnd);
+	Flip_GFX(hWnd);
 
 	return 1;
 }
@@ -826,7 +738,7 @@ int Update_Emulation(HWND hWnd)
 		{
 			Frame_Number = 0;
 			Update_Frame();
-			Flip(hWnd);
+			Flip_GFX(hWnd);
 		}
 	}
 	else
@@ -850,7 +762,7 @@ int Update_Emulation(HWND hWnd)
 				else
 				{
 					Update_Frame();
-					Flip(hWnd);
+                    Flip_GFX(hWnd);
 				}
 			}
 		}
@@ -877,7 +789,7 @@ int Update_Emulation(HWND hWnd)
 			{
 				Update_Controllers();
 				Update_Frame();
-				Flip(hWnd);
+                Flip_GFX(hWnd);
 			}
 			else Sleep(Sleep_Time);
 		}
@@ -891,7 +803,7 @@ int Update_Emulation_One(HWND hWnd)
 {
 	Update_Controllers();
 	Update_Frame();
-	Flip(hWnd);
+    Flip_GFX(hWnd);
 
 	return 1;
 }
@@ -943,7 +855,7 @@ int Update_Emulation_Netplay(HWND hWnd, int player, int num_player)
 		//Kaillera_Error = Kaillera_Modify_Play_Values((void *) (Kaillera_Keys), 2);
 		Update_Controllers_Net(num_player);
 		Update_Frame();
-		Flip(hWnd);
+        Flip_GFX(hWnd);
 	}
 
 	return 1;
@@ -1010,7 +922,7 @@ int Pause_Screen(void)
 int Show_Genesis_Screen(HWND hWnd)
 {
 	Do_VDP_Only();
-	Flip(hWnd);
+    Flip_GFX(hWnd);
 
 	return 1;
 }
@@ -1030,7 +942,7 @@ int Take_Shot()
 	
 	Put_Info(" ", 10);
 	//Do_VDP_Only();
-	Flip( HWnd );
+    Flip_GFX(HWnd);
 	
 /***********************/
 

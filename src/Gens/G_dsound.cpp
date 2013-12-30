@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "G_ddraw.h"
 #include "G_dsound.h"
+#include "G_gfx.h"
 #include "psg.h"
 #include "ym2612.h"
 #include "mem_M68K.h"
