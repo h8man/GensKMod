@@ -259,7 +259,7 @@ void End_CD_Driver(void)
 }
 
 
-int Reset_CD(char *buf, char *iso_name)
+int Reset_CD(const char *buf, char *iso_name)
 {
 	memset(CD_Audio_Buffer_L, 0, 4096 * 4);
 	memset(CD_Audio_Buffer_R, 0, 4096 * 4);

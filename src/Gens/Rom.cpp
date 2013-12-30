@@ -55,7 +55,7 @@ void Get_Name_From_Path(char *Full_Path, char *Name)
 }
 
 
-void Get_Dir_From_Path(char *Full_Path, char *Dir)
+void Get_Dir_From_Path(const char *Full_Path, char *Dir)
 {
 	int i = 0;
 
@@ -75,7 +75,7 @@ void Get_Dir_From_Path(char *Full_Path, char *Dir)
 }
 
 
-void Update_Recent_Rom(char *Path)
+void Update_Recent_Rom(const char *Path)
 {
 	int i;
 
@@ -88,13 +88,13 @@ void Update_Recent_Rom(char *Path)
 }
 
 
-void Update_Rom_Dir(char *Path)
+void Update_Rom_Dir(const char *Path)
 {
 	Get_Dir_From_Path(Path, Rom_Dir);
 }
 
 
-void Update_Rom_Name(char *Name)
+void Update_Rom_Name(const char *Name)
 {
 	int i, leng;
 
@@ -142,7 +142,7 @@ void Update_CD_Rom_Name(char *Name)
 }
 
 
-int Detect_Format(char *Name)
+int Detect_Format(const char *Name)
 {
 	FILE *f;
 	unzFile zf;
@@ -329,12 +329,83 @@ void Fill_Infos(void)
 	My_Rom->Countries[3] = 0;
 }
 
+int Run_Rom(HWND hWnd, const char * Name, int File_Type_Index)
+{
+    int sys;
+
+    Free_Rom(Game);
+
+    sys = Detect_Format(Name);
+
+    if (sys < 1) return -1;
+
+    if ((File_Type_Index > 1) && (File_Type_Index < 5))
+    {
+        sys &= 1;
+        sys |= (File_Type_Index - 1) << 1;
+    }
+
+    Update_Recent_Rom(Name);
+    Update_Rom_Dir(Name);
+
+    if ((sys >> 1) < 3)		// Have to load a rom
+    {
+        if ((!stricmp("ZIP", &Name[strlen(Name) - 3])) || (!stricmp("ZSG", &Name[strlen(Name) - 3])))
+        {
+            Game = Load_Rom_Zipped(hWnd, Name, sys & 1);
+        }
+        else
+        {
+            Game = Load_Rom(hWnd, Name, sys & 1);
+        }
+    }
+
+    switch (sys >> 1)
+    {
+    default:
+    case 1:		// Genesis rom
+        if (Game) Genesis_Started = Init_Genesis(Game);
+        /* KANEDA_BUG */
+        if (!Genesis_Started)	Free_Rom(Game);
+        /**************/
+        Build_Main_Menu();
+        return Genesis_Started;
+        break;
+
+    case 2:		// 32X rom
+        if (Game) _32X_Started = Init_32X(Game);
+        /* KANEDA_BUG */
+        if (!_32X_Started)	Free_Rom(Game);
+        /**************/
+        Build_Main_Menu();
+        return _32X_Started;
+        break;
+
+    case 3:		// Sega CD image
+        SegaCD_Started = Init_SegaCD(Name);
+        /* KANEDA_BUG */
+        if (!SegaCD_Started)	Free_Rom(Game);
+        /**************/
+        Build_Main_Menu();
+        return SegaCD_Started;
+        break;
+
+    case 4:		// Sega CD 32X image
+        /* KANEDA_BUG */
+        Free_Rom(Game);
+        Build_Main_Menu();
+        /**************/
+        break;
+    }
+
+    return -1;
+}
+
 
 int Get_Rom(HWND hWnd)
 {
 	char Name[1024];
 	OPENFILENAME ofn;
-	int sys;
 
 	SetCurrentDirectory(Gens_Path);
 
@@ -356,78 +427,11 @@ int Get_Rom(HWND hWnd)
 
 	if (GetOpenFileName(&ofn) == NULL) return 0;
 
-	Free_Rom(Game);
-
-	sys = Detect_Format(Name);
-
-	if (sys < 1) return -1;
-
-	File_Type_Index = ofn.nFilterIndex;
-
-	if ((File_Type_Index > 1) && (File_Type_Index < 5))
-	{
-		sys &= 1;
-		sys |= (File_Type_Index - 1) << 1;
-	}
-
-	Update_Recent_Rom(Name);
-	Update_Rom_Dir(Name);
-
-	if ((sys >> 1) < 3)		// Have to load a rom
-	{
-		if ((!stricmp("ZIP", &Name[strlen(Name) - 3])) || (!stricmp("ZSG", &Name[strlen(Name) - 3])))
-		{
-			Game = Load_Rom_Zipped(hWnd, Name, sys & 1);
-		}
-		else
-		{
-			Game = Load_Rom(hWnd, Name, sys & 1);
-		}
-	}
-
-	switch (sys >> 1)
-	{
-		default:
-		case 1:		// Genesis rom
-			if (Game) Genesis_Started = Init_Genesis(Game);
-/* KANEDA_BUG */
-			if (!Genesis_Started)	Free_Rom(Game);
-/**************/
-			Build_Main_Menu();
-			return Genesis_Started;
-			break;
-
-		case 2:		// 32X rom
-			if (Game) _32X_Started = Init_32X(Game);
-/* KANEDA_BUG */
-			if (!_32X_Started)	Free_Rom(Game);
-/**************/
-			Build_Main_Menu();
-			return _32X_Started;
-			break;
-
-		case 3:		// Sega CD image
-			SegaCD_Started = Init_SegaCD(Name);
-/* KANEDA_BUG */
-			if (!SegaCD_Started)	Free_Rom(Game);
-/**************/
-			Build_Main_Menu();
-			return SegaCD_Started;
-			break;
-
-		case 4:		// Sega CD 32X image
-/* KANEDA_BUG */
-			Free_Rom(Game);
-			Build_Main_Menu();
-/**************/
-			break;
-	}
-
-	return -1;
+    return Run_Rom(hWnd, Name, ofn.nFilterIndex);
 }
 
 
-int Pre_Load_Rom(HWND hWnd, char *Name)
+int Pre_Load_Rom(HWND hWnd, const char *Name)
 {
 	HANDLE Rom_File;
 	int sys;
@@ -551,7 +555,7 @@ Rom *Load_Bios(HWND hWnd, char *Name)
 }
 
 
-Rom *Load_Rom(HWND hWnd, char *Name, int inter)
+Rom *Load_Rom(HWND hWnd, const char *Name, int inter)
 {
 	HANDLE Rom_File;
 	BY_HANDLE_FILE_INFORMATION File_Inf;
@@ -614,7 +618,7 @@ Rom *Load_Rom(HWND hWnd, char *Name, int inter)
 }
  
 
-Rom *Load_Rom_Zipped(HWND hWnd, char *Name, int inter)
+Rom *Load_Rom_Zipped(HWND hWnd, const char *Name, int inter)
 {
 	int Size = 0;
 	int bResult;

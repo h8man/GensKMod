@@ -107,7 +107,7 @@ void Check_CD_Command(void);
 int Init_CD_Driver(void);
 void End_CD_Driver(void);
 
-int Reset_CD(char *buf, char *iso_name);
+int Reset_CD(char *buf, const char *iso_name);
 void Stop_CD(void);
 void Change_CD(void);
 

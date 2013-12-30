@@ -153,7 +153,7 @@ int Change_VSync(HWND hWnd)
 	else MESSAGE_L("Vertical Sync Disabled", "Vertical Sync Disabled", 1000)
 
 	Build_Main_Menu();
-	if (Full_Screen) Init_GFX(HWnd);
+	if (Full_Screen) return Init_GFX(HWnd);
 	else return 1;
 }
 
@@ -1486,7 +1486,9 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 
 	if (!HWnd) return FALSE;
 
-	hAccelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(RAC));
+    DragAcceptFiles(HWnd, TRUE);
+
+    hAccelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(RAC));
 
 	Identify_CPU();
 
@@ -1825,7 +1827,8 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		case WM_CREATE:
 			Active = 1;
-			break;
+            DragAcceptFiles(hWnd, TRUE);
+            break;
 		
 		case WM_PAINT:
 			Clear_Primary_Screen(HWnd);
@@ -2759,7 +2762,18 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				default:
 					return(-1);
 			}
-	}
+
+        case WM_DROPFILES:
+        {
+            char buffer[1024];
+            if (DragQueryFile((HDROP)wParam, 0, buffer, sizeof(buffer)))
+            {
+                Run_Rom(hWnd, buffer, 0);
+            }
+            DragFinish((HDROP)wParam);
+            break;
+        }
+    }
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }

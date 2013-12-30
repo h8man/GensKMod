@@ -1745,7 +1745,7 @@ int Do_32X_Frame()
 /*************************************/
 
 
-int Init_SegaCD(char *iso_name)
+int Init_SegaCD(const char *iso_name)
 {
 	char Str_Err[256], *Bios_To_Use;
 
@@ -1907,7 +1907,7 @@ int Init_SegaCD(char *iso_name)
 }
 
 
-int Reload_SegaCD(char *iso_name)
+int Reload_SegaCD(const char *iso_name)
 {
 	char Str_Err[256];
 
