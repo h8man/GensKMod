@@ -415,6 +415,7 @@
 #define IDC_VDP_PAL_4			51024
 #define IDC_VDP_PREVIEW         51026
 #define IDC_VDP_SCROLL          51027
+#define IDC_VDP_TILE_ZOOM_ADR   51028
 
 #define IDC_VDP_REG_LIST		50031
 

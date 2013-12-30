@@ -314,165 +314,165 @@ struct ym2612_KMod {
 
 
 
-char *mcd_bios_name[]={
-"UNKNOWN 0x00   ",
-"UNKNOWN 0x01   ",
-"MSCSTOP        ",
-"MSCPAUSEON     ",
-"MSCPAUSEOFF    ",
-"MSCSCANFF      ",
-"MSCSCANFR      ",
-"MSCSCANOFF     ",
-"ROMPAUSEON     ",
-"ROMPAUSEOFF    ",
-"DRVOPEN        ",
-"UNKNOWN 0x0b   ",
-"UNKNOWN 0x0c   ",
-"UNKNOWN 0x0d   ",
-"UNKNOWN 0x0e   ",
-"UNKNOWN 0x0f   ",
-"DRVINIT        ",
-"MSCPLAY        ",
-"MSCPLAY1       ",
-"MSCPLAYR       ",
-"MSCPLAYT       ",
-"MSCSEEK        ",
-"MSCSEEKT       ",
-"ROMREAD        ",
-"ROMSEEK        ",
-"MSCSEEK1       ",
-"UNKNOWN 0x1a   ",
-"UNKNOWN 0x1b   ",
-"UNKNOWN 0x1c   ",
-"UNKNOWN 0x1d   ",
-"TESTENTRY      ",
-"TESTENTRYLOOP  ",
-"ROMREADN       ",
-"ROMREADE       ",
-"UNKNOWN 0x22   ",
-"UNKNOWN 0x23   ",
-"UNKNOWN 0x24   ",
-"UNKNOWN 0x25   ",
-"UNKNOWN 0x26   ",
-"UNKNOWN 0x27   ",
-"UNKNOWN 0x28   ",
-"UNKNOWN 0x29   ",
-"UNKNOWN 0x2a   ",
-"UNKNOWN 0x2b   ",
-"UNKNOWN 0x2c   ",
-"UNKNOWN 0x2d   ",
-"UNKNOWN 0x2e   ",
-"UNKNOWN 0x2f   ",
-"UNKNOWN 0x30   ",
-"UNKNOWN 0x31   ",
-"UNKNOWN 0x32   ",
-"UNKNOWN 0x33   ",
-"UNKNOWN 0x34   ",
-"UNKNOWN 0x35   ",
-"UNKNOWN 0x36   ",
-"UNKNOWN 0x37   ",
-"UNKNOWN 0x38   ",
-"UNKNOWN 0x39   ",
-"UNKNOWN 0x3a   ",
-"UNKNOWN 0x3b   ",
-"UNKNOWN 0x3c   ",
-"UNKNOWN 0x3d   ",
-"UNKNOWN 0x3e   ",
-"UNKNOWN 0x3f   ",
-"UNKNOWN 0x40   ",
-"UNKNOWN 0x41   ",
-"UNKNOWN 0x42   ",
-"UNKNOWN 0x43   ",
-"UNKNOWN 0x44   ",
-"UNKNOWN 0x45   ",
-"UNKNOWN 0x46   ",
-"UNKNOWN 0x47   ",
-"UNKNOWN 0x48   ",
-"UNKNOWN 0x49   ",
-"UNKNOWN 0x4a   ",
-"UNKNOWN 0x4b   ",
-"UNKNOWN 0x4c   ",
-"UNKNOWN 0x4d   ",
-"UNKNOWN 0x4e   ",
-"UNKNOWN 0x4f   ",
-"UNKNOWN 0x50   ",
-"UNKNOWN 0x51   ",
-"UNKNOWN 0x52   ",
-"UNKNOWN 0x53   ",
-"UNKNOWN 0x54   ",
-"UNKNOWN 0x55   ",
-"UNKNOWN 0x56   ",
-"UNKNOWN 0x57   ",
-"UNKNOWN 0x58   ",
-"UNKNOWN 0x59   ",
-"UNKNOWN 0x5a   ",
-"UNKNOWN 0x5b   ",
-"UNKNOWN 0x5c   ",
-"UNKNOWN 0x5d   ",
-"UNKNOWN 0x5e   ",
-"UNKNOWN 0x5f   ",
-"UNKNOWN 0x60   ",
-"UNKNOWN 0x61   ",
-"UNKNOWN 0x62   ",
-"UNKNOWN 0x63   ",
-"UNKNOWN 0x64   ",
-"UNKNOWN 0x65   ",
-"UNKNOWN 0x66   ",
-"UNKNOWN 0x67   ",
-"UNKNOWN 0x68   ",
-"UNKNOWN 0x69   ",
-"UNKNOWN 0x6a   ",
-"UNKNOWN 0x6b   ",
-"UNKNOWN 0x6c   ",
-"UNKNOWN 0x6d   ",
-"UNKNOWN 0x6e   ",
-"UNKNOWN 0x6f   ",
-"UNKNOWN 0x70   ",
-"UNKNOWN 0x71   ",
-"UNKNOWN 0x72   ",
-"UNKNOWN 0x73   ",
-"UNKNOWN 0x74   ",
-"UNKNOWN 0x75   ",
-"UNKNOWN 0x76   ",
-"UNKNOWN 0x77   ",
-"UNKNOWN 0x78   ",
-"UNKNOWN 0x79   ",
-"UNKNOWN 0x7a   ",
-"UNKNOWN 0x7b   ",
-"UNKNOWN 0x7c   ",
-"UNKNOWN 0x7d   ",
-"UNKNOWN 0x7e   ",
-"UNKNOWN 0x7f   ",
-"CDBCHK         ",
-"CDBSTAT        ",
-"CDBTOCWRITE    ",
-"CDBTOCREAD     ",
-"CDBPAUSE       ",
-"FDRSET         ",
-"FDRCHG         ",
-"CDCSTART       ",
-"CDCSTARTP      ",
-"CDCSTOP        ",
-"CDCSTAT        ",
-"CDCREAD        ",
-"CDCTRN         ",
-"CDCACK         ",
-"SCDINIT        ",
-"SCDSTART       ",
-"SCDSTOP        ",
-"SCDSTAT        ",
-"SCDREAD        ",
-"SCDPQ          ",
-"SCDPQL         ",
-"LEDSET         ",
-"CDCSETMODE     ",
-"WONDERREQ      ",
-"WONDERCHK      "
+static const char *mcd_bios_name[] =
+{
+    "UNKNOWN 0x00   ",
+    "UNKNOWN 0x01   ",
+    "MSCSTOP        ",
+    "MSCPAUSEON     ",
+    "MSCPAUSEOFF    ",
+    "MSCSCANFF      ",
+    "MSCSCANFR      ",
+    "MSCSCANOFF     ",
+    "ROMPAUSEON     ",
+    "ROMPAUSEOFF    ",
+    "DRVOPEN        ",
+    "UNKNOWN 0x0b   ",
+    "UNKNOWN 0x0c   ",
+    "UNKNOWN 0x0d   ",
+    "UNKNOWN 0x0e   ",
+    "UNKNOWN 0x0f   ",
+    "DRVINIT        ",
+    "MSCPLAY        ",
+    "MSCPLAY1       ",
+    "MSCPLAYR       ",
+    "MSCPLAYT       ",
+    "MSCSEEK        ",
+    "MSCSEEKT       ",
+    "ROMREAD        ",
+    "ROMSEEK        ",
+    "MSCSEEK1       ",
+    "UNKNOWN 0x1a   ",
+    "UNKNOWN 0x1b   ",
+    "UNKNOWN 0x1c   ",
+    "UNKNOWN 0x1d   ",
+    "TESTENTRY      ",
+    "TESTENTRYLOOP  ",
+    "ROMREADN       ",
+    "ROMREADE       ",
+    "UNKNOWN 0x22   ",
+    "UNKNOWN 0x23   ",
+    "UNKNOWN 0x24   ",
+    "UNKNOWN 0x25   ",
+    "UNKNOWN 0x26   ",
+    "UNKNOWN 0x27   ",
+    "UNKNOWN 0x28   ",
+    "UNKNOWN 0x29   ",
+    "UNKNOWN 0x2a   ",
+    "UNKNOWN 0x2b   ",
+    "UNKNOWN 0x2c   ",
+    "UNKNOWN 0x2d   ",
+    "UNKNOWN 0x2e   ",
+    "UNKNOWN 0x2f   ",
+    "UNKNOWN 0x30   ",
+    "UNKNOWN 0x31   ",
+    "UNKNOWN 0x32   ",
+    "UNKNOWN 0x33   ",
+    "UNKNOWN 0x34   ",
+    "UNKNOWN 0x35   ",
+    "UNKNOWN 0x36   ",
+    "UNKNOWN 0x37   ",
+    "UNKNOWN 0x38   ",
+    "UNKNOWN 0x39   ",
+    "UNKNOWN 0x3a   ",
+    "UNKNOWN 0x3b   ",
+    "UNKNOWN 0x3c   ",
+    "UNKNOWN 0x3d   ",
+    "UNKNOWN 0x3e   ",
+    "UNKNOWN 0x3f   ",
+    "UNKNOWN 0x40   ",
+    "UNKNOWN 0x41   ",
+    "UNKNOWN 0x42   ",
+    "UNKNOWN 0x43   ",
+    "UNKNOWN 0x44   ",
+    "UNKNOWN 0x45   ",
+    "UNKNOWN 0x46   ",
+    "UNKNOWN 0x47   ",
+    "UNKNOWN 0x48   ",
+    "UNKNOWN 0x49   ",
+    "UNKNOWN 0x4a   ",
+    "UNKNOWN 0x4b   ",
+    "UNKNOWN 0x4c   ",
+    "UNKNOWN 0x4d   ",
+    "UNKNOWN 0x4e   ",
+    "UNKNOWN 0x4f   ",
+    "UNKNOWN 0x50   ",
+    "UNKNOWN 0x51   ",
+    "UNKNOWN 0x52   ",
+    "UNKNOWN 0x53   ",
+    "UNKNOWN 0x54   ",
+    "UNKNOWN 0x55   ",
+    "UNKNOWN 0x56   ",
+    "UNKNOWN 0x57   ",
+    "UNKNOWN 0x58   ",
+    "UNKNOWN 0x59   ",
+    "UNKNOWN 0x5a   ",
+    "UNKNOWN 0x5b   ",
+    "UNKNOWN 0x5c   ",
+    "UNKNOWN 0x5d   ",
+    "UNKNOWN 0x5e   ",
+    "UNKNOWN 0x5f   ",
+    "UNKNOWN 0x60   ",
+    "UNKNOWN 0x61   ",
+    "UNKNOWN 0x62   ",
+    "UNKNOWN 0x63   ",
+    "UNKNOWN 0x64   ",
+    "UNKNOWN 0x65   ",
+    "UNKNOWN 0x66   ",
+    "UNKNOWN 0x67   ",
+    "UNKNOWN 0x68   ",
+    "UNKNOWN 0x69   ",
+    "UNKNOWN 0x6a   ",
+    "UNKNOWN 0x6b   ",
+    "UNKNOWN 0x6c   ",
+    "UNKNOWN 0x6d   ",
+    "UNKNOWN 0x6e   ",
+    "UNKNOWN 0x6f   ",
+    "UNKNOWN 0x70   ",
+    "UNKNOWN 0x71   ",
+    "UNKNOWN 0x72   ",
+    "UNKNOWN 0x73   ",
+    "UNKNOWN 0x74   ",
+    "UNKNOWN 0x75   ",
+    "UNKNOWN 0x76   ",
+    "UNKNOWN 0x77   ",
+    "UNKNOWN 0x78   ",
+    "UNKNOWN 0x79   ",
+    "UNKNOWN 0x7a   ",
+    "UNKNOWN 0x7b   ",
+    "UNKNOWN 0x7c   ",
+    "UNKNOWN 0x7d   ",
+    "UNKNOWN 0x7e   ",
+    "UNKNOWN 0x7f   ",
+    "CDBCHK         ",
+    "CDBSTAT        ",
+    "CDBTOCWRITE    ",
+    "CDBTOCREAD     ",
+    "CDBPAUSE       ",
+    "FDRSET         ",
+    "FDRCHG         ",
+    "CDCSTART       ",
+    "CDCSTARTP      ",
+    "CDCSTOP        ",
+    "CDCSTAT        ",
+    "CDCREAD        ",
+    "CDCTRN         ",
+    "CDCACK         ",
+    "SCDINIT        ",
+    "SCDSTART       ",
+    "SCDSTOP        ",
+    "SCDSTAT        ",
+    "SCDREAD        ",
+    "SCDPQ          ",
+    "SCDPQL         ",
+    "LEDSET         ",
+    "CDCSETMODE     ",
+    "WONDERREQ      ",
+    "WONDERCHK      "
 };
 
-
-
-struct _32X_register_struct {
+struct _32X_register_struct
+{
 	BYTE side; //bit 0:MD, bit 1:32X
 	WORD adr;
 	char *descriptionMD;
@@ -481,7 +481,8 @@ struct _32X_register_struct {
 
 
 
-struct _32X_register_struct _32X_register[]={
+struct _32X_register_struct _32X_register[] =
+{
 	{3, 0x00, "Adapter control register", "Interrupt Mask"},
 	{3, 0x02, "Interrupt control register", "Stand By change"},
 	{3, 0x04, "Bank set register", "H Count"},
@@ -490,7 +491,7 @@ struct _32X_register_struct _32X_register[]={
 	{3, 0x0A, "DREQ source LSB", "DREQ source LSB"},
 	{3, 0x0C, "DREQ destination MSB", "DREQ destination MSB"},
 	{3, 0x0E, "DREQ destination LSB", "DREQ destination LSB"},
-	{3, 0x10, "DREQ lenght", "DREQ lenght"},
+	{3, 0x10, "DREQ length", "DREQ length"},
 	{3, 0x12, "FIFO", "FIFO"},
 	{2, 0x14, "", "VRES Interrupt clear"},
 	{2, 0x16, "", "V Interrupt clear"},
@@ -512,7 +513,7 @@ struct _32X_register_struct _32X_register[]={
 	{3, 0x38, "Mono Pulse Width", "Mono Pulse Width"},
 	{2, 0x100, "", "Bitmap mode"},
 	{2, 0x102, "", "Packed Pixel Control"},
-	{2, 0x104, "", "Auto fill lenght"},
+	{2, 0x104, "", "Auto fill length"},
 	{2, 0x106, "", "Auto fill start"},
 	{2, 0x108, "", "Auto fill data"},
 	{2, 0x10A, "", "Frame Buffer control"},
@@ -3298,7 +3299,7 @@ HWND hWndRedArrow;
 HWND hWndPal;
 RECT rcArrow, rcPal, rcTiles;
 
-COLORREF GetPal_KMod( unsigned char numPal, unsigned numColor )
+static COLORREF GetPal_KMod(unsigned int numPal, unsigned int numColor)
 {
 	/* can't use MD_Palette since it's DirectX mode (555 or 565) */
 	/* !! CRAM is (binary:)GGG0RRR00000BBB0   while COLORREF is (hexa:)0x00BBGGRR */
@@ -3322,81 +3323,79 @@ COLORREF GetPal_KMod( unsigned char numPal, unsigned numColor )
 	if (newColor == 0x00E0E0E0)
 		newColor = 0x00FFFFFF;
 
-
 	// handle our false pal ;)
 	if (numPal==4)
 		newColor = PALETTEINDEX(numColor);
 
 	return newColor;
-
 }
 
-void DrawTile_KMod( HDC hDCMain, unsigned short int numTile, WORD x, WORD y, UCHAR pal, UCHAR zoom)
+static void DrawTile_KMod(HDC hDCMain, unsigned short int numTile, WORD x, WORD y, UCHAR pal, UCHAR zoom)
 {
-	unsigned char j;
-	unsigned char TileData;
-	HDC hDC;
-	HBITMAP hBitmap, hOldBitmap;
+    int j;
+    COLORREF tile_data[8 * 8];
+    COLORREF *ptr = &tile_data[0];
+    unsigned int tile_row;
 
-	hDC = CreateCompatibleDC( hDCMain );
-	hBitmap = CreateCompatibleBitmap( hDCMain, 8, 8);
-	hOldBitmap = SelectObject(hDC, hBitmap);
+    static const struct BITMAPINFO_LOCAL
+    {
+        BITMAPINFOHEADER hdr;
+        COLORREF colors[3];
+    }
+    bmi =
+    {
+        {
+            sizeof(BITMAPINFOHEADER),   // biSize
+            8,                          // biWidth
+            -8,                         // biHeight
+            1,                          // biPlanes
+            32,                         // biBitCount
+            BI_BITFIELDS,               // biCompression
+            0,                          // biSizeImage
+            75,                         // biXPelsPerMeter
+            75,                         // biYPelsPerMeter
+            0,                          // biClrUsed
+            0                           // biClrImportant
+        },
+        {
+            0x000000FF,
+            0x0000FF00,
+            0x00FF0000,
+        }
+    };
+    const unsigned int * __restrict vram_dwords = (const unsigned int *)VRam;
 
+    for (j = 0; j < 8; j++)
+    {
+        tile_row = vram_dwords[numTile * 8 + j];
+        ptr[3] = GetPal_KMod(pal, tile_row & 0xF);
+        tile_row >>= 4;
+        ptr[2] = GetPal_KMod(pal, tile_row & 0xF);
+        tile_row >>= 4;
+        ptr[1] = GetPal_KMod(pal, tile_row & 0xF);
+        tile_row >>= 4;
+        ptr[0] = GetPal_KMod(pal, tile_row & 0xF);
+        tile_row >>= 4;
+        ptr[7] = GetPal_KMod(pal, tile_row & 0xF);
+        tile_row >>= 4;
+        ptr[6] = GetPal_KMod(pal, tile_row & 0xF);
+        tile_row >>= 4;
+        ptr[5] = GetPal_KMod(pal, tile_row & 0xF);
+        tile_row >>= 4;
+        ptr[4] = GetPal_KMod(pal, tile_row & 0xF);
+        ptr += 8;
+    }
 
-	for(j = 0; j < 8; j++)
-	{
-		TileData = VRam[numTile*32 + j*4 + 1]&0xF0;
-		TileData >>=4;
-		SetPixelV(hDC, 0, j, GetPal_KMod(pal, TileData) );
-
-		TileData = VRam[numTile*32 + j*4 + 1]&0x0F;
-		SetPixelV(hDC, 1, j, GetPal_KMod(pal, TileData) );
-
-		TileData = VRam[numTile*32 + j*4 ]&0xF0;
-		TileData >>=4;
-		SetPixelV(hDC, 2, j, GetPal_KMod(pal, TileData) );
-
-		TileData = VRam[numTile*32 + j*4 ]&0x0F;
-		SetPixelV(hDC, 3, j, GetPal_KMod(pal, TileData) );
-
-		TileData = VRam[numTile*32 + j*4 + 3]&0xF0;
-		TileData >>=4;
-		SetPixelV(hDC, 4, j, GetPal_KMod(pal, TileData) );
-
-		TileData = VRam[numTile*32 + j*4 + 3]&0x0F;
-		SetPixelV(hDC, 5, j, GetPal_KMod(pal, TileData) );
-
-		TileData = VRam[numTile*32 + j*4 + 2]&0xF0;
-		TileData >>=4;
-		SetPixelV(hDC, 6, j, GetPal_KMod(pal, TileData) );
-
-		TileData = VRam[numTile*32 + j*4 + 2]&0x0F;
-		SetPixelV(hDC, 7, j, GetPal_KMod(pal, TileData) );
-	}	
-
-	StretchBlt(
-		hDCMain, // handle to destination device context
-		x,  // x-coordinate of destination rectangle's upper-left 
-               // corner
-		y,  // y-coordinate of destination rectangle's upper-left 
-               // corner
-		8*zoom,  // width of destination rectangle
-		8*zoom, // height of destination rectangle
-		hDC,  // handle to source device context
-		0,   // x-coordinate of source rectangle's upper-left 
-			// corner
-		0,   // y-coordinate of source rectangle's upper-left 
-               // corner
-		8,
-		8,
-		SRCCOPY  // raster operation code
-	);
-
-
-	SelectObject(hDC, hOldBitmap);
-    DeleteObject( hBitmap );
-
-	DeleteDC( hDC );
+    StretchDIBits(
+        hDCMain,
+        x, y,
+        8 * zoom, 8 * zoom,
+        0, 0,
+        8, 8,
+        tile_data,
+        &bmi,
+        DIB_RGB_COLORS,
+        SRCCOPY);
 }
 
 void UpdateVDP_KMod( )
@@ -3459,19 +3458,9 @@ void DrawVDP_Tiles_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	si.fMask  = SIF_POS; 
 	GetScrollInfo((HWND) GetDlgItem(hVDP, IDC_VDP_SCROLL), SB_CTL, &si);
 
-	numTile = si.nPos*16; //tileBank_KMod*16;
-	if (Paused)
-	{
-		maxY = 32*8;
-	}
-	else
-	{
-		/* let's speed up emulation by redrawing 1/4 each refresh */
-		maxY = 8*8;
-		numTile += TileCurDraw*16*8;
-	}
-
-	maxX = 16*8;
+	numTile = si.nPos*32; //tileBank_KMod*16;
+	maxY = 32*8;
+	maxX = 32*8;
 
 	for(posY = 0; posY < maxY; posY+=8)
 	{
@@ -3513,7 +3502,7 @@ void DrawVDPZoom_Tiles_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	si.fMask  = SIF_POS; 
 	GetScrollInfo((HWND) GetDlgItem(hVDP, IDC_VDP_SCROLL), SB_CTL, &si);
 
-	DrawTile_KMod( hlDIS->hDC, (si.nPos*16) + tile_KMod, 0, 0, pal_KMod, zoomTile_KMod);
+	DrawTile_KMod( hlDIS->hDC, (si.nPos*32) + tile_KMod, 0, 0, pal_KMod, zoomTile_KMod);
 }
 
 void DumpTiles_KMod( HWND hwnd )
@@ -3744,10 +3733,13 @@ void VDPTile_Choose( )
 
 	pt.y -= rcTiles.top;
 	tile_KMod = (unsigned char) (pt.y/8);
-	tile_KMod *= 16;
+	tile_KMod *= 32;
 
 	pt.x -= rcTiles.left;
 	tile_KMod += (unsigned char) (pt.x/8);
+
+    wsprintf(debug_string, "0x%.4X", tile_KMod);
+    SendDlgItemMessage(hVDP, IDC_VDP_TILE_ZOOM_ADR, WM_SETTEXT, 0, (LPARAM)debug_string);
 
 	if (Paused)	UpdateVDP_KMod( );
 }
@@ -3780,7 +3772,7 @@ void VDPInit_KMod( HWND hwnd )
 	MapWindowPoints( GetDlgItem(hwnd, IDC_VDP_TILES), hwnd, (LPPOINT) &rcTiles, 2 );
 	
 	rcTiles.bottom = rcTiles.top+32*8;
-	rcTiles.right = rcTiles.left+16*8;
+	rcTiles.right = rcTiles.left+32*8;
 	MoveWindow(GetDlgItem(hwnd, IDC_VDP_TILES), rcTiles.left, rcTiles.top, rcTiles.right-rcTiles.left, rcTiles.bottom-rcTiles.top, TRUE);
 
 	MoveWindow(GetDlgItem(hwnd, IDC_VDP_SCROLL), rcTiles.right, rcTiles.top, GetSystemMetrics(SM_CXVSCROLL), rcTiles.bottom-rcTiles.top, TRUE);
@@ -3796,10 +3788,10 @@ void VDPInit_KMod( HWND hwnd )
 	ZeroMemory(&si, sizeof(SCROLLINFO));
 	si.cbSize = sizeof(si); 
 	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS; 
-	si.nMin   = 0; 
-	si.nPage  = 1;
-	si.nPos   = 0; 
-	si.nMax   = 125-32;
+	si.nMin   = 0;
+	si.nPage  = 8;
+	si.nPos   = 0;
+	si.nMax   = 32;
 
 	SetScrollInfo(GetDlgItem(hwnd, IDC_VDP_SCROLL), SB_CTL, &si, TRUE);
 }
@@ -3918,7 +3910,7 @@ BOOL CALLBACK VDPDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			si.fMask  = SIF_POS; 
 			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE); 
 			
-			wsprintf(debug_string, "0x%.4X", si.nPos*16);
+			wsprintf(debug_string, "0x%.4X", si.nPos*32);
 			SendDlgItemMessage(hVDP , IDC_VDP_TILES_ADR, WM_SETTEXT, 0 , (LPARAM)debug_string);
 			
 			UpdateVDP_KMod( );
@@ -6453,9 +6445,15 @@ void VDPRegInit_KMod( HWND hwnd)
 void UpdateVDPReg_KMod( )
 {
 	BYTE		valReg;
-	LVITEM		lvItem;
+    LVITEM		lvItem;
+    static struct Reg_VDP_Type old_regs = { 0, };
 
-	if ( OpenedWindow_KMod[ 9 ] == FALSE )	return;
+    if (OpenedWindow_KMod[9] == FALSE)	return;
+
+    if (!memcmp(&old_regs, &VDP_Reg, sizeof(old_regs)))
+        return;
+
+    memcpy(&old_regs, &VDP_Reg, sizeof(old_regs));
 
 	lvItem.mask = LVIF_TEXT;
 	
@@ -6621,7 +6619,7 @@ void UpdateVDPReg_KMod( )
 	lvItem.pszText = debug_string;
 	ListView_SetItem(hVDPReg_List, &lvItem);
 
-	wsprintf(debug_string, " ");
+    debug_string[0] = 0;
 	if (valReg&0x08)	lstrcat(debug_string, "EIntEnable ");
 
 	if (valReg&0x04)
@@ -6655,7 +6653,7 @@ void UpdateVDPReg_KMod( )
 	lvItem.pszText = debug_string;
 	ListView_SetItem(hVDPReg_List, &lvItem);
 
-	wsprintf(debug_string, " ");
+    debug_string[0] = 0;
 	if (valReg&0x08) lstrcat(debug_string, "Shadow/Highlight ");
 
 	switch (valReg&0x06)
@@ -6726,7 +6724,7 @@ void UpdateVDPReg_KMod( )
 	lvItem.pszText = debug_string;
 	ListView_SetItem(hVDPReg_List, &lvItem);
 
-	wsprintf(debug_string, " ");
+    debug_string[0] = 0;
 	switch (valReg&0x30)
 	{
 		case 0x00:
@@ -6813,7 +6811,7 @@ void UpdateVDPReg_KMod( )
 	lvItem.pszText = debug_string;
 	ListView_SetItem(hVDPReg_List, &lvItem);
 
-	wsprintf(debug_string, "DMA Lenght 0x%0.2X%0.2X", valReg, VDP_Reg.DMA_Lenght_L);
+	wsprintf(debug_string, "DMA Length 0x%0.2X%0.2X", valReg, VDP_Reg.DMA_Lenght_L);
 	lvItem.iSubItem = 2;
 	lvItem.pszText = debug_string;
 	ListView_SetItem(hVDPReg_List, &lvItem);
@@ -6892,6 +6890,7 @@ BOOL CALLBACK VDPRegDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 		default:
             return FALSE;
     }
+
     return TRUE;
 }
 
@@ -6919,18 +6918,28 @@ void UpdateSprites_KMod( )
 	unsigned int i, topIdx, selIdx;
 	unsigned short int *sprData, tmp;
 	unsigned char tmp_string[32];
+    static unsigned short data_copy[80 * 4];
 
-	if ( OpenedWindow_KMod[ 10 ] == FALSE )	return;
+	if ( OpenedWindow_KMod[ 10 ] == FALSE )
+        return;
 
-	SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, WM_SETREDRAW   , (WPARAM) FALSE , (LPARAM) 0);
+    sprData = VRam + (VDP_Reg.Spr_Att_Adr << 9);
+
+    if (!memcmp(sprData, data_copy, sizeof(data_copy)))
+    {
+        return;
+    }
+
+    memcpy(data_copy, sprData, sizeof(data_copy));
+
+    SendDlgItemMessage(hSprites, IDC_SPRITES_LIST, WM_SETREDRAW, (WPARAM)FALSE, (LPARAM)0);
 
 	topIdx = SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_GETTOPINDEX  , (WPARAM) 0 , (LPARAM) 0);
 	selIdx = SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_GETCURSEL , (WPARAM) 0 , (LPARAM) 0);
 
 
-	sprData = VRam + ( VDP_Reg.Spr_Att_Adr << 9 );
-
-	SendDlgItemMessage(hSprites, IDC_SPRITES_LIST, LB_RESETCONTENT, (WPARAM) 0 , (LPARAM) 0);
+	SendDlgItemMessage(hSprites, IDC_SPRITES_LIST, LB_RESETCONTENT, (WPARAM)0 , (LPARAM) 0);
+    SendDlgItemMessage(hSprites, IDC_SPRITES_LIST, LB_INITSTORAGE, (WPARAM)80, 0);
 	for(i = 0; i < 80; i++)
 	{
 		wsprintf(debug_string, "%.2d",i);
@@ -6954,7 +6963,7 @@ void UpdateSprites_KMod( )
 		if ( sprData[2]&0x0800)	tmp +=001;
 		wsprintf(tmp_string,"  %.3d", tmp );
 		lstrcat(debug_string, tmp_string);
-		SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_INSERTSTRING, (WPARAM) i, (LPARAM) debug_string);
+		SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_ADDSTRING, 0, (LPARAM) debug_string);
 
 		sprData += 4;
 	}
