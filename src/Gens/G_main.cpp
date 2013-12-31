@@ -3133,38 +3133,38 @@ HMENU Build_Main_Menu(void)
 
 	if (Rend == 0)
 	{
-		MENU_L(GraphicsRender, 0, MF_BYPOSITION | MF_STRING | MF_CHECKED, ID_GRAPHICS_RENDER_NORMAL, "Normal", "", "&Normal");
+		MENU_L(GraphicsRender, 0, MF_BYPOSITION | MF_STRING | MF_CHECKED, ID_GRAPHICS_RENDER_NORMAL, "Normal", "\tAlt+1", "&Normal");
 	}
 	else
 	{
-		MENU_L(GraphicsRender, 0, MF_BYPOSITION | MF_STRING | MF_UNCHECKED, ID_GRAPHICS_RENDER_NORMAL, "Normal", "", "&Normal");
+		MENU_L(GraphicsRender, 0, MF_BYPOSITION | MF_STRING | MF_UNCHECKED, ID_GRAPHICS_RENDER_NORMAL, "Normal", "\tAlt+1", "&Normal");
 	}
 
 	if (Rend == 1)
 	{
-		MENU_L(GraphicsRender, 1, MF_BYPOSITION | MF_STRING | MF_CHECKED, ID_GRAPHICS_RENDER_DOUBLE, "Double", "", "&Double");
+		MENU_L(GraphicsRender, 1, MF_BYPOSITION | MF_STRING | MF_CHECKED, ID_GRAPHICS_RENDER_DOUBLE, "Double", "\tAlt+2", "&Double");
 	}
 	else
 	{
-		MENU_L(GraphicsRender, 1, MF_BYPOSITION | MF_STRING | MF_UNCHECKED, ID_GRAPHICS_RENDER_DOUBLE, "Double", "", "&Double");
+		MENU_L(GraphicsRender, 1, MF_BYPOSITION | MF_STRING | MF_UNCHECKED, ID_GRAPHICS_RENDER_DOUBLE, "Double", "\tAlt+2", "&Double");
 	}
 
 	if (Rend == 2)
 	{
-		MENU_L(GraphicsRender, 2, MF_BYPOSITION | MF_CHECKED, ID_GRAPHICS_RENDER_DOUBLE_INT, "Interpolated", "", "&Interpolated");
+		MENU_L(GraphicsRender, 2, MF_BYPOSITION | MF_CHECKED, ID_GRAPHICS_RENDER_DOUBLE_INT, "Interpolated", "\tAlt+3", "&Interpolated");
 	}
 	else
 	{
-		MENU_L(GraphicsRender, 2, MF_BYPOSITION | MF_UNCHECKED, ID_GRAPHICS_RENDER_DOUBLE_INT, "Interpolated", "", "&Interpolated");
+		MENU_L(GraphicsRender, 2, MF_BYPOSITION | MF_UNCHECKED, ID_GRAPHICS_RENDER_DOUBLE_INT, "Interpolated", "\tAlt+3", "&Interpolated");
 	}
 
 	if (Rend == 3)
 	{
-		MENU_L(GraphicsRender, 3, MF_BYPOSITION | MF_CHECKED, ID_GRAPHICS_RENDER_FULLSCANLINE, "Scanline", "", "&Scanline");
+		MENU_L(GraphicsRender, 3, MF_BYPOSITION | MF_CHECKED, ID_GRAPHICS_RENDER_FULLSCANLINE, "Scanline", "\tAlt+4", "&Scanline");
 	}
 	else
 	{
-		MENU_L(GraphicsRender, 3, MF_BYPOSITION | MF_UNCHECKED, ID_GRAPHICS_RENDER_FULLSCANLINE, "Scanline", "", "&Scanline");
+		MENU_L(GraphicsRender, 3, MF_BYPOSITION | MF_UNCHECKED, ID_GRAPHICS_RENDER_FULLSCANLINE, "Scanline", "\tAlt+4", "&Scanline");
 	}
 
 	i = 4;
@@ -3173,59 +3173,59 @@ HMENU Build_Main_Menu(void)
 	{
 		if (Rend == 4)
 		{
-			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_STRING | MF_CHECKED, ID_GRAPHICS_RENDER_50SCANLINE, "50% Scanline", "", "&50% Scanline");
+			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_STRING | MF_CHECKED, ID_GRAPHICS_RENDER_50SCANLINE, "50% Scanline", "\tAlt+5", "&50% Scanline");
 		}
 		else
 		{
-			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_STRING | MF_UNCHECKED, ID_GRAPHICS_RENDER_50SCANLINE, "50% Scanline", "", "&50% Scanline");
+			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_STRING | MF_UNCHECKED, ID_GRAPHICS_RENDER_50SCANLINE, "50% Scanline", "\tAlt+5", "&50% Scanline");
 		}
 
 		if (Rend == 5)
 		{
-			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_CHECKED, ID_GRAPHICS_RENDER_25SCANLINE, "25% Scanline", "", "&25% Scanline");
+			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_CHECKED, ID_GRAPHICS_RENDER_25SCANLINE, "25% Scanline", "\tAlt+6", "&25% Scanline");
 		}
 		else
 		{
-			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_UNCHECKED, ID_GRAPHICS_RENDER_25SCANLINE, "25% Scanline", "", "&25% Scanline");
+			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_UNCHECKED, ID_GRAPHICS_RENDER_25SCANLINE, "25% Scanline", "\tAlt+6", "&25% Scanline");
 		}
 	}
 
 	if (Rend == 6)
 	{
-		MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_STRING | MF_CHECKED, ID_GRAPHICS_RENDER_INTESCANLINE, "Interpolated Scanline", "", "&Interpolated Scanline");
+		MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_STRING | MF_CHECKED, ID_GRAPHICS_RENDER_INTESCANLINE, "Interpolated Scanline", "\tAlt+7", "&Interpolated Scanline");
 	}
 	else
 	{
-		MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_STRING | MF_UNCHECKED, ID_GRAPHICS_RENDER_INTESCANLINE, "Interpolated Scanline", "", "&Interpolated Scanline");
+		MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_STRING | MF_UNCHECKED, ID_GRAPHICS_RENDER_INTESCANLINE, "Interpolated Scanline", "\tAlt+7", "&Interpolated Scanline");
 	}
 
 	if (Have_MMX)
 	{
 		if (Rend == 7)
 		{
-			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_STRING | MF_CHECKED, ID_GRAPHICS_RENDER_INT50SCANLIN, "Interpolated 50% Scanline", "", "Interpolated 50% Scanline");
+			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_STRING | MF_CHECKED, ID_GRAPHICS_RENDER_INT50SCANLIN, "Interpolated 50% Scanline", "\tAlt+8", "Interpolated 50% Scanline");
 		}
 		else
 		{
-			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_STRING | MF_UNCHECKED, ID_GRAPHICS_RENDER_INT50SCANLIN, "Interpolated 50% Scanline", "", "Interpolated 50% Scanline");
+			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_STRING | MF_UNCHECKED, ID_GRAPHICS_RENDER_INT50SCANLIN, "Interpolated 50% Scanline", "\tAlt+8", "Interpolated 50% Scanline");
 		}
 
 		if (Rend == 8)
 		{
-			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_CHECKED, ID_GRAPHICS_RENDER_INT25SCANLIN, "Interpolated 25% Scanline", "", "Interpolated 25% Scanline");
+			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_CHECKED, ID_GRAPHICS_RENDER_INT25SCANLIN, "Interpolated 25% Scanline", "\tAlt+9", "Interpolated 25% Scanline");
 		}
 		else
 		{
-			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_UNCHECKED, ID_GRAPHICS_RENDER_INT25SCANLIN, "Interpolated 25% Scanline", "", "Interpolated 25% Scanline");
+			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_UNCHECKED, ID_GRAPHICS_RENDER_INT25SCANLIN, "Interpolated 25% Scanline", "\tAlt+9", "Interpolated 25% Scanline");
 		}
 
 		if (Rend == 9)
 		{
-			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_CHECKED, ID_GRAPHICS_RENDER_2XSAI, "2xSAI (Kreed)", "", "2xSAI (&Kreed)");
+			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_CHECKED, ID_GRAPHICS_RENDER_2XSAI, "2xSAI (Kreed)", "\tAlt+0", "2xSAI (&Kreed)");
 		}
 		else
 		{
-			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_UNCHECKED, ID_GRAPHICS_RENDER_2XSAI, "2xSAI (Kreed)", "", "2xSAI (&Kreed)");
+			MENU_L(GraphicsRender, i++, MF_BYPOSITION | MF_UNCHECKED, ID_GRAPHICS_RENDER_2XSAI, "2xSAI (Kreed)", "\tAlt+0", "2xSAI (&Kreed)");
 		}
 	}
 
