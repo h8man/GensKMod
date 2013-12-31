@@ -41,6 +41,17 @@
 #include "CCnet.h"
 #include "wave.h"
 
+#include "gdb/gdb_server_thread.h"
+#include "gdb/gdb_68k_target.h"
+#include "gdb/gdb_sh2_target.h"
+
+static gdbServerThread * g_gdb_main68k_server;
+static gdbTarget * g_gdb_main68k_target;
+static gdbTarget * g_gdb_sub68k_target;
+static gdbServerThread * g_gdb_master_sh2_server;
+static gdbTarget * g_gdb_master_sh2_target;
+static gdbTarget * g_gdb_slave_sh2_target;
+
 extern "C" void Read_To_68K_Space(int adr);
 
 #define WM_KNUX WM_USER + 3
@@ -1526,6 +1537,17 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 	YM2612_Init(CLOCK_NTSC / 7, Sound_Rate, YM2612_Improv);
 	PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
 	PWM_Init();
+
+    g_gdb_main68k_target = GetMain68KTarget();
+    g_gdb_sub68k_target = GetSub68KTarget();
+    g_gdb_master_sh2_target = GetMasterSH2Target();
+    g_gdb_slave_sh2_target = GetSlaveSH2Target();
+
+    g_gdb_main68k_server = new gdbServerThread(6868, g_gdb_main68k_target);
+    g_gdb_main68k_server->Run();
+
+    g_gdb_master_sh2_server = new gdbServerThread(6870, g_gdb_master_sh2_target);
+    g_gdb_master_sh2_server->Run();
 
 	Load_Config(Str_Tmp, NULL);
 	ShowWindow(HWnd, nCmdShow);

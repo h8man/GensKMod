@@ -136,6 +136,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="gdb\gdb_68k_target.cpp" />
+    <ClCompile Include="gdb\gdb_server.cpp" />
+    <ClCompile Include="gdb\gdb_server_thread.cpp" />
+    <ClCompile Include="gdb\gdb_sh2_target.cpp" />
+    <ClCompile Include="gdb\gdb_socket.cpp" />
+    <ClCompile Include="gdb\gdb_thread.cpp" />
     <ClCompile Include="G_gdi.cpp" />
     <ClCompile Include="G_gfx.cpp" />
     <ClCompile Include="mp3_dec\common.c" />
@@ -328,6 +334,14 @@
     <CustomBuild Include="resource\rcdata1.bin" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="gdb\gdb_68k_target.h" />
+    <ClInclude Include="gdb\gdb_debug.h" />
+    <ClInclude Include="gdb\gdb_server.h" />
+    <ClInclude Include="gdb\gdb_server_thread.h" />
+    <ClInclude Include="gdb\gdb_sh2_target.h" />
+    <ClInclude Include="gdb\gdb_socket.h" />
+    <ClInclude Include="gdb\gdb_target.h" />
+    <ClInclude Include="gdb\gdb_thread.h" />
     <ClInclude Include="G_gdi.h" />
     <ClInclude Include="G_gfx.h" />
     <ClInclude Include="mp3_dec\huffman.h" />

@@ -2,8 +2,8 @@
 #define __GDB_THREAD_H__
 
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN 1
-#define WIN32_EXTRA_LEAN 1
+#undef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif /* WIN32 */
 

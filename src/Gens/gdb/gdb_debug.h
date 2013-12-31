@@ -4,6 +4,7 @@
 #ifdef _DEBUG
 
 #ifdef _WIN32
+#undef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #include <Windows.h>
 #endif /* _WIN32 */
