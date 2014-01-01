@@ -13,7 +13,7 @@ void gdbThread::Wait(void)
 void gdbThread::Terminate(void)
 {
     m_terminated = true;
-    if (WaitForSingleObject(m_thread, 1000) == WAIT_TIMEOUT)
+    if (WaitForSingleObject(m_thread, 250) == WAIT_TIMEOUT)
         TerminateThread(m_thread, 0);
 }
 

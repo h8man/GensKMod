@@ -46,9 +46,11 @@
 #include "gdb/gdb_sh2_target.h"
 
 static gdbServerThread * g_gdb_main68k_server;
+static gdbServerThread * g_gdb_sub68k_server;
 static gdbTarget * g_gdb_main68k_target;
 static gdbTarget * g_gdb_sub68k_target;
 static gdbServerThread * g_gdb_master_sh2_server;
+static gdbServerThread * g_gdb_slave_sh2_server;
 static gdbTarget * g_gdb_master_sh2_target;
 static gdbTarget * g_gdb_slave_sh2_target;
 
@@ -1431,6 +1433,25 @@ void CC_End_Callback(char mess[256])
 }
 #endif
 
+void Init_GDBStubs(void)
+{
+    g_gdb_main68k_target = GetMain68KTarget();
+    g_gdb_sub68k_target = GetSub68KTarget();
+    g_gdb_master_sh2_target = GetMasterSH2Target();
+    g_gdb_slave_sh2_target = GetSlaveSH2Target();
+
+    g_gdb_main68k_server = new gdbServerThread(KConf.gdb_m68kport, g_gdb_main68k_target);
+    g_gdb_main68k_server->Run();
+
+    g_gdb_sub68k_server = new gdbServerThread(KConf.gdb_s68kport, g_gdb_sub68k_target);
+    g_gdb_sub68k_server->Run();
+
+    g_gdb_master_sh2_server = new gdbServerThread(KConf.gdb_msh2port, g_gdb_master_sh2_target);
+    g_gdb_master_sh2_server->Run();
+
+    g_gdb_slave_sh2_server = new gdbServerThread(KConf.gdb_ssh2port, g_gdb_slave_sh2_target);
+    g_gdb_slave_sh2_server->Run();
+}
 
 BOOL Init(HINSTANCE hInst, int nCmdShow)
 {
@@ -1538,17 +1559,6 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 	PSG_Init(CLOCK_NTSC / 15, Sound_Rate);
 	PWM_Init();
 
-    g_gdb_main68k_target = GetMain68KTarget();
-    g_gdb_sub68k_target = GetSub68KTarget();
-    g_gdb_master_sh2_target = GetMasterSH2Target();
-    g_gdb_slave_sh2_target = GetSlaveSH2Target();
-
-    g_gdb_main68k_server = new gdbServerThread(6868, g_gdb_main68k_target);
-    g_gdb_main68k_server->Run();
-
-    g_gdb_master_sh2_server = new gdbServerThread(6870, g_gdb_master_sh2_target);
-    g_gdb_master_sh2_server->Run();
-
 	Load_Config(Str_Tmp, NULL);
 	ShowWindow(HWnd, nCmdShow);
 
@@ -1591,11 +1601,29 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 	Init_KMod( );
 #endif
 
+    Init_GDBStubs();
+
 	Gens_Running = 1;
 
 	return TRUE;
 }
 
+void End_GDBStubs(void)
+{
+    g_gdb_slave_sh2_server->Terminate();
+    g_gdb_master_sh2_server->Terminate();
+    g_gdb_sub68k_server->Terminate();
+    g_gdb_main68k_server->Terminate();
+
+    delete g_gdb_slave_sh2_server;
+    delete g_gdb_master_sh2_server;
+    delete g_gdb_sub68k_server;
+    delete g_gdb_main68k_server;
+    delete g_gdb_main68k_target;
+    delete g_gdb_sub68k_target;
+    delete g_gdb_master_sh2_target;
+    delete g_gdb_slave_sh2_target;
+}
 
 void End_All(void)
 {
@@ -1606,6 +1634,7 @@ void End_All(void)
 	End_Sound();
 	End_CD_Driver();
 	End_Network();
+    End_GDBStubs();
 
 	SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, SS_Actived, NULL, 0);
 }

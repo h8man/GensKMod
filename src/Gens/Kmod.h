@@ -26,7 +26,11 @@ struct ConfigKMod_struct {
 	BOOL	noCDCSTAT;
 	BOOL	bBluePause;
 	BOOL	Special;
-	char	logfile[MAX_PATH];
+    unsigned int gdb_m68kport;
+    unsigned int gdb_s68kport;
+    unsigned int gdb_msh2port;
+    unsigned int gdb_ssh2port;
+    char	logfile[MAX_PATH];
 };
 
 void Init_KMod( );
