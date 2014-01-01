@@ -264,6 +264,43 @@ public:
         }
     }
 
+    unsigned int GetMemoryRegions(unsigned int * base, unsigned int * size, unsigned int * flags)
+    {
+        if (is_main)
+        {
+            // ROM
+            base[0] = 0;
+            size[0] = 4096 * 1024;
+            flags[0] = 1;
+
+            // RAM
+            base[1] = 0xFF0000;
+            size[1] = 0x010000;
+            flags[1] = 0;
+
+            // VRAM: 64KB at 0x1000000
+            base[2] = 0x1000000;
+            size[2] = 0x0010000;
+            flags[2] = 0;
+
+            // CRAM: 256 bytes at 0x1010000
+            base[3] = 0x1010000;
+            size[3] = 0x100;
+            flags[3] = 0;
+
+            // VSRAM: 256 bytes at 0x1010100
+            base[4] = 0x1010100;
+            size[4] = 0x100;
+            flags[4] = 0;
+
+            return 5;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
 protected:
     gdbTargetController * m_controller;
 

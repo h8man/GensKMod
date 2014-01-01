@@ -35,6 +35,7 @@ protected:
     gdbTarget * m_target;
     char * m_send_buffer;
     unsigned int m_pending_signal;
+    char * m_memory_map_xml;
 
     inline bool GotAck(void)
     {

@@ -70,6 +70,36 @@ void gdbServerConnection::Handle(gdbSocket * sock, gdbTarget * target)
     m_socket->SetTimeout(10);
     m_socket->SetBlocking(false);
 
+    m_memory_map_xml = new char[4096];
+    unsigned int mem_bases[64];
+    unsigned int mem_sizes[64];
+    unsigned int mem_flags[64];
+    unsigned int mem_regions;
+    unsigned int i;
+
+    static const char memory_map_xml_header[] =
+        "<?xml version=\"1.0\"?>\n"
+        "<!DOCTYPE memory-map\n"
+        "          PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\"\n"
+        "          \"http://sourceware.org/gdb/gdb-memory-map.dtd\">\n"
+        "<memory-map>\n";
+
+    memcpy(m_memory_map_xml, memory_map_xml_header, sizeof(memory_map_xml_header));
+
+    mem_regions = m_target->GetMemoryRegions(mem_bases, mem_sizes, mem_flags);
+
+    for (i = 0; i < mem_regions; i++)
+    {
+        sprintf(data,
+                "    <memory type=\"%s\" start=\"0x%08X\" length=\"0x%08X\"/>\n",
+                (mem_flags[i] & 1) ? "rom" : "ram",
+                mem_bases[i],
+                mem_sizes[i]);
+        strcat(m_memory_map_xml, data);
+    }
+
+    strcat(m_memory_map_xml, "</memory-map>\n");
+
     // GDB seems to send an ACK as its first character
     m_socket->Receive(data, 1);
 
@@ -110,6 +140,9 @@ void gdbServerConnection::Handle(gdbSocket * sock, gdbTarget * target)
                 SendAck();
                 switch (data[1])
                 {
+                    case '!':
+                        SendPacketUntilAck("OK");
+                        break;
                     case '?':
                         SendPacketUntilAck("S02");
                         break;
@@ -139,14 +172,42 @@ void gdbServerConnection::Handle(gdbSocket * sock, gdbTarget * target)
                             case 'S':
                                 {
                                     static const char qSymbol[] = "$qSymbol";
+                                    static const char qSupported[] = "$qSupported";
                                     if (memcmp(data, qSymbol, sizeof(qSymbol) - 1) == 0)
                                     {
                                         SendPacketUntilAck("OK");
+                                    }
+                                    else if (memcmp(data, qSupported, sizeof(qSupported) - 1) == 0)
+                                    {
+                                        // Pretend not to support this packet because GDB can't
+                                        // handle the wrapping 24-bit address space of the 68K.
+                                        // SendPacketUntilAck("qXfer:memory-map:read+");
+                                        SendPacketUntilAck("");
                                     }
                                     else
                                     {
                                         debug_printf("Query for unknown S feature\n");
                                         SendPacketUntilAck("");
+                                    }
+                                }
+                                break;
+                            case 'X':
+                                {
+                                    static const char qXfer_mem[] = "$qXfer:memory-map:read";
+                                    if (memcmp(data, qXfer_mem, sizeof(qXfer_mem) - 1) == 0)
+                                    {
+                                        // $qXfer:memory-map:read::0,18a#b4
+                                        unsigned int start = 0;
+                                        unsigned int length = 0;
+                                        sscanf(data, "$qXfer:memory-map:read::%x,%x", &start, &length);
+                                        data[0] = (start + length) >= strlen(m_memory_map_xml) ? 'l' : 'm';
+                                        memcpy(&data[1], m_memory_map_xml + start, length);
+                                        data[length + 2] = 0;
+                                        SendPacketUntilAck(data);
+                                    }
+                                    else
+                                    {
+                                        debug_printf("Query for unknown X feature\n");
                                     }
                                 }
                                 break;
@@ -200,6 +261,9 @@ void gdbServerConnection::Handle(gdbSocket * sock, gdbTarget * target)
             data_received = 1;
         }
     } while (connected);
+
+    delete[] m_memory_map_xml;
+    delete[] m_send_buffer;
 
     printf("Socket no longer connected\n");
 

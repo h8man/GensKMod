@@ -17,6 +17,7 @@ public:
     virtual void SetRegisterValue(int index, unsigned int value) { }
     virtual void ReadMemory(unsigned int base, unsigned int count, void * data) { }
     virtual void WriteMemory(unsigned int base, unsigned int count, const void * data) { }
+    virtual unsigned int GetMemoryRegions(unsigned int * base, unsigned int * size, unsigned int * flags) { return 0; }
     virtual void Stop(void) { }
     virtual void Step(void) { }
     virtual void SetPC(unsigned int new_pc) { }
