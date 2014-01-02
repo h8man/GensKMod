@@ -343,6 +343,7 @@
 #define IDD_DEBUGMSG                    163
 #define IDD_DEBUGCD_REG                 164
 #define IDD_DEBUG32X_REG                165
+#define IDD_DEBUGPLANEEXPLORER          166
 #define IDD_GMVTOOLS					170
 
 #define ID_GRAPHICS_AUTOSHOT			40062
@@ -355,6 +356,7 @@
 #define ID_CPU_DEBUG_MSG				40912
 #define ID_CPU_DEBUG_SEGACD_REG			40913
 #define ID_CPU_DEBUG_32X_REG			40914
+#define ID_CPU_DEBUG_PLANEEXPLORER      40915
 #define ID_OPTIONS_DEBUG				40189
 #define ID_EMULATION_FRAME	            40301
 #define ID_GMV_PLAY						40400
@@ -601,6 +603,10 @@
 #define IDC_32XVDP_TILES2       53028
 
 #define IDC_32XREG_LIST			53031
+
+#define IDC_PLANEXPLEORER_MAIN  54001
+#define IDC_PLANEEXPLORER_COMBO 54002
+#define IDC_PLANEEXPLORER_PROPS 54003
 
 /*********/
 

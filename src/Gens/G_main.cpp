@@ -2205,6 +2205,11 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					Change_Debug(hWnd, DMODE_LAYERS);
 					return 0;
 
+                case ID_CPU_DEBUG_PLANEEXPLORER:
+                    MINIMIZE
+                    Change_Debug(hWnd, DMODE_PLANEEXPLORER);
+                    return 0;
+
 				case ID_CPU_DEBUG_SEGACD_REG:
 					MINIMIZE
 					Change_Debug(hWnd, DMODE_CD_REG);
@@ -3373,8 +3378,9 @@ HMENU Build_Main_Menu(void)
 	MENU_L(CPUDebug, 0, Flags, ID_CPU_DEBUG_MSG, "Messages", "", "Messages");
 	MENU_L(CPUDebug, 1, Flags, ID_CPU_DEBUG_WATCHERS, "Watchers", "", "Watchers");
 	MENU_L(CPUDebug, 2, Flags, ID_CPU_DEBUG_LAYERS, "Layers", "", "Layers");
+    MENU_L(CPUDebug, 3, Flags, ID_CPU_DEBUG_PLANEEXPLORER, "Plane Explorer", "", "Plane Explorer");
 	
-	MENU_L(CPUDebug, 3, Flags | MF_POPUP, (UINT)DebugMD, "Genesis", "", "Genesis");
+	MENU_L(CPUDebug, 4, Flags | MF_POPUP, (UINT)DebugMD, "Genesis", "", "Genesis");
 
 	MENU_L(DebugMD, 0, Flags, ID_CPU_DEBUG_GENESIS_68000, "Genesis - 68K", "", "Genesis - 68K");
 	MENU_L(DebugMD, 1, Flags, ID_CPU_DEBUG_GENESIS_Z80, "Z80", "", "Z80");
@@ -3408,7 +3414,7 @@ HMENU Build_Main_Menu(void)
 #ifdef GENS_KMOD
 		Flags = MF_BYPOSITION | MF_STRING;
 
-		MENU_L(CPUDebug, 4, Flags | MF_POPUP, (UINT)DebugMCD, "SegaCD", "", "SegaCD");
+		MENU_L(CPUDebug, 5, Flags | MF_POPUP, (UINT)DebugMCD, "SegaCD", "", "SegaCD");
 
 		MENU_L(DebugMCD, 0, Flags, ID_CPU_DEBUG_SEGACD_68000, "SegaCD - 68K", "", "SegaCD - 68K");
 		MENU_L(DebugMCD, 1, Flags, ID_CPU_DEBUG_SEGACD_REG, "CD Registers", "", "CD Registers");
@@ -3439,11 +3445,11 @@ HMENU Build_Main_Menu(void)
 
 		if (SegaCD_Started)
 		{
-			MENU_L(CPUDebug, 5, Flags | MF_POPUP, (UINT)Debug32X, "32X", "", "32X");
+			MENU_L(CPUDebug, 6, Flags | MF_POPUP, (UINT)Debug32X, "32X", "", "32X");
 		}
 		else
 		{
-			MENU_L(CPUDebug, 4, Flags | MF_POPUP, (UINT)Debug32X, "32X", "", "32X");
+			MENU_L(CPUDebug, 5, Flags | MF_POPUP, (UINT)Debug32X, "32X", "", "32X");
 		}
 
 		MENU_L(Debug32X, 0, Flags, ID_CPU_DEBUG_32X_MAINSH2, "Master SH2", "", "Master SH2");
