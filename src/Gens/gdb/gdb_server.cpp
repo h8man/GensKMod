@@ -46,7 +46,8 @@ static inline void hex_to_bytes(const char * hex, unsigned char * bytes, unsigne
 
 gdbServerConnection::gdbServerConnection()
     : m_socket(0),
-      m_pending_signal(0)
+      m_pending_signal(0),
+      m_pending_close(false)
 {
 
 }
@@ -104,6 +105,17 @@ void gdbServerConnection::Handle(gdbSocket * sock, gdbTarget * target)
     m_socket->Receive(data, 1);
 
     do {
+        // If we have been asked to close the connection
+        if (m_pending_close)
+        {
+            // Send the "I am terminated" packet, close the socket
+            // and acknowlege. Break out of the loop.
+            SendPacketUntilAck("W00");
+            m_socket->Close();
+            m_pending_close = false;
+            break;
+        }
+
         // Clear the data buffer
         memset(data, 0, sizeof(data));
 
@@ -276,6 +288,11 @@ void gdbServerConnection::Signal(unsigned int signum)
     char buffer[8];
     sprintf(buffer, "S%02X", signum & 0xFF);
     SendPacketUntilAck(buffer);
+}
+
+void gdbServerConnection::Disconnect(void)
+{
+    m_pending_close = true;
 }
 
 // Handle a single register read. Format '$pNN#cc', NN = reg number, cc == checksum

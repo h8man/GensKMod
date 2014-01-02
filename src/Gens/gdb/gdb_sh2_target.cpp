@@ -22,7 +22,8 @@ public:
     gdbSH2Target(void)
         : m_controller(0)
     {}
-    ~gdbSH2Target(void);
+    ~gdbSH2Target(void)
+    {}
 
 protected:
     gdbTargetController * m_controller;
@@ -115,10 +116,12 @@ protected:
 
 gdbTarget * GetMasterSH2Target()
 {
-    return new gdbSH2Target<true>;
+    static gdbSH2Target<true> mastersh2_target;
+    return &mastersh2_target;
 }
 
 gdbTarget * GetSlaveSH2Target()
 {
-    return new gdbSH2Target<false>;
+    static gdbSH2Target<false> slavesh2_target;
+    return &slavesh2_target;
 }

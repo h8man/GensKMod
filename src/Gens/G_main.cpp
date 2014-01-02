@@ -1610,6 +1610,11 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 
 void End_GDBStubs(void)
 {
+    g_gdb_main68k_target->Disconnect();
+    g_gdb_sub68k_target->Disconnect();
+    g_gdb_master_sh2_target->Disconnect();
+    g_gdb_slave_sh2_target->Disconnect();
+
     g_gdb_slave_sh2_server->Terminate();
     g_gdb_master_sh2_server->Terminate();
     g_gdb_sub68k_server->Terminate();
@@ -1619,10 +1624,6 @@ void End_GDBStubs(void)
     delete g_gdb_master_sh2_server;
     delete g_gdb_sub68k_server;
     delete g_gdb_main68k_server;
-    delete g_gdb_main68k_target;
-    delete g_gdb_sub68k_target;
-    delete g_gdb_master_sh2_target;
-    delete g_gdb_slave_sh2_target;
 }
 
 void End_All(void)

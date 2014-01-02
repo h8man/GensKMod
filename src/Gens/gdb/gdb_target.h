@@ -6,6 +6,7 @@ class gdbTargetController
 public:
     virtual void Signal(unsigned int signal) = 0;
     virtual void InjectSignal(unsigned int signal) = 0;
+    virtual void Disconnect(void) = 0;
 };
 
 class gdbTarget
@@ -23,6 +24,7 @@ public:
     virtual void SetPC(unsigned int new_pc) { }
     virtual void Continue(void) { }
     virtual void Kill(void) { }
+    virtual void Disconnect(void) { }
 };
 
 #endif /* __GDB_TARGET_H__ */

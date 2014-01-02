@@ -233,7 +233,8 @@ public:
         unsigned int return_code;
 
         is_main ? main68k_tripOdometer() : sub68k_tripOdometer();
-        do {
+        do
+        {
             return_code = (is_main ? main68k_exec(cycles) : sub68k_exec(cycles));
             new_pc = (is_main ? main68k_readPC() : sub68k_readPC());
             cycles++;
@@ -261,6 +262,14 @@ public:
         if (is_main)
         {
 
+        }
+    }
+
+    void Disconnect(void)
+    {
+        if (s_controller != NULL)
+        {
+            s_controller->Disconnect();
         }
     }
 
@@ -311,36 +320,43 @@ protected:
 
     static void reset_handler(void)
     {
+        unsigned int vector = 0;
+        unsigned short opcode = 0;
         Paused = 1;
+
+        s_bkpt_pc = (is_main ? main68k_readPC() : sub68k_readPC()) - 2;
+        s_broke = true;
+
         if (is_main)
         {
-            unsigned short opcode;
-            s_bkpt_pc = main68k_readPC() - 2;
-            s_broke = true;
             main68k_tripOdometer();
             main68k_releaseCycles();
             main68k_releaseTimeslice();
             opcode = main68k_fetch(s_bkpt_pc);
-            unsigned int vector = (opcode & 0xF);
-            switch (vector)
-            {
-                case 4:
-                    s_controller->InjectSignal(vector);
-                    break;
-                case 15:
-                    s_controller->InjectSignal(5);
-                    break;
-                default:
-                    s_controller->InjectSignal(143);
-                    break;
-            }
         }
         else
         {
             sub68k_tripOdometer();
+            // There doesn't seem to be a 'sub68k_releaseCycles' - not sure
+            // why - haven't investigated.
             // sub68k_releaseCycles();
             sub68k_releaseTimeslice();
-            s_controller->InjectSignal(5);
+            opcode = sub68k_fetch(s_bkpt_pc);
+        }
+
+        vector = (opcode & 0xF);
+
+        switch (vector)
+        {
+            case 4:
+                s_controller->InjectSignal(vector);
+                break;
+            case 15:
+                s_controller->InjectSignal(5);
+                break;
+            default:
+                s_controller->InjectSignal(143);
+                break;
         }
     }
 
@@ -379,10 +395,12 @@ gdb68KTarget<is_main>::~gdb68KTarget(void)
 
 gdbTarget * GetMain68KTarget()
 {
-    return new gdb68KTarget<true>;
+    static gdb68KTarget<true> main68k_target;
+    return &main68k_target;
 }
 
 gdbTarget * GetSub68KTarget()
 {
-    return new gdb68KTarget<false>;
+    static gdb68KTarget<false> sub68k_target;
+    return &sub68k_target;
 }

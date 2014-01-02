@@ -24,6 +24,7 @@ public:
     gdbServerConnection();
 
     void Handle(gdbSocket * sock, gdbTarget * target);
+    void Disconnect(void);
 
 public:
     // Functions called by target
@@ -35,6 +36,7 @@ protected:
     gdbTarget * m_target;
     char * m_send_buffer;
     unsigned int m_pending_signal;
+    bool   m_pending_close;
     char * m_memory_map_xml;
 
     inline bool GotAck(void)
