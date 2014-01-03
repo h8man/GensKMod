@@ -123,9 +123,9 @@ void Recalculate_Palettes(void)
 				gf = (g & 0xE) << 2;
 				bf = (b & 0xE) << 2;
 
-				rf = (double) (rf) * ((double) (RMax_Level) / 224.0);
-				gf = (double) (gf) * ((double) (GMax_Level) / 224.0);
-				bf = (double) (bf) * ((double) (BMax_Level) / 224.0);
+				rf = (int)((float) (rf) * ((float) (RMax_Level) / 224.0));
+				gf = (int)((float) (gf) * ((float) (GMax_Level) / 224.0));
+				bf = (int)((float) (bf) * ((float) (BMax_Level) / 224.0));
 
 				// Compute colors here (64 levels)
 
@@ -181,9 +181,9 @@ void Recalculate_Palettes(void)
 		g = ((i >>  5) & 0x1F) << 1;
 		r = ((i >>  0) & 0x1F) << 1;
 
-		r = (double) (r) * ((double) (RMax_Level) / 248.0);
-		g = (double) (g) * ((double) (GMax_Level) / 248.0);
-		b = (double) (b) * ((double) (BMax_Level) / 248.0);
+		r = (int) ((float) (r) * ((float) (RMax_Level) / 248.0f));
+		g = (int) ((float) (g) * ((float) (GMax_Level) / 248.0f));
+		b = (int) ((float) (b) * ((float) (BMax_Level) / 248.0f));
 
 		// Compute colors here (64 levels)
 

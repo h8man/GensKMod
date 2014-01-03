@@ -2412,24 +2412,25 @@ static unsigned short byte_swap(unsigned short w)
 static void PlaneExplorer_DrawTile(unsigned short name_word, unsigned int x, unsigned int y)
 {
     union PATTERN_NAME name;
-    unsigned char * ptr = &plane_explorer_data[y * 8192 + x * 8];
+    int tile_height = ((VDP_Reg.Set4 & 0x6) == 6) ? 16 : 8;
+    unsigned char * ptr = &plane_explorer_data[y * 1024 * tile_height + x * 8];
     unsigned int i, j;
     unsigned int * tile_data;
     int stride = 1024;
 
     name.word = name_word;
-    tile_data = (unsigned int *)(&VRam[name.tile_index * 32]);
+    tile_data = (unsigned int *)(&VRam[(name.tile_index * tile_height * 4) & 0xFFFF]);
     unsigned char pal_index = (unsigned char)name.pal_index << 4;
 
     if (name.v_flip)
     {
-        ptr += 7 * 1024;
+        ptr += (tile_height - 1) * stride;
         stride = -stride;
     }
 
     if (name.h_flip)
     {
-        for (j = 0; j < 8; j++)
+        for (j = 0; j < tile_height; j++)
         {
             unsigned int tile_row = tile_data[j];
             ptr[4] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
@@ -2445,7 +2446,7 @@ static void PlaneExplorer_DrawTile(unsigned short name_word, unsigned int x, uns
     }
     else
     {
-        for (j = 0; j < 8; j++)
+        for (j = 0; j < tile_height; j++)
         {
             unsigned int tile_row = tile_data[j];
             ptr[3] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
@@ -2552,15 +2553,20 @@ static void PlaneExplorerPaint_KMod(HWND hwnd, LPDRAWITEMSTRUCT lpdi)
         static unsigned int old_scr_size = 0xFFF;
         static unsigned int old_a_base = 0;
         static unsigned int old_b_base = 0;
+        static unsigned int old_mode = 0xFFF;
 
         if (old_scr_size != VDP_Reg.Scr_Size ||
             old_a_base != plane_a_base ||
             old_b_base != plane_b_base)
         {
-            wsprintf(buffer, "Width: %d Height %d: Plane A Base: 0x%04X Plane B Base: 0x%04X",
+            old_mode = VDP_Reg.Set4 & 0x6;
+            wsprintf(buffer, "Width: %d Height %d: Plane A Base: 0x%04X Plane B Base: 0x%04X: Mode %s",
                 32 + (VDP_Reg.Scr_Size & 0x3) * 32,
                 32 + ((VDP_Reg.Scr_Size >> 4) & 0x3) * 32,
-                plane_a_base, plane_b_base);
+                plane_a_base, plane_b_base,
+                (old_mode == 2) ? "Interlaced" :
+                (old_mode == 6) ? "Double interlaced" :
+                                  "Normal");
 
             SetDlgItemText(hwnd, IDC_PLANEEXPLORER_PROPS, buffer);
 
