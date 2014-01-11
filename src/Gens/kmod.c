@@ -1305,7 +1305,7 @@ void SpyDMA( )
 			break;
 		
 		case 0x03:
-			wsprintf(debug_string, "VRAM copy of %d bytes from %0.6X to %0.4X", VDP_Reg.DMA_Lenght, VDP_Reg.DMA_Address, Ctrl.Address&0xFFFF);
+			wsprintf(debug_string, "VRAM copy of %d words from %0.6X to %0.4X", VDP_Reg.DMA_Lenght, VDP_Reg.DMA_Address, Ctrl.Address&0xFFFF);
 			if ( (VDP_Reg.DMA_Address/0x020000) != ((VDP_Reg.DMA_Lenght+VDP_Reg.DMA_Address) / 0x020000) )
 				lstrcat(debug_string, "\r\nError : DMA must stay between a same 0x020000 block");
 			break;
@@ -1313,7 +1313,7 @@ void SpyDMA( )
 		case 0x00:
 		case 0x01:
 			// 68k -> VRAM
-			wsprintf(debug_string, "68k -> VRAM of %d bytes from %0.6X to %0.4X", VDP_Reg.DMA_Lenght, VDP_Reg.DMA_Address*2, Ctrl.Address&0xFFFF);		
+            wsprintf(debug_string, "@ (%d,%d) 68k -> VRAM of %d words from %0.6X to %0.4X", Read_VDP_H_Counter(), Read_VDP_V_Counter(), VDP_Reg.DMA_Lenght, VDP_Reg.DMA_Address * 2, Ctrl.Address & 0xFFFF);
 
 
 			switch(Ctrl.Access & 0x03)
@@ -8370,7 +8370,7 @@ static unsigned int GetUIntFromEdit(HWND hwnd, int item)
 {
     char buffer[64];
 
-    GetDlgItemText(hwnd, ICD_DCONFIG_GDBPORTM68K, buffer, sizeof(buffer) - 1);
+    GetDlgItemText(hwnd, item, buffer, sizeof(buffer) - 1);
 
     return atoi(buffer);
 }
