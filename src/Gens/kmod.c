@@ -1313,8 +1313,13 @@ void SpyDMA( )
 		case 0x00:
 		case 0x01:
 			// 68k -> VRAM
-            wsprintf(debug_string, "@ (%d,%d) 68k -> VRAM of %d words from %0.6X to %0.4X", Read_VDP_H_Counter(), Read_VDP_V_Counter(), VDP_Reg.DMA_Lenght, VDP_Reg.DMA_Address * 2, Ctrl.Address & 0xFFFF);
-
+            wsprintf(debug_string, "@ (%d,%d) 68k (@ 0x%04X) -> VRAM of %d words from %0.6X to %0.4X",
+                     Read_VDP_H_Counter(),
+                     Read_VDP_V_Counter(),
+                     main68k_readPC(),
+                     VDP_Reg.DMA_Lenght,
+                     VDP_Reg.DMA_Address * 2,
+                     Ctrl.Address & 0xFFFF);
 
 			switch(Ctrl.Access & 0x03)
 			{
