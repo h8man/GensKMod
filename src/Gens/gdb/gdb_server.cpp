@@ -268,9 +268,14 @@ void gdbServerConnection::Handle(gdbSocket * sock, gdbTarget * target)
         }
         else if (m_pending_signal)
         {
+            debug_printf("Signal %d pending\n", m_pending_signal);
             Signal(m_pending_signal);
             m_pending_signal = 0;
             data_received = 1;
+        }
+        else
+        {
+            Sleep(2);
         }
     } while (connected);
 

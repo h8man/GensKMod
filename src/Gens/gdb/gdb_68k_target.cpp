@@ -12,6 +12,7 @@
 extern "C"
 {
 extern int Paused;
+void __stdcall Sleep(unsigned int);
 };
 
 static inline unsigned int byteswap(unsigned int n)
@@ -55,8 +56,6 @@ public:
     {
         S68000CONTEXT &context = is_main ? main68k_context : sub68k_context;
 
-        check_breakpoint();
-
         if (index < 0)
             return 0;
 
@@ -72,7 +71,7 @@ public:
         if (index == 17)
         {
             unsigned int value = is_main ? main68k_readPC() : sub68k_readPC();
-            return value;
+            return s_broke ? value - 2 : value;
         }
 
         return 0;
@@ -220,17 +219,20 @@ public:
     void Stop(void)
     {
         Paused = 1;
+        {
+            Sleep(10);
+        }
         m_controller->InjectSignal(2);
     }
 
     void Step(void)
     {
-        check_breakpoint();
-
         unsigned int old_pc = (is_main ? main68k_readPC() : sub68k_readPC());
         unsigned int new_pc;
         unsigned int cycles = 1;
         unsigned int return_code;
+
+        check_breakpoint();
 
         is_main ? main68k_tripOdometer() : sub68k_tripOdometer();
         do
@@ -323,24 +325,25 @@ protected:
         unsigned int vector = 0;
         unsigned short opcode = 0;
         Paused = 1;
+        Sleep(10);
 
         s_bkpt_pc = (is_main ? main68k_readPC() : sub68k_readPC()) - 2;
         s_broke = true;
 
         if (is_main)
         {
+            main68k_releaseTimeslice();
             main68k_tripOdometer();
             main68k_releaseCycles();
-            main68k_releaseTimeslice();
             opcode = main68k_fetch(s_bkpt_pc);
         }
         else
         {
+            sub68k_releaseTimeslice();
             sub68k_tripOdometer();
             // There doesn't seem to be a 'sub68k_releaseCycles' - not sure
             // why - haven't investigated.
             // sub68k_releaseCycles();
-            sub68k_releaseTimeslice();
             opcode = sub68k_fetch(s_bkpt_pc);
         }
 
