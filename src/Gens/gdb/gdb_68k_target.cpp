@@ -240,7 +240,7 @@ public:
             return_code = (is_main ? main68k_exec(cycles) : sub68k_exec(cycles));
             new_pc = (is_main ? main68k_readPC() : sub68k_readPC());
             cycles++;
-        } while (old_pc == new_pc && return_code < 0x80000000);
+        } while (old_pc == new_pc && return_code >= 0x80000000);
 
         m_controller->InjectSignal(5);
     }
