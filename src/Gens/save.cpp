@@ -958,6 +958,8 @@ int Save_Config(char *File_Name)
 	WritePrivateProfileString("Graphics", "Stretch", Str_Tmp, Conf_File);
 	wsprintf(Str_Tmp, "%d", Blit_Soft & 1);
 	WritePrivateProfileString("Graphics", "Software Blit", Str_Tmp, Conf_File);
+    wsprintf(Str_Tmp, "%d", Always_On_Top ? 1 : 0);
+    WritePrivateProfileString("Graphics", "Always On Top", Str_Tmp, Conf_File);
 
 	wsprintf(Str_Tmp, "%d", Contrast_Level);
 	WritePrivateProfileString("Graphics", "Contrast", Str_Tmp, Conf_File);
@@ -1372,6 +1374,7 @@ int Load_Config(char *File_Name, void *Game_Active)
 	Full_Screen = GetPrivateProfileInt("Graphics", "Full Screen", 0, Conf_File);
 	Render_W = GetPrivateProfileInt("Graphics", "Render Windowed", 0, Conf_File);
 	Render_FS = GetPrivateProfileInt("Graphics", "Render Fullscreen", 1, Conf_File);
+    Always_On_Top = GetPrivateProfileInt("Graphics", "Always On Top", 0, Conf_File);
 
 	Set_Render(HWnd, Full_Screen, -1, 1);
 

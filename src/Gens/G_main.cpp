@@ -112,6 +112,7 @@ int Active = 0; // Gens window active
 int Paused = 0;
 int Net_Play = 0;
 int Full_Screen = -1;
+int Always_On_Top = 0;
 int Resolution = 1;
 int Fast_Blur = 0;
 int Render_W = 0;
@@ -170,6 +171,24 @@ int Change_VSync(HWND hWnd)
 	else return 1;
 }
 
+int Toggle_AlwaysOnTop(HWND hWnd)
+{
+    Always_On_Top = (Always_On_Top != 0) ? 0 : 1;
+    if (Always_On_Top)
+    {
+        MESSAGE_L("Always on top enabled", "Always on top enabled", 1000);
+        SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    }
+    else
+    {
+        MESSAGE_L("Always on top disabled", "Always on top disabled", 1000);
+        SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    }
+
+    Build_Main_Menu();
+
+    return 1;
+}
 
 int Set_Frame_Skip(HWND hWnd, int Num)
 {
@@ -518,7 +537,6 @@ int Set_Render(HWND hWnd, int Full, int Num, int Force)
 			while (ShowCursor(true) < 1);
 			while (ShowCursor(false) >= 0);
 
-			// SetWindowPos(hWnd, NULL, 0, 0, 320 * ((*Rend == 0)?1:2), 240 * ((*Rend == 0)?1:2), SWP_NOZORDER | SWP_NOACTIVATE);
             SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CXSCREEN), SWP_SHOWWINDOW);
             SetWindowLong(hWnd, GWL_STYLE, WS_VISIBLE);
 		}
@@ -539,7 +557,7 @@ int Set_Render(HWND hWnd, int Full, int Num, int Force)
 			SetWindowLong(hWnd, GWL_STYLE, GetWindowLong(hWnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW);
 			SetRect(&r, 0, 0, 320 * ((*Rend == 0)?1:2), 240 * ((*Rend == 0)?1:2));
 			AdjustWindowRectEx(&r, GetWindowLong(hWnd, GWL_STYLE), 1, GetWindowLong(hWnd, GWL_EXSTYLE));
-			SetWindowPos(hWnd, NULL, Window_Pos.x, Window_Pos.y, r.right - r.left, r.bottom - r.top, SWP_NOZORDER | SWP_NOACTIVATE);
+			SetWindowPos(hWnd, Always_On_Top ? HWND_TOPMOST : HWND_NOTOPMOST, Window_Pos.x, Window_Pos.y, r.right - r.left, r.bottom - r.top, SWP_NOZORDER | SWP_NOACTIVATE);
 		}
 	
 		Build_Main_Menu();
@@ -1560,7 +1578,12 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 	PWM_Init();
 
 	Load_Config(Str_Tmp, NULL);
-	ShowWindow(HWnd, nCmdShow);
+    ShowWindow(HWnd, nCmdShow);
+
+    if (Always_On_Top)
+    {
+        SetWindowPos(HWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    }
 
 	if (!Init_Input(hInst, HWnd))
 	{
@@ -2007,6 +2030,10 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					Set_Current_State(hWnd, LOWORD(wParam) - ID_FILES_CHANGESTATE_0);
 					return 0;
 				
+                case ID_GRAPHICS_ALWAYS_ON_TOP:
+                    Toggle_AlwaysOnTop(hWnd);
+                    return 0;
+
 				case ID_GRAPHICS_VSYNC:
 					Change_VSync(hWnd);
 					return 0;
@@ -3130,6 +3157,8 @@ HMENU Build_Main_Menu(void)
 	{
 		MENU_L(Graphics, i++, Flags, ID_GRAPHICS_SWITCH_MODE, "Full Screen", "\tAlt+Enter", "&Full Screen");
 	}
+
+    MENU_L(Graphics, i++, Flags | (Always_On_Top ? MF_CHECKED : 0) , ID_GRAPHICS_ALWAYS_ON_TOP, "Always on Top", "\tCtrl+A", "Always on &Top");
 
 	if ((Full_Screen && FS_VSync) || (!Full_Screen && W_VSync))
 	{
