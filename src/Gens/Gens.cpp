@@ -123,9 +123,9 @@ void Recalculate_Palettes(void)
 				gf = (g & 0xE) << 2;
 				bf = (b & 0xE) << 2;
 
-				rf = (double) (rf) * ((double) (RMax_Level) / 224.0);
-				gf = (double) (gf) * ((double) (GMax_Level) / 224.0);
-				bf = (double) (bf) * ((double) (BMax_Level) / 224.0);
+				rf = (int)((float) (rf) * ((float) (RMax_Level) / 224.0));
+				gf = (int)((float) (gf) * ((float) (GMax_Level) / 224.0));
+				bf = (int)((float) (bf) * ((float) (BMax_Level) / 224.0));
 
 				// Compute colors here (64 levels)
 
@@ -181,9 +181,9 @@ void Recalculate_Palettes(void)
 		g = ((i >>  5) & 0x1F) << 1;
 		r = ((i >>  0) & 0x1F) << 1;
 
-		r = (double) (r) * ((double) (RMax_Level) / 248.0);
-		g = (double) (g) * ((double) (GMax_Level) / 248.0);
-		b = (double) (b) * ((double) (BMax_Level) / 248.0);
+		r = (int) ((float) (r) * ((float) (RMax_Level) / 248.0f));
+		g = (int) ((float) (g) * ((float) (GMax_Level) / 248.0f));
+		b = (int) ((float) (b) * ((float) (BMax_Level) / 248.0f));
 
 		// Compute colors here (64 levels)
 
@@ -719,8 +719,11 @@ int Do_Genesis_Frame_No_VDP(void)
 
 		VDP_Status |= 0x0004;					// HBlank = 1
 //		main68k_exec(Cycles_M68K - 436);
-		main68k_exec(Cycles_M68K - 404);
-		VDP_Status &= 0xFFFB;					// HBlank = 0
+        if (!Paused)
+        {
+		    main68k_exec(Cycles_M68K - 404);
+        }
+        VDP_Status &= 0xFFFB;					// HBlank = 0
 
 		if (--HInt_Counter < 0)
 		{
@@ -729,8 +732,11 @@ int Do_Genesis_Frame_No_VDP(void)
 			Update_IRQ_Line();
 		}
 
-		main68k_exec(Cycles_M68K);
-		if (Z80_State == 3) z80_Exec(&M_Z80, Cycles_Z80);
+        if (!Paused)
+        {
+		    main68k_exec(Cycles_M68K);
+        }
+        if (Z80_State == 3) z80_Exec(&M_Z80, Cycles_Z80);
 		else z80_Set_Odo(&M_Z80, Cycles_Z80);
 	}
 	
@@ -752,8 +758,11 @@ int Do_Genesis_Frame_No_VDP(void)
 	}
 
 	VDP_Status |= 0x000C;			// VBlank = 1 et HBlank = 1 (retour de balayage vertical en cours)
-	main68k_exec(Cycles_M68K - 360);
-	if (Z80_State == 3) z80_Exec(&M_Z80, Cycles_Z80 - 168);
+    if (!Paused)
+    {
+	    main68k_exec(Cycles_M68K - 360);
+    }
+    if (Z80_State == 3) z80_Exec(&M_Z80, Cycles_Z80 - 168);
 	else z80_Set_Odo(&M_Z80, Cycles_Z80 - 168);
 
 	VDP_Status &= 0xFFFB;			// HBlank = 0
@@ -762,8 +771,11 @@ int Do_Genesis_Frame_No_VDP(void)
 	Update_IRQ_Line();
 	z80_Interrupt(&M_Z80, 0xFF);
 
-	main68k_exec(Cycles_M68K);
-	if (Z80_State == 3) z80_Exec(&M_Z80, Cycles_Z80);
+    if (!Paused)
+    {
+	    main68k_exec(Cycles_M68K);
+    }
+    if (Z80_State == 3) z80_Exec(&M_Z80, Cycles_Z80);
 	else z80_Set_Odo(&M_Z80, Cycles_Z80);
 
 	for(VDP_Current_Line++; VDP_Current_Line < VDP_Num_Lines; VDP_Current_Line++)
@@ -781,10 +793,16 @@ int Do_Genesis_Frame_No_VDP(void)
 
 		VDP_Status |= 0x0004;					// HBlank = 1
 //		main68k_exec(Cycles_M68K - 436);
-		main68k_exec(Cycles_M68K - 404);
+        if (!Paused)
+        {
+            main68k_exec(Cycles_M68K - 404);
+        }
 		VDP_Status &= 0xFFFB;					// HBlank = 0
 
-		main68k_exec(Cycles_M68K);
+        if (!Paused)
+        {
+            main68k_exec(Cycles_M68K);
+        }
 		if (Z80_State == 3) z80_Exec(&M_Z80, Cycles_Z80);
 		else z80_Set_Odo(&M_Z80, Cycles_Z80);
 	}
@@ -845,7 +863,10 @@ int Do_Genesis_Frame()
 		if (DMAT_Lenght) main68k_addCycles(Update_DMA());
 
 		VDP_Status |= 0x0004;			// HBlank = 1
-		main68k_exec(Cycles_M68K - 404);
+        if (!Paused)
+        {
+            main68k_exec(Cycles_M68K - 404);
+        }
 		VDP_Status &= 0xFFFB;			// HBlank = 0
 
 		if (--HInt_Counter < 0)
@@ -857,7 +878,10 @@ int Do_Genesis_Frame()
 
 		Render_Line();
 
-		main68k_exec(Cycles_M68K);
+        if (!Paused)
+        {
+            main68k_exec(Cycles_M68K);
+        }
 		if (Z80_State == 3) z80_Exec(&M_Z80, Cycles_Z80);
 		else z80_Set_Odo(&M_Z80, Cycles_Z80);
 	}
@@ -880,7 +904,10 @@ int Do_Genesis_Frame()
 	}
 
 	VDP_Status |= 0x000C;			// VBlank = 1 et HBlank = 1 (retour de balayage vertical en cours)
-	main68k_exec(Cycles_M68K - 360);
+    if (!Paused)
+    {
+        main68k_exec(Cycles_M68K - 360);
+    }
 	if (Z80_State == 3) z80_Exec(&M_Z80, Cycles_Z80 - 168);
 	else z80_Set_Odo(&M_Z80, Cycles_Z80 - 168);
 
@@ -891,7 +918,10 @@ int Do_Genesis_Frame()
 	Update_IRQ_Line();
 	z80_Interrupt(&M_Z80, 0xFF);
 
-	main68k_exec(Cycles_M68K);
+    if (!Paused)
+    {
+        main68k_exec(Cycles_M68K);
+    }
 	if (Z80_State == 3) z80_Exec(&M_Z80, Cycles_Z80);
 	else z80_Set_Odo(&M_Z80, Cycles_Z80);
 
@@ -910,10 +940,16 @@ int Do_Genesis_Frame()
 
 		VDP_Status |= 0x0004;					// HBlank = 1
 //		main68k_exec(Cycles_M68K - 436);
-		main68k_exec(Cycles_M68K - 404);
-		VDP_Status &= 0xFFFB;					// HBlank = 0
+        if (!Paused)
+        {
+		    main68k_exec(Cycles_M68K - 404);
+        }
+        VDP_Status &= 0xFFFB;					// HBlank = 0
 
-		main68k_exec(Cycles_M68K);
+        if (!Paused)
+        {
+            main68k_exec(Cycles_M68K);
+        }
 		if (Z80_State == 3) z80_Exec(&M_Z80, Cycles_Z80);
 		else z80_Set_Odo(&M_Z80, Cycles_Z80);
 	}
@@ -1263,7 +1299,10 @@ int Do_32X_Frame_No_VDP()
 		VDP_Status |= 0x0004;			// HBlank = 1
 		_32X_VDP.State |= 0x6000;
 
-		main68k_exec(i - p_i);
+        if (!Paused)
+        {
+            main68k_exec(i - p_i);
+        }
 		SH2_Exec(&M_SH2, j - p_j);
 		SH2_Exec(&S_SH2, k - p_k);
 		PWM_Update_Timer(l - p_l);

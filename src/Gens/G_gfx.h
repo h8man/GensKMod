@@ -27,6 +27,7 @@ extern int Use_GDI;
 extern int Render_FS;
 extern int Render_W;
 extern int Full_Screen;
+extern int Always_On_Top;
 extern int Show_Message;
 extern int Show_FPS;
 extern int Fast_Blur;

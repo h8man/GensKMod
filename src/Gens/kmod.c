@@ -290,8 +290,6 @@ close the sound buffer is to wrapping around on itself, and toggle the playback 
 
 #define TIMER_CYCLES		66480	/* cycles used by timer call */
 
-#define WIN_NUMBER	18
-
 struct oper {
 	unsigned char op_data[8];
 	long op_padding[2];
@@ -551,6 +549,7 @@ HWND hCD_68K, hCD_CDC, hCD_GFX, hCD_Reg;
 HWND hMSH2, hSSH2, h32X_VDP, h32X_Reg;
 HWND hWatchers;
 HWND hLayers;
+HWND hPlaneExplorer;
 HWND hDMsg;
 
 struct ConfigKMod_struct KConf;
@@ -1306,7 +1305,7 @@ void SpyDMA( )
 			break;
 		
 		case 0x03:
-			wsprintf(debug_string, "VRAM copy of %d bytes from %0.6X to %0.4X", VDP_Reg.DMA_Lenght, VDP_Reg.DMA_Address, Ctrl.Address&0xFFFF);
+			wsprintf(debug_string, "VRAM copy of %d words from %0.6X to %0.4X", VDP_Reg.DMA_Lenght, VDP_Reg.DMA_Address, Ctrl.Address&0xFFFF);
 			if ( (VDP_Reg.DMA_Address/0x020000) != ((VDP_Reg.DMA_Lenght+VDP_Reg.DMA_Address) / 0x020000) )
 				lstrcat(debug_string, "\r\nError : DMA must stay between a same 0x020000 block");
 			break;
@@ -1314,7 +1313,7 @@ void SpyDMA( )
 		case 0x00:
 		case 0x01:
 			// 68k -> VRAM
-			wsprintf(debug_string, "68k -> VRAM of %d bytes from %0.6X to %0.4X", VDP_Reg.DMA_Lenght, VDP_Reg.DMA_Address*2, Ctrl.Address&0xFFFF);		
+            wsprintf(debug_string, "@ (%d,%d) 68k -> VRAM of %d words from %0.6X to %0.4X", Read_VDP_H_Counter(), Read_VDP_V_Counter(), VDP_Reg.DMA_Lenght, VDP_Reg.DMA_Address * 2, Ctrl.Address & 0xFFFF);
 
 
 			switch(Ctrl.Access & 0x03)
@@ -2334,6 +2333,302 @@ BOOL CALLBACK LayersDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
     return TRUE;
 }
 
+/*********** PLANE EXPLORER ******/
+
+static unsigned char plane_explorer_data[128 * 8 * 128 * 8];
+static COLORREF plane_explorer_palette[256];
+static int old_plane_width = 0;
+static int old_plane_height = 0;
+
+static void PlaneExplorerInit_KMod(HWND hDlg)
+{
+    SendDlgItemMessage(hDlg, IDC_PLANEEXPLORER_COMBO, CB_INSERTSTRING, (WPARAM)-1, (LONG)(LPTSTR) "Plane A");
+    SendDlgItemMessage(hDlg, IDC_PLANEEXPLORER_COMBO, CB_INSERTSTRING, (WPARAM)-1, (LONG)(LPTSTR) "Plane B");
+    SendDlgItemMessage(hDlg, IDC_PLANEEXPLORER_COMBO, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+
+    HWND hexplorer = GetDlgItem(hDlg, IDC_PLANEXPLEORER_MAIN);
+    RECT rc;
+    GetClientRect(hDlg, &rc);
+    MoveWindow(hexplorer, 10, 46, (rc.right - rc.left) - 20, (rc.bottom - rc.top) - 60, TRUE);
+}
+
+static void PlaneExplorer_UpdatePalette(void)
+{
+    COLORREF * cr = &plane_explorer_palette[0];
+    COLORREF col;
+    unsigned short * pal = (unsigned short *)(&CRam[0]);
+    int i;
+    static const COLORREF normal_pal[] =
+    {
+        0x00000000,
+        0x00000011,
+        0x00000022,
+        0x00000033,
+        0x00000044,
+        0x00000055,
+        0x00000066,
+        0x00000077,
+        0x00000088,
+        0x00000099,
+        0x000000AA,
+        0x000000BB,
+        0x000000CC,
+        0x000000DD,
+        0x000000EE,
+        0x000000FF
+    };
+
+    for (i = 0; i < 64; i++)
+    {
+        unsigned short p = *pal++;
+        col  = normal_pal[(p >> 8) & 0xF] << 0;
+        col |= normal_pal[(p >> 4) & 0xF] << 8;
+        col |= normal_pal[(p >> 0) & 0xF] << 16;
+        *cr++ = col;
+    }
+
+    plane_explorer_palette[254] = 0x00444444;
+    plane_explorer_palette[255] = 0x00555555;
+}
+
+union PATTERN_NAME
+{
+    struct
+    {
+        unsigned short tile_index : 11;
+        unsigned short h_flip : 1;
+        unsigned short v_flip : 1;
+        unsigned short pal_index : 2;
+        unsigned short priority : 1;
+    };
+    unsigned short word;
+};
+
+static unsigned short byte_swap(unsigned short w)
+{
+    return (w >> 8) | (w << 8);
+}
+
+static void PlaneExplorer_DrawTile(unsigned short name_word, unsigned int x, unsigned int y)
+{
+    union PATTERN_NAME name;
+    int tile_height = ((VDP_Reg.Set4 & 0x6) == 6) ? 16 : 8;
+    unsigned char * ptr = &plane_explorer_data[y * 1024 * tile_height + x * 8];
+    unsigned int i, j;
+    unsigned int * tile_data;
+    int stride = 1024;
+
+    name.word = name_word;
+    tile_data = (unsigned int *)(&VRam[(name.tile_index * tile_height * 4) & 0xFFFF]);
+    unsigned char pal_index = (unsigned char)name.pal_index << 4;
+
+    if (name.v_flip)
+    {
+        ptr += (tile_height - 1) * stride;
+        stride = -stride;
+    }
+
+    if (name.h_flip)
+    {
+        for (j = 0; j < tile_height; j++)
+        {
+            unsigned int tile_row = tile_data[j];
+            ptr[4] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
+            ptr[5] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
+            ptr[6] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
+            ptr[7] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
+            ptr[0] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
+            ptr[1] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
+            ptr[2] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
+            ptr[3] = (tile_row & 0xF) | pal_index;
+            ptr += stride;
+        }
+    }
+    else
+    {
+        for (j = 0; j < tile_height; j++)
+        {
+            unsigned int tile_row = tile_data[j];
+            ptr[3] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
+            ptr[2] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
+            ptr[1] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
+            ptr[0] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
+            ptr[7] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
+            ptr[6] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
+            ptr[5] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
+            ptr[4] = (tile_row & 0xF) | pal_index;
+            ptr += stride;
+        }
+    }
+}
+
+static void PlaneExplorer_UpdateBitmap(int plane)
+{
+    unsigned int i, j;
+
+    unsigned int plane_width = 32 + (VDP_Reg.Scr_Size & 0x3) * 32;
+    unsigned int plane_height = 32 + ((VDP_Reg.Scr_Size >> 4) & 0x3) * 32;
+    unsigned int plane_a_base = (VDP_Reg.Pat_ScrA_Adr & 0x38) << 10;
+    unsigned int plane_b_base = (VDP_Reg.Pat_ScrB_Adr & 0x7) << 13;
+    unsigned short * plane_a = (unsigned short *)(&VRam[plane_a_base]);
+    unsigned short * plane_b = (unsigned short *)(&VRam[plane_b_base]);
+    unsigned short * plane_data = (plane == 0) ? plane_a : plane_b;
+
+    if (plane_width != old_plane_width ||
+        plane_height != old_plane_height)
+    {
+        old_plane_width = plane_width;
+        old_plane_height = plane_height;
+        for (i = 0; i < 1024; i++)
+        {
+            for (j = 0; j < 1024; j++)
+            {
+                plane_explorer_data[i * 1024 + j] = (unsigned char)(((j ^ i) >> 4) & 1) + 254;
+            }
+        }
+    }
+
+    for (j = 0; j < plane_height; j++)
+    {
+        for (i = 0; i < plane_width; i++)
+        {
+            PlaneExplorer_DrawTile(plane_data[j * plane_width + i], i, j);
+        }
+    }
+}
+
+static void PlaneExplorerPaint_KMod(HWND hwnd, LPDRAWITEMSTRUCT lpdi)
+{
+    struct BMI_LOCAL
+    {
+        BITMAPINFOHEADER hdr;
+        COLORREF         palette[256];
+    };
+
+    struct BMI_LOCAL bmi =
+    {
+        {
+            sizeof(BITMAPINFOHEADER),
+            128 * 8,
+            -128 * 8,
+            1,
+            8,
+            BI_RGB,
+            0,
+            250,
+            250,
+            256,
+            256,
+        },
+        {
+            0x00FF0055,
+        }
+    };
+
+    unsigned int plane_a_base = (VDP_Reg.Pat_ScrA_Adr & 0x38) << 10;
+    unsigned int plane_b_base = (VDP_Reg.Pat_ScrB_Adr & 0x7) << 13;
+
+    char buffer[1024];
+
+    PlaneExplorer_UpdatePalette();
+
+    int plane = (int)SendDlgItemMessage(hwnd, IDC_PLANEEXPLORER_COMBO, CB_GETCURSEL, 0, 0);
+
+    PlaneExplorer_UpdateBitmap(plane);
+
+    memcpy(bmi.palette, plane_explorer_palette, sizeof(bmi.palette));
+
+    SetDIBitsToDevice(
+        lpdi->hDC,
+        lpdi->rcItem.left, lpdi->rcItem.top,
+        lpdi->rcItem.right - lpdi->rcItem.left,
+        lpdi->rcItem.bottom - lpdi->rcItem.top,
+        lpdi->rcItem.left, lpdi->rcItem.top,
+        lpdi->rcItem.top, lpdi->rcItem.bottom - lpdi->rcItem.top,
+        plane_explorer_data,
+        (const BITMAPINFO *)&bmi,
+        DIB_RGB_COLORS);
+
+    {
+        static unsigned int old_scr_size = 0xFFF;
+        static unsigned int old_a_base = 0;
+        static unsigned int old_b_base = 0;
+        static unsigned int old_mode = 0xFFF;
+
+        if (old_scr_size != VDP_Reg.Scr_Size ||
+            old_a_base != plane_a_base ||
+            old_b_base != plane_b_base)
+        {
+            old_mode = VDP_Reg.Set4 & 0x6;
+            wsprintf(buffer, "Width: %d Height %d: Plane A Base: 0x%04X Plane B Base: 0x%04X: Mode %s",
+                32 + (VDP_Reg.Scr_Size & 0x3) * 32,
+                32 + ((VDP_Reg.Scr_Size >> 4) & 0x3) * 32,
+                plane_a_base, plane_b_base,
+                (old_mode == 2) ? "Interlaced" :
+                (old_mode == 6) ? "Double interlaced" :
+                                  "Normal");
+
+            SetDlgItemText(hwnd, IDC_PLANEEXPLORER_PROPS, buffer);
+
+            old_scr_size = VDP_Reg.Scr_Size;
+            old_a_base = plane_a_base;
+            old_b_base = plane_b_base;
+        }
+    }
+}
+
+BOOL CALLBACK PlaneExplorerDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+    switch (Message)
+    {
+    case WM_INITDIALOG:
+        PlaneExplorerInit_KMod(hwnd);
+        break;
+
+    case WM_DRAWITEM:
+        PlaneExplorerPaint_KMod(hwnd, (LPDRAWITEMSTRUCT)lParam);
+        break;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+            case IDC_PLANEEXPLORER_COMBO:
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            default:
+                break;
+        }
+        break;
+
+    case WM_SIZE:
+        {
+            HWND hexplorer = GetDlgItem(hwnd, IDC_PLANEXPLEORER_MAIN);
+            MoveWindow(hexplorer, 20, 60, LOWORD(lParam) - 40, HIWORD(lParam) - 80, TRUE);
+            break;
+        }
+
+    case WM_CLOSE:
+        CloseWindow_KMod(DMODE_PLANEEXPLORER);
+        break;
+
+    case WM_DESTROY:
+        DestroyWindow(hPlaneExplorer);
+        PostQuitMessage(0);
+        break;
+
+    default:
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static void PlaneExplorerUpdate_KMod(void)
+{
+    if (OpenedWindow_KMod[18] == FALSE)	return;
+
+    RedrawWindow(GetDlgItem(hPlaneExplorer, IDC_PLANEXPLEORER_MAIN), NULL, NULL, RDW_INVALIDATE);
+}
 
 /*********** GMV **************/
 HANDLE	hGMVFile;
@@ -3393,7 +3688,7 @@ static void DrawTile_KMod(HDC hDCMain, unsigned short int numTile, WORD x, WORD 
         0, 0,
         8, 8,
         tile_data,
-        &bmi,
+        (const BITMAPINFO *)&bmi,
         DIB_RGB_COLORS,
         SRCCOPY);
 }
@@ -3752,8 +4047,8 @@ void VDPInit_KMod( HWND hwnd )
 
 	GetClientRect( GetDlgItem(hwnd, IDC_VDP_PREVIEW), &TZoomRect);
 
-	zoomTile_KMod = (TZoomRect.right - TZoomRect.left) / 8;
-	zoomTile_KMod = min(zoomTile_KMod, (TZoomRect.bottom - TZoomRect.top) / 8);
+	zoomTile_KMod = (UCHAR)((TZoomRect.right - TZoomRect.left) / 8);
+	zoomTile_KMod = (UCHAR)min(zoomTile_KMod, (TZoomRect.bottom - TZoomRect.top) / 8);
 
 	pal_KMod = 0;
 //	tileBank_KMod = 0;
@@ -5889,7 +6184,7 @@ void Draw32XPal_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	HBRUSH newBrush = NULL;
 	HPEN hPen, hPenOld;
 	RECT rc;
-	WORD pix, h;
+	LONG pix, h;
 	COLORREF col;
 
 	palV = (hlDIS->rcItem.bottom - hlDIS->rcItem.top)/64;
@@ -5977,7 +6272,7 @@ void Draw32XVDP_KMod( LPDRAWITEMSTRUCT hlDIS  )
 		toDraw = 1;
 	}
 	
-	lineTable = _32X_VDP_Ram + (toDraw*0x20000);
+	lineTable = (WORD *)(_32X_VDP_Ram + ((unsigned int)toDraw * 0x20000));
 
 	maxX = 320;
 	maxY = 240;
@@ -6056,7 +6351,7 @@ void Draw32XVDPRaw_KMod( LPDRAWITEMSTRUCT hlDIS  )
 		toDraw = 1;
 	}
 	
-	VRAM = _32X_VDP_Ram + (toDraw*0x20000) + 256*2; //skip 256 words of line table
+	VRAM = (WORD *)(_32X_VDP_Ram + ((unsigned int)toDraw * 0x20000) + 256 * 2); //skip 256 words of line table
 
 	
 	maxX = 320;
@@ -6923,7 +7218,7 @@ void UpdateSprites_KMod( )
 	if ( OpenedWindow_KMod[ 10 ] == FALSE )
         return;
 
-    sprData = VRam + (VDP_Reg.Spr_Att_Adr << 9);
+    sprData = (unsigned short *)(VRam + (VDP_Reg.Spr_Att_Adr << 9));
 
     if (!memcmp(sprData, data_copy, sizeof(data_copy)))
     {
@@ -6994,7 +7289,7 @@ void DrawSprite_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	if (selIdx == LB_ERR)
 		return;
 
-	sprData = VRam + ( VDP_Reg.Spr_Att_Adr << 9 );
+	sprData = (unsigned short *)(VRam + ( VDP_Reg.Spr_Att_Adr << 9 ));
 	sprData += selIdx*4; /* each sprite is 4 short int data */
 
 	numTile = sprData[2]&0x07FF;
@@ -7053,15 +7348,15 @@ void DrawSpriteZoom_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	if (selIdx == LB_ERR)
 		return;
 
-	sprData = VRam + ( VDP_Reg.Spr_Att_Adr << 9 );
+	sprData = (unsigned short *)(VRam + ( VDP_Reg.Spr_Att_Adr << 9 ));
 	sprData += selIdx*4; /* each sprite is 4 short int data */
 
 	numTile = sprData[2]&0x07FF;
 	sizeH = TrueSize_KMod( ((sprData[1]&0x0C00)>>10) );
 	sizeV = TrueSize_KMod( ((sprData[1]&0x0300)>>8 ) );
 
-	zoom = (hlDIS->rcItem.right - hlDIS->rcItem.left) / 32;
-	zoom = min(zoom, (hlDIS->rcItem.bottom - hlDIS->rcItem.top) / 32);
+	zoom = (unsigned char)((hlDIS->rcItem.right - hlDIS->rcItem.left) / 32);
+	zoom = (unsigned char)min(zoom, (hlDIS->rcItem.bottom - hlDIS->rcItem.top) / 32);
 
 	hDC = CreateCompatibleDC( hlDIS->hDC );
 	hBitmap = CreateCompatibleBitmap( hlDIS->hDC,  32*zoom, 32*zoom);
@@ -7119,7 +7414,7 @@ void DumpSprite_KMod( HWND hwnd )
 	unsigned char		TileData, sizeH, sizeV, posX, posY, j, pal, tmp;
 	unsigned short int	*sprData;
 
-	selIdx = SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_GETCURSEL , (WPARAM) 0 , (LPARAM) 0);
+	selIdx = (unsigned short)SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_GETCURSEL , (WPARAM) 0 , (LPARAM) 0);
 	if (selIdx == LB_ERR)
 		return;
 
@@ -7144,7 +7439,7 @@ void DumpSprite_KMod( HWND hwnd )
     if (GetSaveFileName(&szFile)!=TRUE)   return;
 
 
-	sprData = VRam + ( VDP_Reg.Spr_Att_Adr << 9 );
+	sprData = (unsigned short *)(VRam + ( VDP_Reg.Spr_Att_Adr << 9 ));
 	sprData += selIdx*4; /* each sprite is 4 short int data */
 
 	numTile = sprData[2]&0x07FF;
@@ -8075,7 +8370,7 @@ static unsigned int GetUIntFromEdit(HWND hwnd, int item)
 {
     char buffer[64];
 
-    GetDlgItemText(hwnd, ICD_DCONFIG_GDBPORTM68K, buffer, sizeof(buffer) - 1);
+    GetDlgItemText(hwnd, item, buffer, sizeof(buffer) - 1);
 
     return atoi(buffer);
 }
@@ -8091,8 +8386,6 @@ static void SetUIntToEdit(HWND hwnd, int item, unsigned int value)
 
 BOOL CALLBACK ConfigKDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-    char buffer[1024];
-
 	switch(Message)
     {
 		case WM_INITDIALOG:
@@ -8216,6 +8509,7 @@ void Init_KMod( )
 	hDMsg = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGMSG), HWnd, MsgDlgProc);
 	hCD_Reg = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGCD_REG), HWnd, CD_RegDlgProc);
 	h32X_Reg = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUG32X_REG), HWnd, _32X_RegDlgProc);
+    hPlaneExplorer = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGPLANEEXPLORER), HWnd, PlaneExplorerDialogProc);
 
 	HandleWindow_KMod[0] = hM68K;
 	HandleWindow_KMod[1] = hZ80;
@@ -8235,6 +8529,7 @@ void Init_KMod( )
 	HandleWindow_KMod[15] = hDMsg;
 	HandleWindow_KMod[16] = hCD_Reg;
 	HandleWindow_KMod[17] = h32X_Reg;
+    HandleWindow_KMod[18] = hPlaneExplorer;
 
 	ResetDebug_KMod( );
 
@@ -8252,6 +8547,7 @@ void Update_KMod( )
 	UpdateWatchers_KMod( );
 //	UpdateLayers_KMod( ); no update needed
 	UpdateSpy_KMod( );
+    PlaneExplorerUpdate_KMod();
 
 	GMVUpdateRecord_KMod( );
 
