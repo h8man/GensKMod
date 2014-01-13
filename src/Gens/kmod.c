@@ -2344,12 +2344,15 @@ static unsigned char plane_explorer_data[128 * 8 * 128 * 8];
 static COLORREF plane_explorer_palette[256];
 static int old_plane_width = 0;
 static int old_plane_height = 0;
+static int plane_explorer_plane = 0;
 
 static void PlaneExplorerInit_KMod(HWND hDlg)
 {
     SendDlgItemMessage(hDlg, IDC_PLANEEXPLORER_COMBO, CB_INSERTSTRING, (WPARAM)-1, (LONG)(LPTSTR) "Plane A");
     SendDlgItemMessage(hDlg, IDC_PLANEEXPLORER_COMBO, CB_INSERTSTRING, (WPARAM)-1, (LONG)(LPTSTR) "Plane B");
     SendDlgItemMessage(hDlg, IDC_PLANEEXPLORER_COMBO, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+
+    InitCommonControls();
 
     HWND hexplorer = GetDlgItem(hDlg, IDC_PLANEXPLEORER_MAIN);
     RECT rc;
@@ -2392,6 +2395,7 @@ static void PlaneExplorer_UpdatePalette(void)
         *cr++ = col;
     }
 
+    plane_explorer_palette[253] = 0x00333333;
     plane_explorer_palette[254] = 0x00444444;
     plane_explorer_palette[255] = 0x00555555;
 }
@@ -2414,12 +2418,12 @@ static unsigned short byte_swap(unsigned short w)
     return (w >> 8) | (w << 8);
 }
 
-static void PlaneExplorer_DrawTile(unsigned short name_word, unsigned int x, unsigned int y)
+static void PlaneExplorer_DrawTile(unsigned short name_word, unsigned int x, unsigned int y, int transcolor)
 {
     union PATTERN_NAME name;
     int tile_height = ((VDP_Reg.Set4 & 0x6) == 6) ? 16 : 8;
     unsigned char * ptr = &plane_explorer_data[y * 1024 * tile_height + x * 8];
-    unsigned int i, j;
+    unsigned int i, j, k;
     unsigned int * tile_data;
     int stride = 1024;
 
@@ -2446,6 +2450,16 @@ static void PlaneExplorer_DrawTile(unsigned short name_word, unsigned int x, uns
             ptr[1] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
             ptr[2] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
             ptr[3] = (tile_row & 0xF) | pal_index;
+            if (transcolor != -1)
+            {
+                for (k = 0; k < 8; k++)
+                {
+                    if (ptr[k] == pal_index)
+                    {
+                        ptr[k] = transcolor;
+                    }
+                }
+            }
             ptr += stride;
         }
     }
@@ -2462,12 +2476,22 @@ static void PlaneExplorer_DrawTile(unsigned short name_word, unsigned int x, uns
             ptr[6] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
             ptr[5] = (tile_row & 0xF) | pal_index;    tile_row >>= 4;
             ptr[4] = (tile_row & 0xF) | pal_index;
+            if (transcolor != -1)
+            {
+                for (k = 0; k < 8; k++)
+                {
+                    if (ptr[k] == pal_index)
+                    {
+                        ptr[k] = transcolor;
+                    }
+                }
+            }
             ptr += stride;
         }
     }
 }
 
-static void PlaneExplorer_UpdateBitmap(int plane)
+static void PlaneExplorer_UpdateBitmap(HWND hwnd, int plane)
 {
     unsigned int i, j;
 
@@ -2488,7 +2512,7 @@ static void PlaneExplorer_UpdateBitmap(int plane)
         {
             for (j = 0; j < 1024; j++)
             {
-                plane_explorer_data[i * 1024 + j] = (unsigned char)(((j ^ i) >> 4) & 1) + 254;
+                plane_explorer_data[i * 1024 + j] = (unsigned char)(((j ^ i) >> 2) & 1) + 253;
             }
         }
     }
@@ -2497,7 +2521,8 @@ static void PlaneExplorer_UpdateBitmap(int plane)
     {
         for (i = 0; i < plane_width; i++)
         {
-            PlaneExplorer_DrawTile(plane_data[j * plane_width + i], i, j);
+            int trans_color = (IsDlgButtonChecked(hwnd, IDC_PLANEEXPLORER_TRANS) == BST_CHECKED) ? (unsigned char)(((j ^ i) >> 1) & 1) + 254 : -1;
+            PlaneExplorer_DrawTile(plane_data[j * plane_width + i], i, j, trans_color);
         }
     }
 }
@@ -2539,7 +2564,7 @@ static void PlaneExplorerPaint_KMod(HWND hwnd, LPDRAWITEMSTRUCT lpdi)
 
     int plane = (int)SendDlgItemMessage(hwnd, IDC_PLANEEXPLORER_COMBO, CB_GETCURSEL, 0, 0);
 
-    PlaneExplorer_UpdateBitmap(plane);
+    PlaneExplorer_UpdateBitmap(hwnd, plane);
 
     memcpy(bmi.palette, plane_explorer_palette, sizeof(bmi.palette));
 
@@ -2582,6 +2607,42 @@ static void PlaneExplorerPaint_KMod(HWND hwnd, LPDRAWITEMSTRUCT lpdi)
     }
 }
 
+void PlaneExplorer_GetTipText(int x, int y, char * buffer)
+{
+    int plane_size_x = 32 + (VDP_Reg.Scr_Size & 0x3) * 32;
+    int plane_size_y = 32 + ((VDP_Reg.Scr_Size >> 4) & 0x3) * 32;
+
+    if (x >= (plane_size_x * 8) ||
+        y >= (plane_size_y * 8))
+    {
+        buffer[0] = 0;
+        return;
+    }
+
+    unsigned int plane_a_base = (VDP_Reg.Pat_ScrA_Adr & 0x38) << 10;
+    unsigned int plane_b_base = (VDP_Reg.Pat_ScrB_Adr & 0x7) << 13;
+    unsigned int base = plane_explorer_plane ? plane_b_base : plane_a_base;
+    char plane_char = plane_explorer_plane ? 'B' : 'A';
+    unsigned int tile_addr = base + ((y >> 3) * plane_size_x + (x >> 3)) * 2;
+    union PATTERN_NAME name;
+
+    name.word = *(unsigned short *)(&VRam[tile_addr]);
+
+    wsprintf(buffer, "%d, %d in plane %c @ 0x%04X is @ 0x%04X = 0x%04X [tile %d, pal %d,%s%s prior %d]",
+             x >> 3,
+             y >> 3,
+             plane_char,
+             base,
+             tile_addr,
+             name.word,
+             name.tile_index,
+             name.pal_index,
+             name.h_flip ? " HFLIP," : "",
+             name.v_flip ? " VFLIP," : "",
+             name.priority
+             );
+}
+
 BOOL CALLBACK PlaneExplorerDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     switch (Message)
@@ -2598,6 +2659,10 @@ BOOL CALLBACK PlaneExplorerDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LP
         switch (LOWORD(wParam))
         {
             case IDC_PLANEEXPLORER_COMBO:
+                plane_explorer_plane = (int)SendDlgItemMessage(hwnd, IDC_PLANEEXPLORER_COMBO, CB_GETCURSEL, 0, 0);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            case IDC_PLANEEXPLORER_TRANS:
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             default:
@@ -2620,6 +2685,35 @@ BOOL CALLBACK PlaneExplorerDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LP
         DestroyWindow(hPlaneExplorer);
         PostQuitMessage(0);
         break;
+
+    case WM_MOUSELEAVE:
+        SetDlgItemText(hwnd, IDC_PLANEEXPLORER_TILEINFO, "TILE: ");
+        return FALSE;
+
+    case WM_MOUSEMOVE:
+    {
+        HWND hexplorer = GetDlgItem(hwnd, IDC_PLANEXPLEORER_MAIN);
+        int x = (short)(lParam);
+        int y = (short)(lParam >> 16);
+        char buffer[180] = "TILE: ";
+        RECT rc1;
+        POINT pt;
+        TRACKMOUSEEVENT tme = { sizeof(tme) };
+        tme.hwndTrack = hwnd;
+        tme.dwFlags = TME_LEAVE;
+        TrackMouseEvent(&tme);
+        pt.x = x;
+        pt.y = y;
+        ClientToScreen(hwnd, &pt);
+        ScreenToClient(hexplorer, &pt);
+        GetClientRect(hexplorer, &rc1);
+        if (PtInRect(&rc1, pt))
+        {
+            PlaneExplorer_GetTipText(pt.x, pt.y, buffer + 6);
+        }
+        SetDlgItemText(hwnd, IDC_PLANEEXPLORER_TILEINFO, buffer);
+        return FALSE;
+    }
 
     default:
         return FALSE;
