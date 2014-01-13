@@ -2454,7 +2454,7 @@ static void PlaneExplorer_DrawTile(unsigned short name_word, unsigned int x, uns
             {
                 for (k = 0; k < 8; k++)
                 {
-                    if (ptr[k] == 0)
+                    if (ptr[k] == pal_index)
                     {
                         ptr[k] = transcolor;
                     }
@@ -2480,7 +2480,7 @@ static void PlaneExplorer_DrawTile(unsigned short name_word, unsigned int x, uns
             {
                 for (k = 0; k < 8; k++)
                 {
-                    if (ptr[k] == 0)
+                    if (ptr[k] == pal_index)
                     {
                         ptr[k] = transcolor;
                     }
@@ -2660,6 +2660,9 @@ BOOL CALLBACK PlaneExplorerDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LP
         {
             case IDC_PLANEEXPLORER_COMBO:
                 plane_explorer_plane = (int)SendDlgItemMessage(hwnd, IDC_PLANEEXPLORER_COMBO, CB_GETCURSEL, 0, 0);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            case IDC_PLANEEXPLORER_TRANS:
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             default:
