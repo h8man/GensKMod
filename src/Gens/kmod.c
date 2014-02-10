@@ -2348,14 +2348,17 @@ static int plane_explorer_plane = 0;
 
 static void PlaneExplorerInit_KMod(HWND hDlg)
 {
+	HWND hexplorer;
+    RECT rc;
+
     SendDlgItemMessage(hDlg, IDC_PLANEEXPLORER_COMBO, CB_INSERTSTRING, (WPARAM)-1, (LONG)(LPTSTR) "Plane A");
     SendDlgItemMessage(hDlg, IDC_PLANEEXPLORER_COMBO, CB_INSERTSTRING, (WPARAM)-1, (LONG)(LPTSTR) "Plane B");
     SendDlgItemMessage(hDlg, IDC_PLANEEXPLORER_COMBO, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
 
     InitCommonControls();
 
-    HWND hexplorer = GetDlgItem(hDlg, IDC_PLANEXPLEORER_MAIN);
-    RECT rc;
+   
+	hexplorer = (HWND) GetDlgItem(hDlg, IDC_PLANEXPLEORER_MAIN);
     GetClientRect(hDlg, &rc);
     MoveWindow(hexplorer, 10, 46, (rc.right - rc.left) - 20, (rc.bottom - rc.top) - 60, TRUE);
 }
@@ -2426,10 +2429,11 @@ static void PlaneExplorer_DrawTile(unsigned short name_word, unsigned int x, uns
     unsigned int i, j, k;
     unsigned int * tile_data;
     int stride = 1024;
+	unsigned char pal_index;
 
     name.word = name_word;
     tile_data = (unsigned int *)(&VRam[(name.tile_index * tile_height * 4) & 0xFFFF]);
-    unsigned char pal_index = (unsigned char)name.pal_index << 4;
+    pal_index = (unsigned char)name.pal_index << 4;
 
     if (name.v_flip)
     {
@@ -2559,10 +2563,11 @@ static void PlaneExplorerPaint_KMod(HWND hwnd, LPDRAWITEMSTRUCT lpdi)
     unsigned int plane_b_base = (VDP_Reg.Pat_ScrB_Adr & 0x7) << 13;
 
     char buffer[1024];
+	int plane;
 
     PlaneExplorer_UpdatePalette();
 
-    int plane = (int)SendDlgItemMessage(hwnd, IDC_PLANEEXPLORER_COMBO, CB_GETCURSEL, 0, 0);
+    plane = (int)SendDlgItemMessage(hwnd, IDC_PLANEEXPLORER_COMBO, CB_GETCURSEL, 0, 0);
 
     PlaneExplorer_UpdateBitmap(hwnd, plane);
 
@@ -2612,12 +2617,6 @@ void PlaneExplorer_GetTipText(int x, int y, char * buffer)
     int plane_size_x = 32 + (VDP_Reg.Scr_Size & 0x3) * 32;
     int plane_size_y = 32 + ((VDP_Reg.Scr_Size >> 4) & 0x3) * 32;
 
-    if (x >= (plane_size_x * 8) ||
-        y >= (plane_size_y * 8))
-    {
-        buffer[0] = 0;
-        return;
-    }
 
     unsigned int plane_a_base = (VDP_Reg.Pat_ScrA_Adr & 0x38) << 10;
     unsigned int plane_b_base = (VDP_Reg.Pat_ScrB_Adr & 0x7) << 13;
@@ -2625,6 +2624,14 @@ void PlaneExplorer_GetTipText(int x, int y, char * buffer)
     char plane_char = plane_explorer_plane ? 'B' : 'A';
     unsigned int tile_addr = base + ((y >> 3) * plane_size_x + (x >> 3)) * 2;
     union PATTERN_NAME name;
+
+	
+    if (x >= (plane_size_x * 8) ||
+        y >= (plane_size_y * 8))
+    {
+        buffer[0] = 0;
+        return;
+    }
 
     name.word = *(unsigned short *)(&VRam[tile_addr]);
 
