@@ -651,7 +651,7 @@ BOOL Msg_KMod( char *msg)
 	editCutText = editText;
 	while ( nSize >=  nMaxSize)	
 	{
-		editCutText = strstr(editText, "\r\n");
+		editCutText = strstr(editCutText, "\r\n");
 		editCutText+=2;
 		nSize = strlen(editCutText);
 	}
