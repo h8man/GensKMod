@@ -488,22 +488,20 @@ BEGIN
     CONTROL         "Transparency", IDC_PLANEEXPLORER_TRANS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 20, 20, 100, 10
     END
 
-IDD_DEBUGSPRITES DIALOG DISCARDABLE  0, 0, 237, 253
+IDD_DEBUGSPRITES DIALOG DISCARDABLE  0, 0, 240, 260
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Sprites"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Num    Ypos       XPos             Size      Link   Pal         Tile       Flags*",
-                    IDC_STATIC,7,7,223,8
-    LISTBOX         IDC_SPRITES_LIST,7,21,223,147,LBS_USETABSTOPS | 
-                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL
-    CONTROL         "spriteVDP",IDC_SPRITES_PREVIEW,"Static",SS_OWNERDRAW,7,
-                    185,67,61
-    LTEXT           "* Priority / VFlip / HFlip",IDC_STATIC,7,170,72,8,NOT 
-                    WS_GROUP
-    PUSHBUTTON      "Dump",IDC_SPRITES_DUMP,167,207,50,14
-    CONTROL         "spriteVDP",IDC_SPRITES_PREVIEW2,"Static",SS_OWNERDRAW,
-                    89,185,67,61
+	CONTROL         "List1", IDC_SPRITES_LIST, "SysListView32", LVS_REPORT |
+					LVS_SINGLESEL | LVS_ALIGNLEFT |	LVS_NOSORTHEADER |
+					WS_BORDER | WS_TABSTOP, 7, 7, 225, 150
+	LTEXT           "* Priority / VFlip / HFlip", IDC_STATIC, 7, 160, 72, 8, NOT WS_GROUP
+    CONTROL         "spriteVDP",IDC_SPRITES_PREVIEW,"Static",SS_OWNERDRAW,
+					7, 170, 20, 20
+	CONTROL         "spriteVDP", IDC_SPRITES_PREVIEW2, "Static", SS_OWNERDRAW,
+					30, 170, 80, 80
+    PUSHBUTTON      "Dump",IDC_SPRITES_DUMP,180,180,50,14
 END
 
 IDD_DEBUGYM2612 DIALOG DISCARDABLE  0, 0, 346, 321

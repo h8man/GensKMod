@@ -7297,6 +7297,8 @@ BOOL CALLBACK VDPRegDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
 
 /******************** SPRITES ***************/
+HWND hSpriteList;
+
 unsigned char TrueSize_KMod( unsigned short int data )
 {
 	switch( data)
@@ -7314,70 +7316,121 @@ unsigned char TrueSize_KMod( unsigned short int data )
 	return 0;
 }
 
+
+void SpritesInit_KMod(HWND hDlg)
+{
+	LV_COLUMN   lvColumn;
+	int         i;
+	TCHAR       szString[8][7] = { "Num", "Ypos", "XPos", "Size", "Link", "Pal", "Tile", "Flags*" };
+	LVITEM		lvItem;
+	char		buf[64];
+
+
+	hSpriteList = GetDlgItem(hDlg, IDC_SPRITES_LIST);
+	ListView_DeleteAllItems(hSpriteList);
+
+	lvColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
+	lvColumn.fmt = LVCFMT_LEFT;
+	lvColumn.cx = 53;
+	for (i = 0; i < 8; i++)
+	{
+		lvColumn.pszText = szString[i];
+		ListView_InsertColumn(hSpriteList, i, &lvColumn);
+	}
+
+	ListView_SetExtendedListViewStyle(hSpriteList, LVS_EX_FULLROWSELECT |LVS_EX_GRIDLINES);
+
+	for (i = 0; i < 80; i++)
+	{
+		wsprintf(buf, "%0.2d", i);
+
+		lvItem.mask = LVIF_TEXT;
+		lvItem.iItem = i;
+		lvItem.iSubItem = 0;
+		lvItem.pszText = buf;
+		ListView_InsertItem(hSpriteList, &lvItem);
+	}
+
+}
+
 void UpdateSprites_KMod( )
 {
 	unsigned int i, topIdx, selIdx;
 	unsigned short int *sprData, tmp;
 	unsigned char tmp_string[32];
     static unsigned short data_copy[80 * 4];
+	static unsigned int forceRefreshCounter;
+	LVITEM		lvItem;
+	char	buf[64];
+
 
 	if ( OpenedWindow_KMod[ 10 ] == FALSE )
         return;
 
     sprData = (unsigned short *)(VRam + (VDP_Reg.Spr_Att_Adr << 9));
 
+	
     if (!memcmp(sprData, data_copy, sizeof(data_copy)))
     {
-        return;
+		//sometimes miss the last update... so force refresh every n frame
+		if (--forceRefreshCounter > 0 )	return;
     }
-
+	forceRefreshCounter = 0xFFFF;
     memcpy(data_copy, sprData, sizeof(data_copy));
+	
 
-    SendDlgItemMessage(hSprites, IDC_SPRITES_LIST, WM_SETREDRAW, (WPARAM)FALSE, (LPARAM)0);
-
-	topIdx = SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_GETTOPINDEX  , (WPARAM) 0 , (LPARAM) 0);
-	selIdx = SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_GETCURSEL , (WPARAM) 0 , (LPARAM) 0);
-
-
-	SendDlgItemMessage(hSprites, IDC_SPRITES_LIST, LB_RESETCONTENT, (WPARAM)0 , (LPARAM) 0);
-    SendDlgItemMessage(hSprites, IDC_SPRITES_LIST, LB_INITSTORAGE, (WPARAM)80, 0);
 	for(i = 0; i < 80; i++)
 	{
-		wsprintf(debug_string, "%.2d",i);
-		wsprintf(tmp_string, "  %4d", sprData[0]&0x03FF);
-		lstrcat(debug_string, tmp_string);
-		wsprintf(tmp_string, "  %4d", sprData[3]&0x03FF);
-		lstrcat(debug_string, tmp_string);
-		wsprintf(tmp_string,"  %.2dx", TrueSize_KMod( ((sprData[1]&0x0C00)>>10) ) );
-		lstrcat(debug_string, tmp_string);
-		wsprintf(tmp_string,"%.2d", TrueSize_KMod( ((sprData[1]&0x0300)>>8) ) );
-		lstrcat(debug_string, tmp_string);
-		wsprintf(tmp_string,"  %2d", sprData[1]&0x007F);
-		lstrcat(debug_string, tmp_string);
-		wsprintf(tmp_string," %2d", (sprData[2]&0x6000)>>13 );
-		lstrcat(debug_string, tmp_string);
-		wsprintf(tmp_string,"  %4d", (sprData[2]&0x07FF) );
-		lstrcat(debug_string, tmp_string);
+		lvItem.iItem = i;
+		lvItem.iSubItem = LVIF_TEXT;
+		ListView_GetItem(hSpriteList, &lvItem);
+
+		/*
+		// not needed
+		// index
+		wsprintf(buf, "%.2d", i);
+		ListView_SetItemText(hSpriteList, i, 0, tmp_string);
+		*/
+
+		// yPos
+		wsprintf(tmp_string, "%4d", sprData[0] & 0x03FF);
+		ListView_SetItemText(hSpriteList, i, 1, tmp_string);
+
+		// xPos
+		wsprintf(tmp_string, "%4d", sprData[3] & 0x03FF);
+		ListView_SetItemText(hSpriteList, i, 2, tmp_string);
+
+		// size
+		wsprintf(tmp_string, "%.2dx%.2d", 
+			TrueSize_KMod(((sprData[1] & 0x0C00) >> 10)),
+			TrueSize_KMod(((sprData[1] & 0x0300) >> 8)));
+		ListView_SetItemText(hSpriteList, i, 3, tmp_string);
+
+		// link
+		wsprintf(tmp_string, "%.2d", sprData[1] & 0x007F);
+		ListView_SetItemText(hSpriteList, i, 4, tmp_string);
+
+		// pal
+		wsprintf(tmp_string, "%2d", (sprData[2] & 0x6000) >> 13);
+		ListView_SetItemText(hSpriteList, i, 5, tmp_string);
+
+		// tile
+		wsprintf(tmp_string, "%4d", (sprData[2] & 0x07FF));
+		ListView_SetItemText(hSpriteList, i, 6, tmp_string);
+
+		// flags
 		tmp = 0;
 		if ( sprData[2]&0x8000)	tmp +=100;
 		if ( sprData[2]&0x1000)	tmp +=010;
 		if ( sprData[2]&0x0800)	tmp +=001;
-		wsprintf(tmp_string,"  %.3d", tmp );
-		lstrcat(debug_string, tmp_string);
-		SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_ADDSTRING, 0, (LPARAM) debug_string);
+		wsprintf(tmp_string, "%.3d", tmp);
+		ListView_SetItemText(hSpriteList, i, 7, tmp_string);
 
 		sprData += 4;
 	}
 
-	SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_SETCURSEL , (WPARAM) selIdx , (LPARAM) 0);
-	SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_SETTOPINDEX   , (WPARAM) topIdx , (LPARAM) 0);
-
-	SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, WM_SETREDRAW   , (WPARAM) TRUE , (LPARAM) 0);
-
-//    RedrawWindow(hSprites, NULL, NULL, RDW_INVALIDATE);
     RedrawWindow(GetDlgItem(hSprites, IDC_SPRITES_PREVIEW), NULL, NULL, RDW_INVALIDATE);
     RedrawWindow(GetDlgItem(hSprites, IDC_SPRITES_PREVIEW2), NULL, NULL, RDW_INVALIDATE);
-
 }
 
 
@@ -7391,8 +7444,8 @@ void DrawSprite_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	HDC hDC;
 	HBITMAP hBitmap, hOldBitmap;
 
-	selIdx = SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_GETCURSEL , (WPARAM) 0 , (LPARAM) 0);
-	if (selIdx == LB_ERR)
+	selIdx = SendMessage(hSpriteList, LVM_GETNEXTITEM, -1, LVNI_FOCUSED); // return item selected
+	if (selIdx == -1)
 		return;
 
 	sprData = (unsigned short *)(VRam + ( VDP_Reg.Spr_Att_Adr << 9 ));
@@ -7450,8 +7503,8 @@ void DrawSpriteZoom_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	HDC hDC;
 	HBITMAP hBitmap, hOldBitmap;
 
-	selIdx = SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_GETCURSEL , (WPARAM) 0 , (LPARAM) 0);
-	if (selIdx == LB_ERR)
+	selIdx = SendMessage(hSpriteList, LVM_GETNEXTITEM, -1, LVNI_FOCUSED); // return item selected
+	if (selIdx == -1)
 		return;
 
 	sprData = (unsigned short *)(VRam + ( VDP_Reg.Spr_Att_Adr << 9 ));
@@ -7520,16 +7573,15 @@ void DumpSprite_KMod( HWND hwnd )
 	unsigned char		TileData, sizeH, sizeV, posX, posY, j, pal, tmp;
 	unsigned short int	*sprData;
 
-	selIdx = (unsigned short)SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_GETCURSEL , (WPARAM) 0 , (LPARAM) 0);
-	if (selIdx == LB_ERR)
+	selIdx = SendMessage(hSpriteList, LVM_GETNEXTITEM, -1, LVNI_FOCUSED); // return item selected
+	if (selIdx == -1)
 		return;
 
+
+	szFileName[0] = 0;  /*WITHOUT THIS, CRASH */
+	wsprintf(szFileName, "%s_sprite_%.2d", Rom_Name, selIdx);
+
     ZeroMemory(&szFile, sizeof(szFile));
-    szFileName[0] = 0;  /*WITHOUT THIS, CRASH */
-
-	strcpy(szFileName, Rom_Name);
-	strcat(szFileName, "_Spr");
-
     szFile.lStructSize = sizeof(szFile);
     szFile.hwndOwner = hwnd;
     szFile.lpstrFilter = "16Colors Bitmap file (*.bmp)\0*.bmp\0\0";
@@ -7640,20 +7692,13 @@ void DumpSprite_KMod( HWND hwnd )
 
 BOOL CALLBACK SpritesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	HFONT hFont = NULL;
 	DWORD i;
 
 	switch(Message)
     {
-		case WM_INITDIALOG:			
-			hFont = (HFONT) GetStockObject(ANSI_FIXED_FONT);
-			SendDlgItemMessage(hwnd, IDC_SPRITES_LIST, WM_SETFONT, (WPARAM)hFont, TRUE);
-			for(i = 0; i < 80; i++)
-			{
-				wsprintf(debug_string, "%.2d",i);
-				SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_INSERTSTRING, (WPARAM) i , (LPARAM) debug_string);
-			}
-
+		case WM_INITDIALOG:		
+			SpritesInit_KMod( hwnd );
+			
 			break;
 		case WM_DRAWITEM:
 			if ( (UINT) wParam == IDC_SPRITES_PREVIEW )
@@ -7665,18 +7710,21 @@ BOOL CALLBACK SpritesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
         case WM_COMMAND: 
 			switch (LOWORD(wParam))
 			{ 
- 
-                case IDC_SPRITES_LIST:  
-					switch (HIWORD(wParam))
-					{ 
-                        case LBN_SELCHANGE:
-						    RedrawWindow( GetDlgItem(hSprites, IDC_SPRITES_PREVIEW), NULL, NULL, RDW_INVALIDATE);
-						    RedrawWindow( GetDlgItem(hSprites, IDC_SPRITES_PREVIEW2), NULL, NULL, RDW_INVALIDATE);
-							break;
-					}
-					break;
 				case IDC_SPRITES_DUMP:
 					DumpSprite_KMod( hSprites );
+					break;
+			}
+			break;
+
+		case WM_NOTIFY:
+			switch (LOWORD(wParam))
+			{
+				case IDC_SPRITES_LIST:
+					if (((LPNMHDR)lParam)->code == NM_CLICK)
+					{
+						RedrawWindow(GetDlgItem(hSprites, IDC_SPRITES_PREVIEW), NULL, NULL, RDW_INVALIDATE);
+						RedrawWindow(GetDlgItem(hSprites, IDC_SPRITES_PREVIEW2), NULL, NULL, RDW_INVALIDATE);
+					}
 					break;
 			}
 			break;
@@ -7685,7 +7733,8 @@ BOOL CALLBACK SpritesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			break;
 
 		case WM_DESTROY:
-			DeleteObject( (HGDIOBJ) hFont );
+			ListView_DeleteAllItems(hSpriteList);
+
 			DestroyWindow( hSprites );
 			PostQuitMessage(0);
 			break;
