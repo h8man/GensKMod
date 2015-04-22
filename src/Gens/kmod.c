@@ -2360,7 +2360,7 @@ static void PlaneExplorerInit_KMod(HWND hDlg)
    
 	hexplorer = (HWND) GetDlgItem(hDlg, IDC_PLANEXPLEORER_MAIN);
     GetClientRect(hDlg, &rc);
-    MoveWindow(hexplorer, 10, 46, (rc.right - rc.left) - 20, (rc.bottom - rc.top) - 60, TRUE);
+    MoveWindow(hexplorer, 20, 60, (rc.right - rc.left) - 40, (rc.bottom - rc.top) - 80, TRUE);
 }
 
 static void PlaneExplorer_UpdatePalette(void)
