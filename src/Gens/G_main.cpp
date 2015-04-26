@@ -1453,6 +1453,8 @@ void CC_End_Callback(char mess[256])
 
 void Init_GDBStubs(void)
 {
+	if (KConf.useGDB == FALSE)	return;
+
     g_gdb_main68k_target = GetMain68KTarget();
     g_gdb_sub68k_target = GetSub68KTarget();
     g_gdb_master_sh2_target = GetMasterSH2Target();
@@ -1621,10 +1623,9 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 
 #ifdef GENS_KMOD
 	InitCommonControls();
-	Init_KMod( );
+	Init_KMod();
+	Init_GDBStubs();
 #endif
-
-    Init_GDBStubs();
 
 	Gens_Running = 1;
 
@@ -1633,6 +1634,8 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 
 void End_GDBStubs(void)
 {
+	if (KConf.useGDB == FALSE)	return;
+
     g_gdb_main68k_target->Disconnect();
     g_gdb_sub68k_target->Disconnect();
     g_gdb_master_sh2_target->Disconnect();
@@ -1658,7 +1661,10 @@ void End_All(void)
 	End_Sound();
 	End_CD_Driver();
 	End_Network();
+
+#ifdef GENS_KMOD
     End_GDBStubs();
+#endif
 
 	SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, SS_Actived, NULL, 0);
 }

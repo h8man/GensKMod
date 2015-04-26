@@ -26,6 +26,7 @@ struct ConfigKMod_struct {
 	BOOL	noCDCSTAT;
 	BOOL	bBluePause;
 	BOOL	Special;
+	BOOL	useGDB;
     unsigned int gdb_m68kport;
     unsigned int gdb_s68kport;
     unsigned int gdb_msh2port;

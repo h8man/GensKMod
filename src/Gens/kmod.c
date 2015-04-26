@@ -200,6 +200,15 @@
  ** - enable/disable YM2612 sound channel (TmEE)
  ** - better message view (hangs if too much messages!)
  ** - bug : SH2 disassembler in 0.7c has the registers "shifted" one step. So the value displayed for R0 is actually the value of R1, the value displayed for R1 is the value of R2, and so on. (ob1,_mic)
+ ****** 0.7.2 - Graz release
+ ** - GDB
+ ** - remove 16bit flick
+ ** - ....
+ ****** 0.7.3
+ ** - VS2013 compile
+ ** - update Sprites list
+ ** - bug : Gens hangs when Message reach limit
+ ** - toggle GDB
  *********************************************/
 
 /*********************************************
@@ -7355,13 +7364,12 @@ void SpritesInit_KMod(HWND hDlg)
 
 void UpdateSprites_KMod( )
 {
-	unsigned int i, topIdx, selIdx;
+	unsigned int i;
 	unsigned short int *sprData, tmp;
 	unsigned char tmp_string[32];
     static unsigned short data_copy[80 * 4];
 	static unsigned int forceRefreshCounter;
 	LVITEM		lvItem;
-	char	buf[64];
 
 
 	if ( OpenedWindow_KMod[ 10 ] == FALSE )
@@ -7388,7 +7396,7 @@ void UpdateSprites_KMod( )
 		/*
 		// not needed
 		// index
-		wsprintf(buf, "%.2d", i);
+		wsprintf(tmp_string, "%.2d", i);
 		ListView_SetItemText(hSpriteList, i, 0, tmp_string);
 		*/
 
@@ -7692,8 +7700,6 @@ void DumpSprite_KMod( HWND hwnd )
 
 BOOL CALLBACK SpritesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	DWORD i;
-
 	switch(Message)
     {
 		case WM_INITDIALOG:		
@@ -8415,6 +8421,10 @@ void SaveConfig_KMod( )
 	wsprintf(debug_string, "%d", KConf.Special);
 	WritePrivateProfileString("Debug", "Special", debug_string, Conf_File);
 
+
+	wsprintf(debug_string, "%d", KConf.useGDB);
+	WritePrivateProfileString("Debug", "gdb", debug_string, Conf_File);
+
     wsprintf(debug_string, "%d", KConf.gdb_m68kport);
     WritePrivateProfileString("Debug", "gdbm68k", debug_string, Conf_File);
 
@@ -8446,7 +8456,8 @@ void LoadConfig_KMod( )
 	KConf.noCDBSTAT = (BOOL) GetPrivateProfileInt("Debug", "SpyCD1", FALSE, Conf_File);
 	KConf.noCDCSTAT = (BOOL) GetPrivateProfileInt("Debug", "SpyCD2", FALSE, Conf_File);
 	KConf.bBluePause = (BOOL) GetPrivateProfileInt("Debug", "BluePause", TRUE, Conf_File);
-	KConf.Special = (BOOL) GetPrivateProfileInt("Debug", "Special", FALSE, Conf_File);
+	KConf.Special = (BOOL)GetPrivateProfileInt("Debug", "Special", FALSE, Conf_File);
+	KConf.useGDB = (BOOL)GetPrivateProfileInt("Debug", "gdb", TRUE, Conf_File);
     KConf.gdb_m68kport = GetPrivateProfileInt("Debug", "gdbm68k", 6868, Conf_File);
     KConf.gdb_s68kport = GetPrivateProfileInt("Debug", "gdbs68k", 6869, Conf_File);
     KConf.gdb_msh2port = GetPrivateProfileInt("Debug", "gdbmsh2", 6870, Conf_File);
@@ -8467,6 +8478,18 @@ void RefreshSpyButtons( HWND hwnd )
 		EnableWindow( GetDlgItem( hwnd, i) , bEnable );
 }
 
+void RefreshGDBControls(HWND hwnd)
+{
+	BOOL bEnable = FALSE;
+
+	bEnable = IsDlgButtonChecked(hwnd, IDC_DCONFIG_GDB);
+	
+	EnableWindow(GetDlgItem(hwnd, IDC_DCONFIG_GDBPORTM68K), bEnable);
+	EnableWindow(GetDlgItem(hwnd, IDC_DCONFIG_GDBPORTS68K), bEnable);
+	EnableWindow(GetDlgItem(hwnd, IDC_DCONFIG_GDBPORTMSH2), bEnable);
+	EnableWindow(GetDlgItem(hwnd, IDC_DCONFIG_GDBPORTSSH2), bEnable);
+
+}
 
 void Get_DebugZip_KMod( HWND hwnd )
 {
@@ -8577,12 +8600,16 @@ BOOL CALLBACK ConfigKDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			if ( KConf.Special )
 				CheckDlgButton(hwnd, IDC_DCONFIG_SPECIAL, BST_CHECKED);
 
-            SetUIntToEdit(hwnd, ICD_DCONFIG_GDBPORTM68K, KConf.gdb_m68kport);
-            SetUIntToEdit(hwnd, ICD_DCONFIG_GDBPORTS68K, KConf.gdb_s68kport);
-            SetUIntToEdit(hwnd, ICD_DCONFIG_GDBPORTMSH2, KConf.gdb_msh2port);
-            SetUIntToEdit(hwnd, ICD_DCONFIG_GDBPORTSSH2, KConf.gdb_ssh2port);
+			if (KConf.useGDB)
+				CheckDlgButton(hwnd, IDC_DCONFIG_GDB, BST_CHECKED);
+
+            SetUIntToEdit(hwnd, IDC_DCONFIG_GDBPORTM68K, KConf.gdb_m68kport);
+            SetUIntToEdit(hwnd, IDC_DCONFIG_GDBPORTS68K, KConf.gdb_s68kport);
+            SetUIntToEdit(hwnd, IDC_DCONFIG_GDBPORTMSH2, KConf.gdb_msh2port);
+            SetUIntToEdit(hwnd, IDC_DCONFIG_GDBPORTSSH2, KConf.gdb_ssh2port);
 
 			RefreshSpyButtons( hwnd );
+			RefreshGDBControls( hwnd );
 
 			break;
 
@@ -8594,6 +8621,9 @@ BOOL CALLBACK ConfigKDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 				case IDC_DCONFIG_SPY:
 				case IDC_DCONFIG_SPYCD:
 					RefreshSpyButtons( hwnd );				
+					break;
+				case IDC_DCONFIG_GDB:
+					RefreshGDBControls(hwnd);
 					break;
 				case IDC_DCONFIG_ZIP:
 					Get_DebugZip_KMod( hwnd );
@@ -8610,10 +8640,12 @@ BOOL CALLBACK ConfigKDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 					KConf.noCDCSTAT = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPYCD2);
 					KConf.bBluePause  = IsDlgButtonChecked(hwnd, IDC_DCONFIG_BSCREEN);
 					KConf.Special  = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPECIAL);
-                    KConf.gdb_m68kport = GetUIntFromEdit(hwnd, ICD_DCONFIG_GDBPORTM68K);
-                    KConf.gdb_s68kport = GetUIntFromEdit(hwnd, ICD_DCONFIG_GDBPORTS68K);
-                    KConf.gdb_msh2port = GetUIntFromEdit(hwnd, ICD_DCONFIG_GDBPORTMSH2);
-                    KConf.gdb_ssh2port = GetUIntFromEdit(hwnd, ICD_DCONFIG_GDBPORTSSH2);
+
+					KConf.useGDB = IsDlgButtonChecked(hwnd, IDC_DCONFIG_GDB);
+                    KConf.gdb_m68kport = GetUIntFromEdit(hwnd, IDC_DCONFIG_GDBPORTM68K);
+                    KConf.gdb_s68kport = GetUIntFromEdit(hwnd, IDC_DCONFIG_GDBPORTS68K);
+                    KConf.gdb_msh2port = GetUIntFromEdit(hwnd, IDC_DCONFIG_GDBPORTMSH2);
+                    KConf.gdb_ssh2port = GetUIntFromEdit(hwnd, IDC_DCONFIG_GDBPORTSSH2);
                     SaveConfig_KMod();
                     EndDialog(hwnd, IDOK);
                     break;

@@ -689,7 +689,7 @@ BEGIN
                     WS_TABSTOP,7,73,138,8
 END
 
-IDD_DCONFIG DIALOG DISCARDABLE  0, 0, 200, 244
+IDD_DCONFIG DIALOG DISCARDABLE  0, 0, 200, 260
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Debug configuration"
 FONT 8, "MS Sans Serif"
@@ -698,6 +698,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,143,24,50,14
     CONTROL         "Auto load watchers && structures",IDC_DCONFIG_AUTOW,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,15,115,10
+
     CONTROL         "Spy strange behaviors",IDC_DCONFIG_SPY,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,29,86,10
     CONTROL         "Bad register's value",IDC_DCONFIG_SPY1,"Button",
@@ -705,30 +706,38 @@ BEGIN
     CONTROL         "Sprite limit",IDC_DCONFIG_SPY2,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,36,55,47,10
     CONTROL         "Read/Write forbidden",IDC_DCONFIG_SPY3,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,36,68,85,10
+					BS_AUTOCHECKBOX | WS_TABSTOP, 36, 68, 85, 10
+	CONTROL         "DMA access (for gfx hackers)", IDC_DCONFIG_SPY4, "Button",
+					BS_AUTOCHECKBOX | WS_TABSTOP, 36, 80, 109, 10
+
+	CONTROL         "Spy CD Bios call", IDC_DCONFIG_SPYCD, "Button",
+					BS_AUTOCHECKBOX | WS_TABSTOP, 7, 102, 68, 10
+	CONTROL         "...but CDB Wait", IDC_DCONFIG_SPYCD1, "Button",
+					BS_AUTOCHECKBOX | WS_TABSTOP, 36, 114, 65, 10
+	CONTROL         "...but CDC Wait", IDC_DCONFIG_SPYCD2, "Button",
+					BS_AUTOCHECKBOX | WS_TABSTOP, 36, 126, 65, 10
+
     CONTROL         "'Blue Screen' pause",IDC_DCONFIG_BSCREEN,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,145,79,10
+
     CONTROL         "Active Development Features",IDC_DCONFIG_SPECIAL,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,168,109,10
-    CONTROL         "DMA access (for gfx hackers)",IDC_DCONFIG_SPY4,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,36,80,109,10
     PUSHBUTTON      "Get Debug.zip",IDC_DCONFIG_ZIP,143,164,50,14
-    CONTROL         "Spy CD Bios call",IDC_DCONFIG_SPYCD,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,102,68,10
-    CONTROL         "...but CDB Wait",IDC_DCONFIG_SPYCD1,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,36,114,65,10
-    CONTROL         "...but CDC Wait",IDC_DCONFIG_SPYCD2,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,36,126,65,10
-    LTEXT           "GDB Stub Port (Main 68K)", IDC_STATIC, 7, 182, 120, 10
-    EDITTEXT        ICD_DCONFIG_GDBPORTM68K, 153, 182, 40, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
-    LTEXT           "GDB Stub Port (Sub 68K)", IDC_STATIC, 7, 196, 120, 10
-    EDITTEXT        ICD_DCONFIG_GDBPORTS68K, 153, 196, 40, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
-    LTEXT           "GDB Stub Port (Master SH2)", IDC_STATIC, 7, 210, 120, 10
-    EDITTEXT        ICD_DCONFIG_GDBPORTMSH2, 153, 210, 40, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
-    LTEXT           "GDB Stub Port (Slave SH2)", IDC_STATIC, 7, 224, 120, 10
-    EDITTEXT        ICD_DCONFIG_GDBPORTSSH2, 153, 224, 40, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
 
-    END
+	CONTROL         "use GDB*", IDC_DCONFIG_GDB, "Button",
+					BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 65, 10
+    LTEXT           "GDB Stub Port (Main 68K)", IDC_STATIC, 36, 203, 120, 10
+    EDITTEXT        IDC_DCONFIG_GDBPORTM68K, 130, 203, 30, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
+    LTEXT           "GDB Stub Port (Sub 68K)", IDC_STATIC, 36, 215, 120, 10
+    EDITTEXT        IDC_DCONFIG_GDBPORTS68K, 130, 215, 30, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
+    LTEXT           "GDB Stub Port (Master SH2)", IDC_STATIC, 36, 227, 120, 10
+    EDITTEXT        IDC_DCONFIG_GDBPORTMSH2, 130, 227, 30, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
+    LTEXT           "GDB Stub Port (Slave SH2)", IDC_STATIC, 36, 239, 120, 10
+    EDITTEXT        IDC_DCONFIG_GDBPORTSSH2, 130, 239, 30, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
+
+
+	LTEXT           "* need restart", IDC_STATIC, 7, 250, 120, 10
+END
 
 IDD_DEBUGMSG DIALOG DISCARDABLE  0, 0, 320, 217
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
