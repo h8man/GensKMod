@@ -60,6 +60,11 @@ extern "C" void Read_To_68K_Space(int adr);
 #define GENS_VERSION   2.12
 #define GENS_VERSION_H 2 * 65536 + 12
 
+#define STR_HELPER(x) #x
+#define	STR(x)	STR_HELPER(x)
+#define GENS_CLASS	"GENS_UDLRABCStart_" STR(GENS_VERSION)
+#define CMD_LINE_DATA 0x6548
+
 #define MINIMIZE								\
 if (Sound_Initialised) Clear_Sound_Buffer();	\
 if (Full_Screen)								\
@@ -1477,6 +1482,19 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 {
 	int i;
 	
+	
+	strcpy(Language_Path, Gens_Path);
+	strcpy(Str_Tmp, Gens_Path);
+
+	strcpy(Manual_Path, "");
+	strcpy(CGOffline_Path, "");
+
+	strcat(Language_Path, "language.dat");
+	strcat(Str_Tmp, "gens.cfg");
+
+
+
+
 	Net_Play = 0;
 	Full_Screen = -1;
 	VDP_Num_Vis_Lines = 224;
@@ -1516,7 +1534,7 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 	WndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	WndClass.hbrBackground = NULL;
 	WndClass.lpszMenuName = NULL;
-	WndClass.lpszClassName = "Gens";
+	WndClass.lpszClassName = GENS_CLASS;
 
 	RegisterClass(&WndClass);
 
@@ -1524,7 +1542,7 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 
 	HWnd = CreateWindowEx(
 		NULL,
-		"Gens",
+		GENS_CLASS,
 		"Gens - Idle",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
@@ -1555,19 +1573,7 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 	GetCurrentDirectory(1024, Language_Path);
 	GetCurrentDirectory(1024, Str_Tmp);
 */
-	char* c = Gens_Path + GetModuleFileName(0, Gens_Path, 1024);
-	while(*c != '\\') c--; // c POINTE A LA FIN, RECULER TANT QUE NON '\\'
-	 *c = 0;
 	
-	strcpy(Language_Path, Gens_Path);
-	strcpy(Str_Tmp, Gens_Path);
-
-	strcpy(Manual_Path, "");
-	strcpy(CGOffline_Path, "");
-
-	strcat(Gens_Path, "\\");
-	strcat(Language_Path, "\\language.dat");
-	strcat(Str_Tmp, "\\gens.cfg");
 
 	MSH2_Init();
 	SSH2_Init();
@@ -1673,6 +1679,42 @@ void End_All(void)
 int PASCAL WinMain(HINSTANCE hInst,	HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCmdShow)
 {
 	MSG msg;
+	HANDLE hMutex;
+
+	char* c = Gens_Path + GetModuleFileName(0, Gens_Path, 1024);
+	while (*c != '\\') c--; // c POINTE A LA FIN, RECULER TANT QUE NON '\\'
+	*c = 0;
+
+	strcat(Gens_Path, "\\");
+
+	LoadConfig_KMod();
+	if (KConf.singleInstance)
+	{
+		hMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, "GensMutex");
+
+		if (!hMutex)
+			hMutex = CreateMutex(NULL, FALSE, "GensMutex");
+		else
+		{
+			HWND hInstanceWnd = FindWindow(GENS_CLASS, NULL);
+
+			if (hInstanceWnd != NULL)
+			{
+				if (strlen(lpCmdLine) != 0) {
+					COPYDATASTRUCT cds;
+					cds.dwData = CMD_LINE_DATA;
+					cds.cbData = strlen(lpCmdLine) + 1;
+					cds.lpData = lpCmdLine;
+					SendMessage(hInstanceWnd, WM_COPYDATA, 0, (LPARAM)&cds);
+				}
+				SetForegroundWindow(hInstanceWnd);
+			}
+			return 0;
+		}
+	}
+
+
+
 
 	if( !Init(hInst, nCmdShow) )
 		return -1;
@@ -1818,6 +1860,9 @@ int PASCAL WinMain(HINSTANCE hInst,	HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 	Save_Config(Str_Tmp);
 
 	End_All();
+	
+	if (hMutex != NULL)
+		ReleaseMutex(hMutex);
 
 	ChangeDisplaySettings(NULL, 0);
 
@@ -2771,6 +2816,18 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 #endif
 			break;
 #endif
+
+		case WM_COPYDATA:
+			{
+				COPYDATASTRUCT* pcds = (COPYDATASTRUCT*)lParam;
+				if (pcds->dwData == CMD_LINE_DATA)
+				{
+					LPCTSTR lpszString = (LPCTSTR)(pcds->lpData);
+					MESSAGE_L("Communicating", lpszString, 1000)
+				}
+			}
+			break;
+
 
 		case WM_KNUX:
 			MESSAGE_L("Communicating", "Communicating ...", 1000)

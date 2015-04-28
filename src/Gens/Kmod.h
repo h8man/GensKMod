@@ -25,6 +25,8 @@ struct ConfigKMod_struct {
 	BOOL	noCDBSTAT;
 	BOOL	noCDCSTAT;
 	BOOL	bBluePause;
+	BOOL	pausedAtStart;
+	BOOL	singleInstance;
 	BOOL	Special;
 	BOOL	useGDB;
     unsigned int gdb_m68kport;
@@ -59,9 +61,10 @@ void SpyCDBiosCall( );
 void SpyYM2612DAC( );
 
 void Watchers_KMod( );
+void AutoWatcher_KMod();
 
 void Config_KMod( );
-void AutoWatcher_KMod( );
+void LoadConfig_KMod();
 
 void GMVRecord_KMod( );
 void GMVStop_KMod( );

@@ -8417,6 +8417,10 @@ void SaveConfig_KMod( )
 
 	wsprintf(debug_string, "%d", KConf.bBluePause);
 	WritePrivateProfileString("Debug", "BluePause", debug_string, Conf_File);
+	wsprintf(debug_string, "%d", KConf.pausedAtStart);
+	WritePrivateProfileString("Debug", "pausedAtStart", debug_string, Conf_File);
+	wsprintf(debug_string, "%d", KConf.singleInstance);
+	WritePrivateProfileString("Debug", "singleInstance", debug_string, Conf_File);
 
 	wsprintf(debug_string, "%d", KConf.Special);
 	WritePrivateProfileString("Debug", "Special", debug_string, Conf_File);
@@ -8455,7 +8459,9 @@ void LoadConfig_KMod( )
 	KConf.CDBios = (BOOL) GetPrivateProfileInt("Debug", "SpyCD", FALSE, Conf_File);
 	KConf.noCDBSTAT = (BOOL) GetPrivateProfileInt("Debug", "SpyCD1", FALSE, Conf_File);
 	KConf.noCDCSTAT = (BOOL) GetPrivateProfileInt("Debug", "SpyCD2", FALSE, Conf_File);
-	KConf.bBluePause = (BOOL) GetPrivateProfileInt("Debug", "BluePause", TRUE, Conf_File);
+	KConf.bBluePause = (BOOL)GetPrivateProfileInt("Debug", "BluePause", TRUE, Conf_File);
+	KConf.pausedAtStart = (BOOL)GetPrivateProfileInt("Debug", "pausedAtStart", FALSE, Conf_File);
+	KConf.singleInstance = (BOOL)GetPrivateProfileInt("Debug", "singleInstance", FALSE, Conf_File);
 	KConf.Special = (BOOL)GetPrivateProfileInt("Debug", "Special", FALSE, Conf_File);
 	KConf.useGDB = (BOOL)GetPrivateProfileInt("Debug", "gdb", TRUE, Conf_File);
     KConf.gdb_m68kport = GetPrivateProfileInt("Debug", "gdbm68k", 6868, Conf_File);
@@ -8597,6 +8603,12 @@ BOOL CALLBACK ConfigKDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			if ( KConf.bBluePause )
 				CheckDlgButton(hwnd, IDC_DCONFIG_BSCREEN, BST_CHECKED);
 
+			if (KConf.pausedAtStart)
+				CheckDlgButton(hwnd, IDC_DCONFIG_PAUSE_START, BST_CHECKED);
+
+			if (KConf.singleInstance)
+				CheckDlgButton(hwnd, IDC_DCONFIG_SINGLE, BST_CHECKED);
+
 			if ( KConf.Special )
 				CheckDlgButton(hwnd, IDC_DCONFIG_SPECIAL, BST_CHECKED);
 
@@ -8638,7 +8650,9 @@ BOOL CALLBACK ConfigKDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 					KConf.CDBios = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPYCD);
 					KConf.noCDBSTAT = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPYCD1);
 					KConf.noCDCSTAT = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPYCD2);
-					KConf.bBluePause  = IsDlgButtonChecked(hwnd, IDC_DCONFIG_BSCREEN);
+					KConf.bBluePause = IsDlgButtonChecked(hwnd, IDC_DCONFIG_BSCREEN);
+					KConf.pausedAtStart = IsDlgButtonChecked(hwnd, IDC_DCONFIG_PAUSE_START);
+					KConf.singleInstance = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SINGLE);
 					KConf.Special  = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPECIAL);
 
 					KConf.useGDB = IsDlgButtonChecked(hwnd, IDC_DCONFIG_GDB);
