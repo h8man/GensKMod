@@ -76,7 +76,7 @@ extern struct ConfigKMod_struct KConf;
 extern UCHAR ActiveLayer;
 extern UCHAR ActivePal;
 extern int AutoShot_KMod;
-extern BOOL	EnabledChannels[5];
+extern BOOL	EnabledChannels[6];
 
 #endif //GENS_KMOD
 

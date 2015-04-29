@@ -510,19 +510,19 @@ CAPTION "Yamaha 2612"
 FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "Channel",IDC_STATIC,7,22,332,202,WS_GROUP
-    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode ?\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
+    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
                     IDC_STATIC,10,42,64,97,NOT WS_GROUP
     GROUPBOX        "Operator 1",IDC_STATIC,85,29,61,113
-    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode ?\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
+    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
                     IDC_YM2612_OP1,91,42,52,97,NOT WS_GROUP
     GROUPBOX        "Operator 2",IDC_STATIC,149,29,61,113
-    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode ?\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
+    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
                     IDC_YM2612_OP2,155,42,53,97
     GROUPBOX        "Operator 3",IDC_STATIC,211,29,61,113
-    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode ?\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
+    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
                     IDC_YM2612_OP3,217,42,54,97
     GROUPBOX        "Operator 4",IDC_STATIC,275,29,61,113
-    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode ?\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
+    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
                     IDC_YM2612_OP4,281,42,52,97
     LTEXT           "Frequency\nOctave\nFrequency CH3\nOctave CH3",
                     IDC_STATIC,31,154,51,34

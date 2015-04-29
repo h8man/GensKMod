@@ -203,12 +203,26 @@
  ****** 0.7.2 - Graz release
  ** - GDB
  ** - remove 16bit flick
- ** - ....
+ ** - drag & drop support
+ ** - always on top
+ ** - optimize tile, sprite and register window
+ ** - plane explorer
+ ** - bug : z80 issue
  ****** 0.7.3
- ** - VS2013 compile
- ** - update Sprites list
+ ** - bug : unreadable plane info
+ ** - bug : crash on joypad key mapping
  ** - bug : Gens hangs when Message reach limit
+ ** - bug : YM2612 wrong AM value (AlyJ)
+ ** - bug : YM2612 wrong FMS value (AlyJ) 
+ ** - bug : PSG wrong noise type (AlyJ)
+ ** - bug : YM2612 Chan6 enable status is wrong
+ ** - VS2013 compile
+ ** - WinXP support
+ ** - update Sprites list
  ** - toggle GDB
+ ** - single instance mode
+ ** - pause at start
+ ** - fast reload with ctrl+alt+l
  *********************************************/
 
 /*********************************************
@@ -236,9 +250,6 @@
  ** - spy odd/even RW error
  ** - Flux (MD+MCD)
  ** - true disasm
- ** - breakpoint
- ** - add Halt when value is xxx on Watchers
- ** - symbol file (haroldoop)
  ** - add line sprites limit spy
  **
  *********************************************/
@@ -571,7 +582,7 @@ int AutoPause_KMod;
 int AutoShot_KMod;
 
 //TODO could be handle by typedef struct channel__ .enabled ?
-BOOL	EnabledChannels[5];
+BOOL	EnabledChannels[6];
 
 // defined on VDP_REND.ASM
 //UCHAR ActiveLayer; /* 0003 ABSW */
@@ -7858,9 +7869,9 @@ void UpdateYM2612_KMod( )
 		wsprintf(tmp_string,"0x%0.2X\n", YM2612.REG[part][0x50 + chan + 4*op]&0x1F);
 		lstrcat(debug_string, tmp_string);
 		if (YM2612.REG[0][0x60]&0x80)
-			lstrcat(debug_string, "Yes\n");
+			lstrcat(debug_string, "ON\n");
 		else
-			lstrcat(debug_string, "No\n");
+			lstrcat(debug_string, "OFF\n");
 		wsprintf(tmp_string,"0x%0.2X\n", YM2612.REG[part][0x60 + chan + 4*op]&0x1F);
 		lstrcat(debug_string, tmp_string);
 		wsprintf(tmp_string,"0x%0.2X\n", YM2612.REG[part][0x70 + chan + 4*op]&0x1F);
@@ -7885,8 +7896,8 @@ void UpdateYM2612_KMod( )
 	lstrcat(debug_string, tmp_string);
 	SetDlgItemText(hYM2612, IDC_YM2612_FREQ, debug_string);
 	
-	wsprintf(debug_string,"0x%0.2X\n", (YM2612.REG[part][0xB4 + chan]&0x30)>>4);
-	wsprintf(tmp_string,"0x%0.2X\n", YM2612.REG[part][0xB4 + chan]&0x08 );
+	wsprintf(debug_string,"0x%0.2X\n", (YM2612.REG[part][0xB4 + chan]&0x30)>>4); //AMS
+	wsprintf(tmp_string,"0x%0.2X\n", YM2612.REG[part][0xB4 + chan]&0x07 ); //FMS
 	lstrcat(debug_string, tmp_string);
 	SetDlgItemText(hYM2612, IDC_YM2612_MOD, debug_string);
 	
@@ -8307,7 +8318,7 @@ void UpdatePSG_KMod( )
 	SetDlgItemText(hPSG, IDC_PSG_FREQ_3, debug_string);
 	wsprintf(debug_string,"%d", PSG.Register[4] );
 	SetDlgItemText(hPSG, IDC_PSG_DATA_3, debug_string);
-	wsprintf(debug_string,"%s", (PSG.Register[6]>>2)==1 ? "Periodic" : "White");
+	wsprintf(debug_string,"%s", (PSG.Register[6]>>2)==1 ? "White":"Periodic");
 	SetDlgItemText(hPSG, IDC_PSG_FEEDBACK, debug_string);
 	if((PSG.Register[6]&0x03)==0)
 	{
@@ -8796,7 +8807,7 @@ void ResetDebug_KMod(  )
 
 	
 	//reset ym2612 channel
-	for(i=0; i<5; i++)
+	for(i=0; i<6; i++)
 	{
 		EnabledChannels[i] = TRUE;
 	}
