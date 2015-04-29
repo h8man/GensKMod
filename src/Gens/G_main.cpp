@@ -2827,9 +2827,10 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (pcds->dwData == CMD_LINE_DATA) //coming from another instance
 				{
 					LPSTR lpszString = (LPSTR)(pcds->lpData);
-					parseCommandLine(lpszString);
 					wsprintf(Str_Tmp, "Load %s", lpszString);
-					Put_Info(Str_Tmp, 1000);
+					Put_Info(Str_Tmp, 2000);
+
+					parseCommandLine(lpszString);
 				}
 			}
 			break;
