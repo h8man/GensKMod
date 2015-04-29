@@ -438,6 +438,7 @@ int Pre_Load_Rom(HWND hWnd, const char *Name)
 
 	SetCurrentDirectory(Gens_Path);
 
+	//chack if exit
 	Rom_File = CreateFile(Name, GENERIC_READ, FILE_SHARE_READ, 
 		NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -445,8 +446,11 @@ int Pre_Load_Rom(HWND hWnd, const char *Name)
 
 	CloseHandle(Rom_File);
 
+	//close previous
 	Free_Rom(Game);
 
+
+	//
 	sys = Detect_Format(Name);
 
 	if (sys < 1) return -1;

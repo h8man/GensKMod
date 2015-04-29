@@ -1675,7 +1675,57 @@ void End_All(void)
 	SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, SS_Actived, NULL, 0);
 }
 
+void parseCommandLine(LPSTR lpCmdLine)
+{
+	int src;
 
+#ifdef CC_SUPPORT
+	//		src = CC_Connect("CCGEN://Stef:gens@emu.consoleclassix.com/sonicthehedgehog2.gen", (char *) Rom_Data, CC_End_Callback);
+	src = CC_Connect(lpCmdLine, (char *)Rom_Data, CC_End_Callback);
+
+	if (src == 0)
+	{
+		Load_Rom_CC(CCRom.RName, CCRom.RSize);
+		Build_Main_Menu();
+	}
+	else if (src == 1)
+	{
+		MessageBox(NULL, "Error during connection", NULL, MB_OK);
+	}
+	else if (src == 2)
+	{
+#endif
+		src = 0;
+
+		if (lpCmdLine[src] == '"')
+		{
+			src++;
+
+			while ((lpCmdLine[src] != '"') && (lpCmdLine[src] != 0))
+			{
+				Str_Tmp[src - 1] = lpCmdLine[src];
+				src++;
+			}
+
+			Str_Tmp[src - 1] = 0;
+		}
+		else
+		{
+			while (lpCmdLine[src] != 0)
+			{
+				Str_Tmp[src] = lpCmdLine[src];
+				src++;
+			}
+
+			Str_Tmp[src] = 0;
+		}
+
+		Pre_Load_Rom(HWnd, Str_Tmp);
+
+#ifdef CC_SUPPORT
+	}
+#endif
+}
 int PASCAL WinMain(HINSTANCE hInst,	HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCmdShow)
 {
 	MSG msg;
@@ -1724,54 +1774,8 @@ int PASCAL WinMain(HINSTANCE hInst,	HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 
 	if (lpCmdLine[0])
 	{
-		int src;
+		parseCommandLine(lpCmdLine);
 
-#ifdef CC_SUPPORT
-//		src = CC_Connect("CCGEN://Stef:gens@emu.consoleclassix.com/sonicthehedgehog2.gen", (char *) Rom_Data, CC_End_Callback);
-		src = CC_Connect(lpCmdLine, (char *) Rom_Data, CC_End_Callback);
-
-		if (src == 0)
-		{
-			Load_Rom_CC(CCRom.RName, CCRom.RSize);
-			Build_Main_Menu();
-		}
-		else if (src == 1)
-		{
-			MessageBox(NULL, "Error during connection", NULL, MB_OK);
-		}
-		else if (src == 2)
-		{
-#endif
-			src = 0;
-			
-			if (lpCmdLine[src] == '"')
-			{
-				src++;
-				
-				while ((lpCmdLine[src] != '"') && (lpCmdLine[src] != 0))
-				{
-					Str_Tmp[src - 1] = lpCmdLine[src];
-					src++;
-				}
-
-				Str_Tmp[src - 1] = 0;
-			}
-			else
-			{
-				while (lpCmdLine[src] != 0)
-				{
-					Str_Tmp[src] = lpCmdLine[src];
-					src++;
-				}
-
-				Str_Tmp[src] = 0;
-			}
-
-			Pre_Load_Rom(HWnd, Str_Tmp);
-
-#ifdef CC_SUPPORT
-		}
-#endif
 	}
 
 	while (Gens_Running)
@@ -2820,10 +2824,12 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case WM_COPYDATA:
 			{
 				COPYDATASTRUCT* pcds = (COPYDATASTRUCT*)lParam;
-				if (pcds->dwData == CMD_LINE_DATA)
+				if (pcds->dwData == CMD_LINE_DATA) //coming from another instance
 				{
-					LPCTSTR lpszString = (LPCTSTR)(pcds->lpData);
-					MESSAGE_L("Communicating", lpszString, 1000)
+					LPSTR lpszString = (LPSTR)(pcds->lpData);
+					parseCommandLine(lpszString);
+					wsprintf(Str_Tmp, "Load %s", lpszString);
+					Put_Info(Str_Tmp, 1000);
 				}
 			}
 			break;
