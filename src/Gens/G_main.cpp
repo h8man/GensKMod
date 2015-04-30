@@ -3154,7 +3154,7 @@ HMENU Build_Main_Menu(void)
 
 	if (strcmp(Recent_Rom[0], ""))
 	{
-		MENU_L(Files, i++, MF_BYPOSITION | MF_POPUP | MF_STRING, (UINT)FilesHistory, "Rom History", "\tCtrl + Alt + L", "&ROM History");
+		MENU_L(Files, i++, MF_BYPOSITION | MF_POPUP | MF_STRING, (UINT)FilesHistory, "Rom History", "\tCtrl+Alt+L", "&ROM History");
 		InsertMenu(Files, i++, MF_SEPARATOR, NULL, NULL);
 	}
 
