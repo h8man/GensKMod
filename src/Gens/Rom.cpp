@@ -78,11 +78,25 @@ void Get_Dir_From_Path(const char *Full_Path, char *Dir)
 void Update_Recent_Rom(const char *Path)
 {
 	int i;
+	int romIdx = 0xFF;
+	int idxToGetDown = 8;
 
-	for(i = 0; i < 9; i++)
-		if (!(strcmp(Recent_Rom[i], Path))) return;
-		
-	for(i = 8; i > 0; i--) strcpy(Recent_Rom[i], Recent_Rom[i - 1]);
+	for (i = 0; i < 9; i++)
+	{
+		if (!(strcmp(Recent_Rom[i], Path)))
+		{
+			romIdx = i;
+			break;
+		}
+	}
+
+	if (romIdx == 0)	return; //nothing to do, already first one
+
+	if (romIdx != 0xFF)
+		idxToGetDown = romIdx;
+	
+	for (i = idxToGetDown; i > 0; i--)
+		strcpy(Recent_Rom[i], Recent_Rom[i - 1]);
 
 	strcpy(Recent_Rom[0], Path);
 }
