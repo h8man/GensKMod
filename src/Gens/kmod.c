@@ -8474,7 +8474,7 @@ void LoadConfig_KMod( )
 	KConf.pausedAtStart = (BOOL)GetPrivateProfileInt("Debug", "pausedAtStart", FALSE, Conf_File);
 	KConf.singleInstance = (BOOL)GetPrivateProfileInt("Debug", "singleInstance", FALSE, Conf_File);
 	KConf.Special = (BOOL)GetPrivateProfileInt("Debug", "Special", FALSE, Conf_File);
-	KConf.useGDB = (BOOL)GetPrivateProfileInt("Debug", "gdb", TRUE, Conf_File);
+	KConf.useGDB = (BOOL)GetPrivateProfileInt("Debug", "gdb", FALSE, Conf_File);
     KConf.gdb_m68kport = GetPrivateProfileInt("Debug", "gdbm68k", 6868, Conf_File);
     KConf.gdb_s68kport = GetPrivateProfileInt("Debug", "gdbs68k", 6869, Conf_File);
     KConf.gdb_msh2port = GetPrivateProfileInt("Debug", "gdbmsh2", 6870, Conf_File);
