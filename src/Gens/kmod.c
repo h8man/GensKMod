@@ -216,6 +216,7 @@
  ** - bug : YM2612 wrong FMS value (AlyJ) 
  ** - bug : PSG wrong noise type (AlyJ)
  ** - bug : YM2612 Chan6 enable status is wrong
+ ** - better 68k debug view, with current address and not relative
  ** - VS2013 compile
  ** - WinXP support
  ** - update Sprites list
@@ -230,6 +231,7 @@
  ** Mod to do
  **
  ** - bug : Timer not working
+ ** - jump to rom/ram address on Genesis - 68k view
  ** - debug Genesis - Scroll (editable on pause)
  ** - 32x VDP modes handle
  ** - add "jump to"/PC in mem/disasm views
@@ -3169,19 +3171,19 @@ void SwitchM68kViewMode_KMod( )
 	si.cbSize = sizeof(si); 
 	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS; 
 	si.nMin   = 0; 
-	si.nPage  = 13;
+	si.nPage  = 10;
 
 	if (M68_ViewMode == 0)
 	{
 		// DISASM VIEW
 		si.nPos   = M68k_StartLineDisasm; 
-		si.nMax   = Rom_Size -1;
+		si.nMax = Rom_Size - 1; // 0x400000 - 28; 
 	}
 	else if (M68_ViewMode == 1)
 	{
 		// ROM VIEW
 		si.nPos   = M68k_StartLineROM; 
-		si.nMax   = (Rom_Size/8) -1;
+		si.nMax = (Rom_Size / 8) - 1; //(0x400000 >> 3) -1;
 	}
 	else
 	{
@@ -3215,7 +3217,15 @@ void UpdateM68k_KMod( )
 		for(i = 0; i < 13; i++)
 		{
 			PC = Current_PC_M68K;
-			wsprintf(debug_string, "%.5X    %-33s", PC, M68KDisasm(Next_Word_M68K, Next_Long_M68K));
+			if (PC >= Rom_Size)
+			{
+				wsprintf(debug_string, "%.6X", PC);
+				Current_PC_M68K += 2;
+			}
+			else
+			{ 
+			wsprintf(debug_string, "%.6X    %-33s", PC, M68KDisasm(Next_Word_M68K, Next_Long_M68K));
+			}
 			SendDlgItemMessage(hM68K , IDC_68K_DISAM, LB_INSERTSTRING, i , (LPARAM)debug_string);
 		}
 	}
@@ -3225,12 +3235,19 @@ void UpdateM68k_KMod( )
 		M68k_StartLineROM = GetScrollPos(GetDlgItem(hM68K, IDC_68K_SCROLL) ,SB_CTL);
 		for(i = 0; i < 13; i++)
 		{
-			wsprintf(tmp_string, "%.5X ", M68k_StartLineROM*8 + i*8);
-			tmp_string[5] = 0x20;
-			Hexview( (unsigned char *) (Rom_Data + M68k_StartLineROM*8 + i*8), tmp_string + 6);
-			tmp_string[23] = 0x20;
-			Ansiview( (unsigned char *) (Rom_Data + M68k_StartLineROM*8 + i*8), tmp_string + 24);
-			wsprintf(debug_string, "%s", tmp_string);
+			if ((M68k_StartLineROM * 8 + i * 8) > Rom_Size)
+			{
+				wsprintf(debug_string, "%.6X ", M68k_StartLineROM * 8 + i * 8);
+			}
+			else
+			{
+				wsprintf(tmp_string, "%.6X ", M68k_StartLineROM * 8 + i * 8);
+				tmp_string[6] = 0x20;
+				Hexview((unsigned char *)(Rom_Data + M68k_StartLineROM * 8 + i * 8), tmp_string + 7);
+				tmp_string[24] = 0x20;
+				Ansiview((unsigned char *)(Rom_Data + M68k_StartLineROM * 8 + i * 8), tmp_string + 25);
+				wsprintf(debug_string, "%s", tmp_string);
+			}
 			SendDlgItemMessage(hM68K , IDC_68K_DISAM, LB_INSERTSTRING, i , (LPARAM)debug_string);
 		}
 		Byte_Swap(Rom_Data, Rom_Size);
@@ -3241,11 +3258,11 @@ void UpdateM68k_KMod( )
 		M68k_StartLineRAM = GetScrollPos(GetDlgItem(hM68K, IDC_68K_SCROLL) ,SB_CTL);
 		for(i = 0; i < 13; i++)
 		{
-			wsprintf(tmp_string, "%.4X ", M68k_StartLineRAM*8 + i*8);
-			tmp_string[4] = 0x20;
-			Hexview( (unsigned char *) (Ram_68k + M68k_StartLineRAM*8 + i*8), tmp_string + 5);
-			tmp_string[22] = 0x20;
-			Ansiview( (unsigned char *) (Ram_68k + M68k_StartLineRAM*8 + i*8), tmp_string + 23);
+			wsprintf(tmp_string, "FF%.4X ", M68k_StartLineRAM*8 + i*8);
+			tmp_string[6] = 0x20;
+			Hexview( (unsigned char *) (Ram_68k + M68k_StartLineRAM*8 + i*8), tmp_string + 7);
+			tmp_string[24] = 0x20;
+			Ansiview( (unsigned char *) (Ram_68k + M68k_StartLineRAM*8 + i*8), tmp_string + 25);
 			wsprintf(debug_string, "%s", tmp_string);
 			SendDlgItemMessage(hM68K , IDC_68K_DISAM, LB_INSERTSTRING, i , (LPARAM)debug_string);
 		}
@@ -4395,7 +4412,7 @@ void SwitchS68kViewMode_KMod( )
 	si.cbSize = sizeof(si); 
 	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS; 
 	si.nMin   = 0; 
-	si.nPage  = 13;
+	si.nPage  = 10;
 
 
 	if (S68k_ViewMode&2)
@@ -5738,7 +5755,7 @@ void SwitchMSH2ViewMode_KMod(  )
 	si.cbSize = sizeof(si); 
 	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS; 
 	si.nMin   = 0; 
-	si.nPage  = 13;
+	si.nPage  = 10;
 
 	if (MSH2_ViewMode&2)
 	{
@@ -6096,7 +6113,7 @@ void SwitchSSH2ViewMode_KMod(  )
 	si.cbSize = sizeof(si); 
 	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS; 
 	si.nMin   = 0; 
-	si.nPage  = 13;
+	si.nPage  = 10;
 
 	if (SSH2_ViewMode&2)
 	{
