@@ -109,6 +109,7 @@ public:
         }
     }
 
+	/*
     void ReadMemory(unsigned int base, unsigned int count, void * data)
     {
         unsigned int n;
@@ -156,6 +157,56 @@ public:
             }
         }
     }
+	*/
+	void ReadMemory(unsigned int base, unsigned int count, void * data)
+	{
+		unsigned int n;
+		unsigned char * d = (unsigned char *)data;
+
+		if (is_main)
+		{
+			//if (base > 0xFFFFFF)
+			{
+				if (base >= 0x1000000 && base < 0x1010000)
+				{
+					memcpy(data, &VRam[base & 0xFFFF], count);
+					return;
+				}
+				if (base >= 0x1010000 && base < 0x1010100)
+				{
+					base -= 0x1010000;
+					for (n = 0; n < count; n++)
+					{
+						d[n] = CRam[(base + n) ^ 1];
+					}
+					return;
+				}
+				if (base >= 0x1010100 && base < 0x1010200)
+				{
+					base -= 0x1010100;
+					memcpy(data, &VSRam[base & 0xFFFF], count);
+					return;
+				}
+			}
+		}
+		/*
+		if (is_main && (base < 6 * 1024 * 1024))
+		{
+			for (n = 0; n < count; n++)
+			{
+				*d++ = Rom_Data[(base + n) ^ 1];
+			}
+		}
+		else
+		{
+		*/
+			for (n = 0; n < count; n++)
+			{
+				*d++ = is_main ? M68K_RB((base + n) & 0xFFFFFF) : S68K_RB((base + n) & 0xFFFFFF);
+			}
+		//}
+	}
+
 
     void WriteMemory(unsigned int base, unsigned int count, const void * data)
     {
@@ -165,8 +216,8 @@ public:
 
         if (is_main)
         {
-            if (base > 0xFFFFFF)
-            {
+            //if (base > 0xFFFFFF)
+            //{
                 if (base >= 0x1000000 && base < 0x1010000)
                 {
                     memcpy(&VRam[base & 0xFFFF], data, count);
@@ -192,8 +243,9 @@ public:
                     }
                     return;
                 }
-            }
+            //}
 
+			//M68K_WB doesn't handle ROM write
             if (base < 6 * 1024 * 1024)
             {
                 // memcpy(&Rom_Data[base], data, count);
@@ -212,6 +264,8 @@ public:
         }
         else
         {
+			//TODO
+
             // XXX - Support SegaCD sub CPU write
         }
     }
@@ -308,6 +362,7 @@ public:
         }
         else
         {
+			//TODO
             return 0;
         }
     }
