@@ -259,7 +259,7 @@ int Save_State(char *Name)
 		Export_32X(buf);
 		buf += 0x82A00;
 	}
-	
+
 	fwrite(State_Buffer, 1, len, f);
 	fclose(f);
 
@@ -333,7 +333,7 @@ Gens and Kega ADD
 -----------------
 
 00040 : last VDP Control data written (DWORD)
-00044 : second write flag (1 for second write) 
+00044 : second write flag (1 for second write)
 00045 : DMA Fill flag (1 mean next data write will cause a DMA fill)
 00048 : VDP write address (DWORD)
 
@@ -417,10 +417,13 @@ void Import_Genesis(unsigned char *Data)
 	Version = Data[0x50];
 
 	/* KANEDA_BUG : not all the CRam & VSRam is loaded  */
-	for(i = 0; i < 0x80; i++) CRam[i] = Data[i + 0x112];
+	for (i = 0; i < 0x40; i++)
+	{
+		CRam[i] = (Data[i * 2 + 0x112 + 1] << 8) | Data[i * 2 + 0x112 + 0];
+	}
 	for(i = 0; i < 0x50; i++) VSRam[i] = Data[i + 0x192];
 	for(i = 0; i < 0x2000; i++) Ram_Z80[i] = Data[i + 0x474];
-	
+
 	for(i = 0; i < 0x10000; i += 2)
 	{
 		Ram_68k[i + 0] = Data[i + 0x2478 + 1];
@@ -483,7 +486,7 @@ void Import_Genesis(unsigned char *Data)
 		Ctrl.Flag = Data[0x44];
 		Ctrl.DMA = (Data[0x45] & 1) << 2;
 		Ctrl.Address = Data[0x48] + (Data[0x49] << 8);
-		
+
 		src = (unsigned char *) &Bank_Z80;
 		for(i = 0; i < 4; i++) *src++ = Data[i + 0x43C];
 
@@ -511,7 +514,7 @@ void Import_Genesis(unsigned char *Data)
 	main68k_GetContext(&Context_68K);
 
 	for(i = 0; i < 24; i++) Set_VDP_Reg(i, Data[0xFA + i]);
-	
+
 	src = (unsigned char *) &Context_68K.dreg[0];
 	for(i = 0; i < 8 * 2 * 4; i++) *src++ = Data[0x80 + i];
 
@@ -617,7 +620,11 @@ void Export_Genesis(unsigned char *Data)
 	}
 
 	/* KANEDA_BUG : not all the CRam & VSRam is saved  */
-	for(i = 0; i < 0x80; i++) Data[i + 0x112] = CRam[i];
+	for (i = 0; i < 0x40; i++)
+	{
+		Data[i * 2 + 0x112 + 1] = ((CRam[i] >> 8) & 0xFF);
+		Data[i * 2 + 0x112 + 0] = ((CRam[i] >> 0) & 0xFF);
+	}
 	for(i = 0; i < 0x50; i++) Data[i + 0x192] = VSRam[i];
 
 	YM2612_Save(Reg_1);
@@ -716,14 +723,14 @@ void Import_32X(unsigned char *Data)
 	_32X_SINT = Data[0x2703];
 	Bank_SH2 = Data[0x2704];
 	M68K_Set_32X_Rom_Bank();
-	
+
 	/*******
-	FIFO stuff to add here...	
+	FIFO stuff to add here...
 	 *******/
 	for(i = 0; i < 0x10; i++) SH2_Write_Byte(&M_SH2, 0x4020 + i, Data[0x2740 + i]);
 	for(i = 0; i < 4; i++) SH2_Write_Byte(&M_SH2, 0x4030 + i, Data[0x2750 + i]);
 	/*******
-	Extra PWM stuff to add here...	
+	Extra PWM stuff to add here...
 	 *******/
 
 	// Do it to allow VDP write on 32X side
@@ -856,14 +863,14 @@ void Export_32X(unsigned char *Data)
 	Data[0x2702] = _32X_MINT;
 	Data[0x2703] = _32X_SINT;
 	Data[0x2704] = Bank_SH2;
-	
+
 	/*******
-	FIFO stuff to add here...	
+	FIFO stuff to add here...
 	 *******/
 	for(i = 0; i < 0x10; i++) Data[0x2740 + i] = SH2_Read_Byte(&M_SH2, 0x4020 + i);
 	for(i = 0; i < 4; i++) Data[0x2750 + i] = SH2_Read_Byte(&M_SH2, 0x4030 + i);
 	/*******
-	Extra PWM stuff to add here...	
+	Extra PWM stuff to add here...
 	 *******/
 
 	// Do it to allow VDP write on 32X side
@@ -1621,8 +1628,8 @@ int Load_SRAM(void)
 	strcpy(Name, SRAM_Dir);
 	strcat(Name, Rom_Name);
 	strcat(Name, ".srm");
-	
-	SRAM_File = CreateFile(Name, GENERIC_READ, FILE_SHARE_READ, 
+
+	SRAM_File = CreateFile(Name, GENERIC_READ, FILE_SHARE_READ,
 		NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	if (SRAM_File == INVALID_HANDLE_VALUE) return 0;
@@ -1661,14 +1668,14 @@ int Save_SRAM(void)
 	strcpy(Name, SRAM_Dir);
 	strcat(Name, Rom_Name);
 	strcat(Name, ".srm");
-	
-	SRAM_File = CreateFile(Name, GENERIC_WRITE, NULL, 
+
+	SRAM_File = CreateFile(Name, GENERIC_WRITE, NULL,
 		NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	if (SRAM_File == INVALID_HANDLE_VALUE) return 0;
-	
+
 	bResult = WriteFile(SRAM_File, SRAM, size_to_save, &Bytes_Write, NULL);
-	
+
 	CloseHandle(SRAM_File);
 
 	strcpy(Str_Tmp, "SRAM saved in ");
@@ -1729,8 +1736,8 @@ int Load_BRAM(void)
 	strcpy(Name, BRAM_Dir);
 	strcat(Name, Rom_Name);
 	strcat(Name, ".brm");
-	
-	BRAM_File = CreateFile(Name, GENERIC_READ, FILE_SHARE_READ, 
+
+	BRAM_File = CreateFile(Name, GENERIC_READ, FILE_SHARE_READ,
 		NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	if (BRAM_File == INVALID_HANDLE_VALUE) return 0;
@@ -1760,15 +1767,15 @@ int Save_BRAM(void)
 	strcpy(Name, BRAM_Dir);
 	strcat(Name, Rom_Name);
 	strcat(Name, ".brm");
-	
-	BRAM_File = CreateFile(Name, GENERIC_WRITE, NULL, 
+
+	BRAM_File = CreateFile(Name, GENERIC_WRITE, NULL,
 		NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	if (BRAM_File == INVALID_HANDLE_VALUE) return 0;
-	
+
 	bResult = WriteFile(BRAM_File, Ram_Backup, 8 * 1024, &Bytes_Write, NULL);
 	bResult = WriteFile(BRAM_File, Ram_Backup_Ex, (8 << BRAM_Ex_Size) * 1024, &Bytes_Write, NULL);
-	
+
 	CloseHandle(BRAM_File);
 
 	strcpy(Str_Tmp, "BRAM saved in ");
