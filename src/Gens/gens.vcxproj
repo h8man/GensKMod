@@ -42,19 +42,15 @@
     <OutDir>.\Debug\</OutDir>
     <IntDir>.\Debug\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\perso\dev\projets\megadrive\gensKMod\src\dx70_min\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\perso\dev\projets\megadrive\gensKMod\src\dx70_min\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>.\Release\</OutDir>
     <IntDir>.\Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\perso\dev\projets\megadrive\gensKMod\src\dx70_min\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\perso\dev\projets\megadrive\gensKMod\src\dx70_min\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <Optimization>Disabled</Optimization>
@@ -67,6 +63,7 @@
       <PrecompiledHeader />
       <ObjectFileName>.\Debug\</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug\</ProgramDataBaseFileName>
+	  <AdditionalIncludeDirectories>..\dx70_min\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -89,9 +86,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OutputFile>.\Debug\gens.exe</OutputFile>
-      <AdditionalDependencies>wsock32.lib;COMCTL32.LIB;ddraw.lib;dsound.lib;$(SolutionDir)dx70_min\lib\dinput.lib;dxguid.lib;winmm.lib;Vfw32.lib;libs\zlib.lib;libs\htmlhelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wsock32.lib;COMCTL32.LIB;ddraw.lib;dsound.lib;dinput.lib;dxguid.lib;winmm.lib;Vfw32.lib;libs\zlib.lib;libs\htmlhelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <IgnoreSpecificDefaultLibraries>libc.lib</IgnoreSpecificDefaultLibraries>
+	  <AdditionalLibraryDirectories>..\dx70_min\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -130,9 +128,10 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Windows</SubSystem>
       <OutputFile>.\Release\gens.exe</OutputFile>
-      <AdditionalDependencies>wsock32.lib;COMCTL32.LIB;ddraw.lib;dsound.lib;$(SolutionDir)dx70_min\lib\dinput.lib;dxguid.lib;winmm.lib;Vfw32.lib;libs\zlib.lib;libs\htmlhelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wsock32.lib;COMCTL32.LIB;ddraw.lib;dsound.lib;dinput.lib;dxguid.lib;winmm.lib;Vfw32.lib;libs\zlib.lib;libs\htmlhelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <IgnoreSpecificDefaultLibraries>libc.lib</IgnoreSpecificDefaultLibraries>
+	  <AdditionalLibraryDirectories>..\dx70_min\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
