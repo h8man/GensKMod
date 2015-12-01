@@ -2367,7 +2367,7 @@ static COLORREF plane_explorer_palette[256];
 static int old_plane_width = 0;
 static int old_plane_height = 0;
 static int plane_explorer_plane = 0;
-static bool show_transparence = false;
+static BOOL show_transparence = FALSE;
 
 static void PlaneExplorerInit_KMod(HWND hDlg)
 {
