@@ -7,6 +7,7 @@
 #include "Rom.h"
 #include "G_dsound.h"
 #include "G_main.h"
+#include "G_gfx.h"
 #include "gens.h"
 #include "ggenie.h"
 #include "cpu_68k.h"
@@ -448,6 +449,7 @@ int Get_Rom(HWND hWnd)
 int Pre_Load_Rom(HWND hWnd, const char *Name)
 {
 	HANDLE Rom_File;
+	char errorStr[1024];
 	int sys;
 
 	SetCurrentDirectory(Gens_Path);
@@ -456,8 +458,12 @@ int Pre_Load_Rom(HWND hWnd, const char *Name)
 	Rom_File = CreateFile(Name, GENERIC_READ, FILE_SHARE_READ, 
 		NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
-	if (Rom_File == INVALID_HANDLE_VALUE) return 0;
-
+	if (Rom_File == INVALID_HANDLE_VALUE)
+	{
+		wsprintf(errorStr, "File %s not found", Name);
+		Put_Info(errorStr, 2000);
+		return 0;
+	}
 	CloseHandle(Rom_File);
 
 	//close previous
