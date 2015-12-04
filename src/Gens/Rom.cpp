@@ -461,7 +461,7 @@ int Pre_Load_Rom(HWND hWnd, const char *Name)
 	if (Rom_File == INVALID_HANDLE_VALUE)
 	{
 		wsprintf(errorStr, "File %s not found", Name);
-		Put_Info(errorStr, 2000);
+		Put_Info(errorStr, 3000);
 		return 0;
 	}
 	CloseHandle(Rom_File);
