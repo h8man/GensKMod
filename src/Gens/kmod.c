@@ -3935,14 +3935,7 @@ void DrawVDP_Tiles_KMod( LPDRAWITEMSTRUCT hlDIS  )
 
 void DrawVDPZoom_Tiles_KMod( LPDRAWITEMSTRUCT hlDIS  )
 {
-	SCROLLINFO si;
-
-	ZeroMemory(&si, sizeof(SCROLLINFO));
-	si.cbSize = sizeof(si);
-	si.fMask  = SIF_POS;
-	GetScrollInfo((HWND) GetDlgItem(hVDP, IDC_VDP_SCROLL), SB_CTL, &si);
-
-	DrawTile_KMod( hlDIS->hDC, (si.nPos*32) + tile_KMod, 0, 0, pal_KMod, zoomTile_KMod);
+	DrawTile_KMod( hlDIS->hDC, tile_KMod, 0, 0, pal_KMod, zoomTile_KMod);
 }
 
 void DumpTiles_KMod( HWND hwnd )
@@ -4165,6 +4158,12 @@ void VDPPal_Choose( )
 void VDPTile_Choose( )
 {
 	POINT pt;
+	SCROLLINFO si;
+
+	ZeroMemory(&si, sizeof(SCROLLINFO));
+	si.cbSize = sizeof(si);
+	si.fMask  = SIF_POS;
+	GetScrollInfo((HWND) GetDlgItem(hVDP, IDC_VDP_SCROLL), SB_CTL, &si);
 
 	GetCursorPos(&pt);
 	ScreenToClient(hVDP, &pt);
@@ -4174,11 +4173,13 @@ void VDPTile_Choose( )
 	pt.y -= rcTiles.top;
 	tile_KMod = (unsigned char) (pt.y/8);
 	tile_KMod *= 32;
+	tile_KMod += si.nPos * 32;
+
 
 	pt.x -= rcTiles.left;
 	tile_KMod += (unsigned char) (pt.x/8);
 
-    wsprintf(debug_string, "0x%.4X", tile_KMod);
+    wsprintf(debug_string, "Tile 0x%.4X", tile_KMod);
     SendDlgItemMessage(hVDP, IDC_VDP_TILE_ZOOM_ADR, WM_SETTEXT, 0, (LPARAM)debug_string);
 
 	if (Paused)	UpdateVDP_KMod( );
@@ -4214,8 +4215,10 @@ void VDPInit_KMod( HWND hwnd )
 	rcTiles.bottom = rcTiles.top+32*8;
 	rcTiles.right = rcTiles.left+32*8;
 	MoveWindow(GetDlgItem(hwnd, IDC_VDP_TILES), rcTiles.left, rcTiles.top, rcTiles.right-rcTiles.left, rcTiles.bottom-rcTiles.top, TRUE);
-
 	MoveWindow(GetDlgItem(hwnd, IDC_VDP_SCROLL), rcTiles.right, rcTiles.top, GetSystemMetrics(SM_CXVSCROLL), rcTiles.bottom-rcTiles.top, TRUE);
+
+	MoveWindow(GetDlgItem(hwnd, IDC_VDP_TILE_ZOOM_ADR), rcTiles.left, rcTiles.bottom + 8, TZoomRect.right - TZoomRect.left, 16, TRUE);
+	MoveWindow(GetDlgItem(hwnd, IDC_VDP_PREVIEW), rcTiles.left, rcTiles.bottom + 8+16+4, TZoomRect.right - TZoomRect.left, TZoomRect.bottom - TZoomRect.top, TRUE);
 
 	CheckDlgButton( hwnd, IDC_VDP_PAL_1, BST_CHECKED);
 	CheckDlgButton( hwnd, IDC_VDP_PAL_2, BST_CHECKED);
@@ -4350,7 +4353,7 @@ BOOL CALLBACK VDPDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			si.fMask  = SIF_POS;
 			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE);
 
-			wsprintf(debug_string, "0x%.4X", si.nPos*32);
+			wsprintf(debug_string, "Offset 0x%.4X", si.nPos*32);
 			SendDlgItemMessage(hVDP , IDC_VDP_TILES_ADR, WM_SETTEXT, 0 , (LPARAM)debug_string);
 
 			UpdateVDP_KMod( );
