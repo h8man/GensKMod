@@ -3738,6 +3738,12 @@ USHORT tile_KMod;
 HWND hWndRedArrow;
 HWND hWndPal;
 RECT rcArrow, rcPal, rcTiles;
+COLORREF cgaPal[16] = {
+	RGB(0, 0, 0), RGB(0, 0, 0xAA), RGB(0, 0xAA, 0), RGB(0, 0xAA, 0xAA),
+	RGB(0xAA, 0, 0), RGB(0xAA, 0, 0xAA), RGB(0xAA, 0x55, 0), RGB(0xAA, 0xAA, 0xAA),
+	RGB(0x55, 0x55, 0x55), RGB(0x55, 0x55, 0xFF), RGB(0x55, 0xFF, 0x55), RGB(0x55, 0xFF, 0xFF),
+	RGB(0xFF, 0x55, 0x55), RGB(0xFF, 0x55, 0xFF), RGB(0xFF, 0xFF, 0x55), RGB(0xFF, 0xFF, 0xFF),
+};
 
 static COLORREF GetPal_KMod(unsigned int numPal, unsigned int numColor)
 {
@@ -3745,6 +3751,9 @@ static COLORREF GetPal_KMod(unsigned int numPal, unsigned int numColor)
 	/* !! CRAM is (binary:)GGG0RRR00000BBB0   while COLORREF is (hexa:)0x00BBGGRR */
 	unsigned short int md_color;
 	COLORREF newColor;
+
+	// handle our false CGA pal
+	if (numPal == 4)	return ( cgaPal[numColor] );
 
 	/* B */
 	newColor = (COLORREF) CRam[ 2*16*numPal + 2*numColor + 1];
@@ -3760,12 +3769,9 @@ static COLORREF GetPal_KMod(unsigned int numPal, unsigned int numColor)
 	md_color <<= 4;
 	newColor |= md_color;
 
+	//transform genny white to true white
 	if (newColor == 0x00E0E0E0)
 		newColor = 0x00FFFFFF;
-
-	// handle our false pal ;)
-	if (numPal==4)
-		newColor = PALETTEINDEX(numColor);
 
 	return newColor;
 }
@@ -3834,7 +3840,7 @@ static void DrawTile_KMod(HDC hDCMain, unsigned short int numTile, WORD x, WORD 
         8, 8,
         tile_data,
         (const BITMAPINFO *)&bmi,
-        DIB_RGB_COLORS,
+		DIB_RGB_COLORS,
         SRCCOPY);
 }
 
