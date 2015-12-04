@@ -209,6 +209,7 @@
  ** - plane explorer
  ** - bug : z80 issue
  ****** 0.7.3
+ ** - bug : crash on screenshot
  ** - bug : unreadable plane info
  ** - bug : crash on joypad key mapping
  ** - bug : Gens hangs when Message reach limit
@@ -216,6 +217,8 @@
  ** - bug : YM2612 wrong FMS value (AlyJ)
  ** - bug : PSG wrong noise type (AlyJ)
  ** - bug : YM2612 Chan6 enable status is wrong
+ ** - bug : VDP tile ID wrong
+ ** - bug : fake pal no longer works
  ** - better 68k debug view, with current address and not relative
  ** - VS2013 compile
  ** - WinXP support
