@@ -222,7 +222,7 @@
  ** - better 68k debug view, with current address and not relative
  ** - VS2013 compile
  ** - WinXP support
- ** - update Sprites list
+ ** - rethink Sprites list
  ** - toggle GDB
  ** - single instance mode
  ** - pause at start
@@ -683,6 +683,7 @@ BOOL Msg_KMod( char *msg)
 
 	SetDlgItemText(hDMsg, IDC_MSG_EDIT, editCutText);
 	SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_LINESCROLL, (WPARAM) 0, (LPARAM) SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLINECOUNT, (WPARAM) 0, (LPARAM) 0) );
+
 	LocalFree( (HLOCAL) editText );
 	editText = NULL;
 
@@ -7470,10 +7471,16 @@ void UpdateSprites_KMod( )
 
 		// flags
 		tmp = 0;
+		/*
 		if ( sprData[2]&0x8000)	tmp +=100;
 		if ( sprData[2]&0x1000)	tmp +=010;
 		if ( sprData[2]&0x0800)	tmp +=001;
 		wsprintf(tmp_string, "%.3d", tmp);
+		*/
+		if (sprData[2] & 0x8000)	tmp |= 4;
+		if (sprData[2] & 0x1000)	tmp |= 2;
+		if (sprData[2] & 0x0800)	tmp |= 1;
+		wsprintf(tmp_string, "%c%c%c", tmp & 4 ? 'P' : '0', tmp & 2 ? 'V' : '0', tmp & 1 ? 'H' : '0');
 		ListView_SetItemText(hSpriteList, i, 7, tmp_string);
 
 		sprData += 4;
