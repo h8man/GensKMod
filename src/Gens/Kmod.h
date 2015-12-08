@@ -39,6 +39,7 @@ struct ConfigKMod_struct {
 void Init_KMod( );
 void ResetDebug_KMod( );
 void Update_KMod( );
+void CloseDebug_KMod();
 void ToggleWindow_KMod( HWND hWnd, int Debug_Mode);
 BOOL IsDialogMsg_KMod( LPMSG lpMsg );
 void FrameStep_KMod( );

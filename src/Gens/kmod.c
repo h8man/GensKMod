@@ -219,6 +219,7 @@
  ** - bug : YM2612 Chan6 enable status is wrong
  ** - bug : VDP tile ID wrong
  ** - bug : fake pal no longer works
+ ** - rewrite message logs
  ** - better 68k debug view, with current address and not relative
  ** - VS2013 compile
  ** - WinXP support
@@ -647,45 +648,75 @@ ULONG	timer_KMod;
 HANDLE	KMsgLog;
 UCHAR	msgIdx_KMod, msg_KMod[255];
 char	*errorText_KMod="** Too many messages **";
+UINT logMaxSize, logSize;
+CHAR *logMessages;
+CHAR *logToAdd;
 
-BOOL Msg_KMod( char *msg)
+
+void UpdateMsg_KMod()
 {
-	CHAR *editText;
 	CHAR *editCutText;
-	UINT nSize, nSizeToAdd, nMaxSize;
-	DWORD dwBytesToWrite, dwBytesWritten;
+	UINT nSizeToAdd, nSize;
+
+	if (logMessages == NULL)	return;
+	if (logToAdd == NULL)	return;
 
 	if (KMsgLog)
 	{
-		dwBytesToWrite = strlen( msg );
-		if (dwBytesToWrite)		WriteFile(KMsgLog, msg, dwBytesToWrite, &dwBytesWritten, NULL) ;
+		DWORD dwBytesToWrite, dwBytesWritten;
+
+		dwBytesToWrite = strlen(logToAdd);
+		if (dwBytesToWrite)		WriteFile(KMsgLog, logToAdd, dwBytesToWrite, &dwBytesWritten, NULL);
 	}
 
-	nSizeToAdd = strlen(msg);
-	nSize = (UINT) SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, WM_GETTEXTLENGTH, (WPARAM) 0, (LPARAM) 0);
-	nMaxSize =  (UINT) SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLIMITTEXT, (WPARAM) 0, (LPARAM) 0);
+	nSizeToAdd = strlen(logToAdd) + 1;
+	nSize = logSize; // (UINT)SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, WM_GETTEXTLENGTH, (WPARAM)0, (LPARAM)0);
+	nSize += nSizeToAdd;
 
-	nSize += nSizeToAdd+1;
-	editText = (CHAR *) LocalAlloc( LPTR, nSize);
-	if (editText == NULL)	return FALSE;
-
-	GetDlgItemText(hDMsg, IDC_MSG_EDIT, editText, nSize);
-	strcat(editText, msg);
-
-	nSize = strlen(editText);
-	editCutText = editText;
-	while ( nSize >=  nMaxSize)
+	if (nSize >= logMaxSize)
 	{
-		editCutText = strstr(editCutText, "\r\n");
-		editCutText+=2;
-		nSize = strlen(editCutText);
+		editCutText = logMessages;
+		editCutText += nSizeToAdd;
+		do
+		{
+			editCutText = strstr(editCutText, "\r\n");
+			editCutText += 2;
+			nSize = strlen(editCutText) + nSizeToAdd;
+		} while (nSize > logMaxSize);
+		memmove(logMessages, editCutText, strlen(editCutText)+1);
+	}
+	strcat(logMessages, logToAdd);
+	logSize = strlen(logMessages);
+
+	SetDlgItemText(hDMsg, IDC_MSG_EDIT, logMessages);
+	SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_LINESCROLL, (WPARAM)0, (LPARAM)SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLINECOUNT, (WPARAM)0, (LPARAM)0));
+
+	LocalFree((HLOCAL)logToAdd);
+	logToAdd = NULL;
+}
+
+
+BOOL Msg_KMod( char *msg)
+{
+	if (logToAdd == NULL)
+	{
+		if (logMaxSize == 0)		logMaxSize = (UINT)SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLIMITTEXT, (WPARAM)0, (LPARAM)0);
+
+		logToAdd = (CHAR *)LocalAlloc(LPTR, logMaxSize/2);
+		if (logToAdd == NULL)	return FALSE;
+
+		ZeroMemory(logToAdd, logMaxSize / 2);
 	}
 
-	SetDlgItemText(hDMsg, IDC_MSG_EDIT, editCutText);
-	SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_LINESCROLL, (WPARAM) 0, (LPARAM) SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLINECOUNT, (WPARAM) 0, (LPARAM) 0) );
+	if ((strlen(logToAdd) + strlen(msg)) > (logMaxSize / 2)) 	return TRUE;
 
-	LocalFree( (HLOCAL) editText );
-	editText = NULL;
+	strcat(logToAdd, msg);
+
+	if (strlen(logToAdd) > (logMaxSize / 2))
+	{
+		strcat(logToAdd, "*** too much message per frame ***");
+		strcat(logToAdd, "***.. skipping some messages ..***");
+	}
 
 	return TRUE;
 }
@@ -893,9 +924,27 @@ void MsgOpen_KMod( HWND hwnd )
 	ShellExecute(hwnd, "open", "notepad", KConf.logfile, NULL, SW_SHOW);
 }
 
+
+void MsgReset_KMod(HWND hwnd)
+{
+	if (KMsgLog)	CloseHandle(KMsgLog);
+	KMsgLog = NULL;
+
+
+	if (logToAdd)		LocalFree((HLOCAL)logToAdd);
+	if (logMessages)	LocalFree((HLOCAL)logMessages);
+	logToAdd = NULL;
+	logMessages = NULL;
+
+
+	msgIdx_KMod = 0;
+	ZeroMemory(msg_KMod, 255);
+}
+
 void MsgInit_KMod( HWND hwnd )
 {
 	unsigned char Conf_File[MAX_PATH];
+	unsigned char fullMsg[MAX_PATH];
 
 	SetCurrentDirectory(Gens_Path);
 	strcpy(Conf_File, Gens_Path);
@@ -904,22 +953,30 @@ void MsgInit_KMod( HWND hwnd )
 	GetPrivateProfileString("Log", "file", szKModLog, KConf.logfile, MAX_PATH, Conf_File);
 	WritePrivateProfileString("Debug", "file", KConf.logfile, Conf_File);
 
-	if (KMsgLog)	CloseHandle( KMsgLog );
 	//FILE_SHARE_READ pour pouvoir l'ouvrir dans notepad
 	KMsgLog = CreateFile (szKModLog, GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL) ;
     if (KMsgLog != INVALID_HANDLE_VALUE)	SetFilePointer(KMsgLog, 0, 0, FILE_END);
 
 	SetDlgItemText(hwnd, IDC_MSG_FILE, szKModLog);
 
+	logMaxSize = (UINT)SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLIMITTEXT, (WPARAM)0, (LPARAM)0);
+	logMessages = (CHAR *)LocalAlloc(LPTR, logMaxSize);
+	ZeroMemory(logMessages, logMaxSize);
+	logSize = 0;
+
 	if (!Game)	return;
 
-	Msg_KMod("*******************");
-	Msg_KMod(Rom_Name);
-	Msg_KMod("\r\n");
+	wsprintf(logMessages, "*******************%s\r\n", Rom_Name);
+	logSize = strlen(logMessages);
+
+	if (KMsgLog)
+	{
+		DWORD dwBytesWritten;
+		WriteFile(KMsgLog, logMessages, (DWORD)logSize, &dwBytesWritten, NULL);
+	}
 
 	msgIdx_KMod = 0;
 	ZeroMemory(msg_KMod, 255);
-
 }
 
 
@@ -977,9 +1034,13 @@ BOOL CALLBACK MsgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 void Spy_KMod( char *log )
 {
-	Msg_KMod("Spy : ");
-	Msg_KMod(log);
-	Msg_KMod("\r\n");
+	char fullMsg[MAX_PATH];
+	wsprintf(fullMsg, "Spy:%s\r\n", log);
+	Msg_KMod(fullMsg);
+	//Msg_KMod("Spy : ");
+	//Msg_KMod(log);
+	//Msg_KMod("\r\n");
+	//Msg_KMod("ddd\r\n");
 }
 
 
@@ -1292,6 +1353,7 @@ void SpyBadWordRead(unsigned int address )
 
 void SpyBadByteWrite(unsigned int address )
 {
+
 	if (!Game)	return;
 
 	if (!KConf.Spy )	return;
@@ -8780,13 +8842,11 @@ void Init_KMod( )
 	HandleWindow_KMod[16] = hCD_Reg;
 	HandleWindow_KMod[17] = h32X_Reg;
     HandleWindow_KMod[18] = hPlaneExplorer;
-
-	ResetDebug_KMod( );
-
 }
 
 void Update_KMod( )
 {
+	UpdateMsg_KMod();
 	UpdateM68k_KMod( );
 	UpdateZ80_KMod( );
 	UpdateVDP_KMod( );
@@ -8828,24 +8888,23 @@ void Update_KMod( )
 	}
 }
 
-void ResetDebug_KMod(  )
+
+void CloseDebug_KMod()
 {
 	UCHAR mode;
-	UCHAR i,j;
-
-
+	UCHAR i, j;
 
 	for (mode = 0; mode < WIN_NUMBER; mode++)
 	{
-		if ( OpenedWindow_KMod[ mode ] && mode != (DMODE_MSG-1) )
+		if (OpenedWindow_KMod[mode] && mode != (DMODE_MSG - 1))
 		{
-			CloseWindow_KMod( (UCHAR) (mode+1) );
+			CloseWindow_KMod((UCHAR)(mode + 1));
 		}
 	}
 
 
 	//reset ym2612 channel
-	for(i=0; i<6; i++)
+	for (i = 0; i<6; i++)
 	{
 		EnabledChannels[i] = TRUE;
 	}
@@ -8853,23 +8912,28 @@ void ResetDebug_KMod(  )
 	//start_tiles = 0;
 	ListView_DeleteAllItems(GetDlgItem(hWatchers, IDC_WATCHER_LIST));
 
-	LayersInit_KMod( );
-	VDPInit_KMod( hVDP );
-	CD_GFXInit_KMod( hCD_GFX );
-	MsgInit_KMod( hDMsg );
-	GMVStop_KMod( );
+	MsgReset_KMod(hDMsg);
+	GMVStop_KMod();
 
 	AutoPause_KMod = 0;
 	AutoShot_KMod = 0;
 
-	for(i=0;i<6; i++)
+	for (i = 0; i<6; i++)
 	{
-		for(j=0; j<4; j++)
+		for (j = 0; j<4; j++)
 		{
 			notes[i][j] = BST_UNCHECKED;
 		}
 	}
 
+}
+
+void ResetDebug_KMod(  )
+{
+	LayersInit_KMod();
+	VDPInit_KMod(hVDP);
+	CD_GFXInit_KMod(hCD_GFX);
+	MsgInit_KMod(hDMsg);
 
 	Put_Info("Debug reset", 1500);
 }

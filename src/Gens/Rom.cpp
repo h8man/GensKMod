@@ -20,6 +20,7 @@
 #include "misc.h"
 #include "unzip.h"
 #include "wave.h"
+#include "kmod.h"
 
 
 int File_Type_Index;
@@ -154,6 +155,7 @@ void Update_CD_Rom_Name(char *Name)
 	}
 
 	Rom_Name[j + 1] = 0;
+
 }
 
 
@@ -342,6 +344,7 @@ void Fill_Infos(void)
 	My_Rom->Modem_Infos[12] = 0;
 	My_Rom->Description[40] = 0;
 	My_Rom->Countries[3] = 0;
+
 }
 
 int Run_Rom(HWND hWnd, const char * Name, int File_Type_Index)
@@ -903,6 +906,10 @@ int IPS_Patching(void)
 
 void Free_Rom(Rom *Rom_MD)
 {
+#ifdef GENS_KMOD
+	CloseDebug_KMod();
+#endif
+
 	if (Game == NULL) return;
 	
 #ifdef CC_SUPPORT
@@ -915,6 +922,9 @@ void Free_Rom(Rom *Rom_MD)
 	if (WAV_Dumping) Stop_WAV_Dump();
 	if (GYM_Dumping) Stop_GYM_Dump();
 	if (SegaCD_Started) Stop_CD();
+
+
+
 	Net_Play = 0;
 	Genesis_Started = 0;
 	_32X_Started = 0;

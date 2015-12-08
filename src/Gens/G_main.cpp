@@ -2026,9 +2026,7 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					}
 					Free_Rom(Game);
 					Build_Main_Menu();
-#ifdef GENS_KMOD
-					ResetDebug_KMod( );
-#endif
+
 					return 0;
 		
 				case ID_FILES_GAMEGENIE:
@@ -2101,10 +2099,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					}
 					else
 					{
-#ifdef GENS_KMOD
-						//ResetDebug_KMod( );
-#endif
-
 						Set_Render(hWnd, 1, Render_FS, true);
 					}
 					return 0;
