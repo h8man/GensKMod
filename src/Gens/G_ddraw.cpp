@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "G_ddraw.h"
+#include "G_gdi.h"
 #include "G_gfx.h"
 #include "G_dsound.h"
 #include "G_Input.h"
@@ -1058,17 +1059,24 @@ int Take_Shot()
 		}
 	}
 
-	memset(&ddsd, 0, sizeof(ddsd));
-	ddsd.dwSize = sizeof(ddsd);
-	rval = lpDDS_Primary->Lock(NULL, &ddsd, DDLOCK_WAIT, NULL);
-
-	if (rval == DD_OK)
+	if (Use_GDI)
 	{
-		Save_Shot((unsigned char *) ddsd.lpSurface + (RD.top * ddsd.lPitch) + (RD.left * 2), Mode_555 & 1, (RD.right - RD.left), (RD.bottom - RD.top), ddsd.lPitch);
-		lpDDS_Primary->Unlock(NULL);
-		return 1;
+		SaveGDI(RD);
 	}
-	else return 0;
+	else
+	{
+		memset(&ddsd, 0, sizeof(ddsd));
+		ddsd.dwSize = sizeof(ddsd);
+		rval = lpDDS_Primary->Lock(NULL, &ddsd, DDLOCK_WAIT, NULL);
+
+		if (rval == DD_OK)
+		{
+			Save_Shot((unsigned char *) ddsd.lpSurface + (RD.top * ddsd.lPitch) + (RD.left * 2), Mode_555 & 1, (RD.right - RD.left), (RD.bottom - RD.top), ddsd.lPitch);
+			lpDDS_Primary->Unlock(NULL);
+			return 1;
+		}
+		else return 0;
+	}
 }
 
 

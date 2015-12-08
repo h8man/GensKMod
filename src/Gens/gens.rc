@@ -32,10 +32,10 @@ CAPTION "About Gens"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "OK",IDOK,59,135,50,14
-    CTEXT           "Gens v2.12a KMod 0.7.2\n\nSega Genesis / Megadrive,\nSega CD / Mega CD,\nSega 32X emulator",
+    CTEXT           "Gens v2.12a KMod 0.7.3\n\nSega Genesis / Megadrive,\nSega CD / Mega CD,\nSega 32X emulator",
                     IDC_STATIC,87,3,88,58
     CONTROL         142,IDC_STATIC,"Static",SS_BITMAP | WS_BORDER,0,0,87,60
-    CTEXT           "(c) 1999/2003 by Stéphane Dallongeville\n\nUse the Gens forum for support\nHomepage : http://www.gens.me\n\nEnhanced Debugger\n(c) 2004/2014 Spritemind community\nHomepage : http://gendev.spritesmind.net/forum",
+    CTEXT           "(c) 1999/2003 by Stéphane Dallongeville\n\nUse the Gens forum for support\nHomepage : http://www.gens.me\n\nEnhanced Debugger\n(c) 2004/2015 Spritesmind community\nHomepage : http://gendev.spritesmind.net/forum",
                     IDC_STATIC,1,63,174,69,0,WS_EX_STATICEDGE
 END
 
@@ -338,17 +338,18 @@ BEGIN
     PUSHBUTTON      "Dump VRAM",IDC_VDP_VRAM,20,7,48,22
     PUSHBUTTON      "Dump CRAM",IDC_VDP_CRAM,72,7,48,22
     PUSHBUTTON      "Tiles to\nBitmap", IDC_VDP_BMP, 124, 7, 48, 22, BS_MULTILINE
-    CONTROL         "palVDP", IDC_VDP_PAL, "Static", SS_OWNERDRAW | SS_NOTIFY, 20,37,183,50
-    LTEXT           "0x0000",IDC_VDP_TILES_ADR,20,94,24,8,NOT WS_GROUP
+	CONTROL         "palVDP", IDC_VDP_PAL, "Static", SS_OWNERDRAW | SS_NOTIFY, 20, 37, 183, 50
+	CONTROL         17258, IDC_VDP_PAL_ARROW, "Static", SS_BITMAP | SS_REALSIZEIMAGE, 7, 65, 14, 8, WS_EX_ACCEPTFILES
+	CONTROL         "Check1", IDC_VDP_PAL_1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 204, 37, 11, 10
+	CONTROL         "Check1", IDC_VDP_PAL_2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 204, 47, 11, 10
+	CONTROL         "Check1", IDC_VDP_PAL_3, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 204, 57, 11, 10
+	CONTROL         "Check1", IDC_VDP_PAL_4, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 204, 67, 11, 10
+    LTEXT           "Offset 0x0000",IDC_VDP_TILES_ADR,20,94,50,8,NOT WS_GROUP
     CONTROL         "tilesVDP",IDC_VDP_TILES,"Static",SS_OWNERDRAW |  SS_NOTIFY,20,104,91,152
-    SCROLLBAR       IDC_VDP_SCROLL, 111, 104, 10, 252, SBS_VERT
-    CONTROL         17258, IDC_VDP_PAL_ARROW, "Static", SS_BITMAP | SS_REALSIZEIMAGE,7,65,14,8,WS_EX_ACCEPTFILES
-    CONTROL         "Check1",IDC_VDP_PAL_1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,204,37,11,10
-    CONTROL         "Check1",IDC_VDP_PAL_2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,204,47,11,10
-    CONTROL         "Check1",IDC_VDP_PAL_3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,204,57,11,10
-    CONTROL         "Check1",IDC_VDP_PAL_4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,204,67,11,10
-    CONTROL         "tilesZoom",IDC_VDP_PREVIEW,"Static",SS_OWNERDRAW,20,280,88,88
-    LTEXT           "0x0000", IDC_VDP_TILE_ZOOM_ADR, 20, 270, 24, 8, NOT WS_GROUP
+    SCROLLBAR       IDC_VDP_SCROLL, 111, 104, 10, 152, SBS_VERT
+    
+	LTEXT           "Tile 0x0000", IDC_VDP_TILE_ZOOM_ADR, 20, 260, 50, 8, NOT WS_GROUP
+    CONTROL         "tilesZoom",IDC_VDP_PREVIEW,"Static",SS_OWNERDRAW,20,270,88,88
 END
 
 IDD_DEBUGCD_68K DIALOG DISCARDABLE  0, 0, 359, 191
@@ -488,22 +489,20 @@ BEGIN
     CONTROL         "Transparency", IDC_PLANEEXPLORER_TRANS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 20, 20, 100, 10
     END
 
-IDD_DEBUGSPRITES DIALOG DISCARDABLE  0, 0, 237, 253
+IDD_DEBUGSPRITES DIALOG DISCARDABLE  0, 0, 240, 260
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Sprites"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Num    Ypos       XPos             Size      Link   Pal         Tile       Flags*",
-                    IDC_STATIC,7,7,223,8
-    LISTBOX         IDC_SPRITES_LIST,7,21,223,147,LBS_USETABSTOPS | 
-                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL
-    CONTROL         "spriteVDP",IDC_SPRITES_PREVIEW,"Static",SS_OWNERDRAW,7,
-                    185,67,61
-    LTEXT           "* Priority / VFlip / HFlip",IDC_STATIC,7,170,72,8,NOT 
-                    WS_GROUP
-    PUSHBUTTON      "Dump",IDC_SPRITES_DUMP,167,207,50,14
-    CONTROL         "spriteVDP",IDC_SPRITES_PREVIEW2,"Static",SS_OWNERDRAW,
-                    89,185,67,61
+	CONTROL         "List1", IDC_SPRITES_LIST, "SysListView32", LVS_REPORT |
+					LVS_SINGLESEL | LVS_ALIGNLEFT |	LVS_NOSORTHEADER |
+					WS_BORDER | WS_TABSTOP, 7, 7, 225, 150
+	LTEXT           "* Priority / VFlip / HFlip", IDC_STATIC, 7, 160, 72, 8, NOT WS_GROUP
+    CONTROL         "spriteVDP",IDC_SPRITES_PREVIEW,"Static",SS_OWNERDRAW,
+					7, 170, 20, 20
+	CONTROL         "spriteVDP", IDC_SPRITES_PREVIEW2, "Static", SS_OWNERDRAW,
+					30, 170, 80, 80
+    PUSHBUTTON      "Dump",IDC_SPRITES_DUMP,180,180,50,14
 END
 
 IDD_DEBUGYM2612 DIALOG DISCARDABLE  0, 0, 346, 321
@@ -512,19 +511,19 @@ CAPTION "Yamaha 2612"
 FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "Channel",IDC_STATIC,7,22,332,202,WS_GROUP
-    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode ?\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
+    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
                     IDC_STATIC,10,42,64,97,NOT WS_GROUP
     GROUPBOX        "Operator 1",IDC_STATIC,85,29,61,113
-    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode ?\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
+    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
                     IDC_YM2612_OP1,91,42,52,97,NOT WS_GROUP
     GROUPBOX        "Operator 2",IDC_STATIC,149,29,61,113
-    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode ?\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
+    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
                     IDC_YM2612_OP2,155,42,53,97
     GROUPBOX        "Operator 3",IDC_STATIC,211,29,61,113
-    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode ?\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
+    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
                     IDC_YM2612_OP3,217,42,54,97
     GROUPBOX        "Operator 4",IDC_STATIC,275,29,61,113
-    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode ?\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
+    LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
                     IDC_YM2612_OP4,281,42,52,97
     LTEXT           "Frequency\nOctave\nFrequency CH3\nOctave CH3",
                     IDC_STATIC,31,154,51,34
@@ -691,7 +690,7 @@ BEGIN
                     WS_TABSTOP,7,73,138,8
 END
 
-IDD_DCONFIG DIALOG DISCARDABLE  0, 0, 200, 244
+IDD_DCONFIG DIALOG DISCARDABLE  0, 0, 200, 290
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Debug configuration"
 FONT 8, "MS Sans Serif"
@@ -700,6 +699,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,143,24,50,14
     CONTROL         "Auto load watchers && structures",IDC_DCONFIG_AUTOW,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,15,115,10
+
     CONTROL         "Spy strange behaviors",IDC_DCONFIG_SPY,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,29,86,10
     CONTROL         "Bad register's value",IDC_DCONFIG_SPY1,"Button",
@@ -707,30 +707,42 @@ BEGIN
     CONTROL         "Sprite limit",IDC_DCONFIG_SPY2,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,36,55,47,10
     CONTROL         "Read/Write forbidden",IDC_DCONFIG_SPY3,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,36,68,85,10
-    CONTROL         "'Blue Screen' pause",IDC_DCONFIG_BSCREEN,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,145,79,10
-    CONTROL         "Active Development Features",IDC_DCONFIG_SPECIAL,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,168,109,10
-    CONTROL         "DMA access (for gfx hackers)",IDC_DCONFIG_SPY4,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,36,80,109,10
-    PUSHBUTTON      "Get Debug.zip",IDC_DCONFIG_ZIP,143,164,50,14
-    CONTROL         "Spy CD Bios call",IDC_DCONFIG_SPYCD,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,102,68,10
-    CONTROL         "...but CDB Wait",IDC_DCONFIG_SPYCD1,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,36,114,65,10
-    CONTROL         "...but CDC Wait",IDC_DCONFIG_SPYCD2,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,36,126,65,10
-    LTEXT           "GDB Stub Port (Main 68K)", IDC_STATIC, 7, 182, 120, 10
-    EDITTEXT        ICD_DCONFIG_GDBPORTM68K, 153, 182, 40, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
-    LTEXT           "GDB Stub Port (Sub 68K)", IDC_STATIC, 7, 196, 120, 10
-    EDITTEXT        ICD_DCONFIG_GDBPORTS68K, 153, 196, 40, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
-    LTEXT           "GDB Stub Port (Master SH2)", IDC_STATIC, 7, 210, 120, 10
-    EDITTEXT        ICD_DCONFIG_GDBPORTMSH2, 153, 210, 40, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
-    LTEXT           "GDB Stub Port (Slave SH2)", IDC_STATIC, 7, 224, 120, 10
-    EDITTEXT        ICD_DCONFIG_GDBPORTSSH2, 153, 224, 40, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
+					BS_AUTOCHECKBOX | WS_TABSTOP, 36, 68, 85, 10
+	CONTROL         "DMA access (for gfx hackers)", IDC_DCONFIG_SPY4, "Button",
+					BS_AUTOCHECKBOX | WS_TABSTOP, 36, 80, 109, 10
 
-    END
+	CONTROL         "Spy CD Bios call", IDC_DCONFIG_SPYCD, "Button",
+					BS_AUTOCHECKBOX | WS_TABSTOP, 7, 102, 68, 10
+	CONTROL         "...but CDB Wait", IDC_DCONFIG_SPYCD1, "Button",
+					BS_AUTOCHECKBOX | WS_TABSTOP, 36, 114, 65, 10
+	CONTROL         "...but CDC Wait", IDC_DCONFIG_SPYCD2, "Button",
+					BS_AUTOCHECKBOX | WS_TABSTOP, 36, 126, 65, 10
+
+    CONTROL         "'Blue Screen' pause",IDC_DCONFIG_BSCREEN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,148,79,10
+	CONTROL         "Paused at start", IDC_DCONFIG_PAUSE_START, "Button",
+					BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 79, 10
+	CONTROL         "Single instance", IDC_DCONFIG_SINGLE, "Button",
+					BS_AUTOCHECKBOX | WS_TABSTOP, 7, 172, 79, 10
+
+    CONTROL         "Active Development Features",IDC_DCONFIG_SPECIAL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,194,109,10
+    PUSHBUTTON      "Get Debug.zip",IDC_DCONFIG_ZIP,143,190,50,14
+
+	CONTROL         "use GDB*", IDC_DCONFIG_GDB, "Button",
+					BS_AUTOCHECKBOX | WS_TABSTOP, 7, 216, 65, 10
+    LTEXT           "GDB Stub Port (Main 68K)", IDC_STATIC, 36, 228, 120, 10
+    EDITTEXT        IDC_DCONFIG_GDBPORTM68K, 130, 228, 30, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
+    LTEXT           "GDB Stub Port (Sub 68K)", IDC_STATIC, 36, 240, 120, 10
+    EDITTEXT        IDC_DCONFIG_GDBPORTS68K, 130, 240, 30, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
+    LTEXT           "GDB Stub Port (Master SH2)", IDC_STATIC, 36, 252, 120, 10
+    EDITTEXT        IDC_DCONFIG_GDBPORTMSH2, 130, 252, 30, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
+    LTEXT           "GDB Stub Port (Slave SH2)", IDC_STATIC, 36, 264, 120, 10
+    EDITTEXT        IDC_DCONFIG_GDBPORTSSH2, 130, 264, 30, 10, WS_TABSTOP | ES_LEFT | WS_BORDER | ES_NUMBER | WS_BORDER
+
+
+	LTEXT           "* need restart", IDC_STATIC, 7, 275, 120, 10
+END
 
 IDD_DEBUGMSG DIALOG DISCARDABLE  0, 0, 320, 217
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -1037,6 +1049,7 @@ BEGIN
     "B",            ID_FILES_BOOTCD,        VIRTKEY, CONTROL, NOINVERT
     "C",            ID_FILES_CLOSEROM,      VIRTKEY, CONTROL, NOINVERT
     "G",            ID_FILES_GAMEGENIE,     VIRTKEY, CONTROL, NOINVERT
+	"L",			ID_FILES_OPENRECENTROM0, VIRTKEY, CONTROL, ALT, NOINVERT
     "N",            ID_FILES_NETPLAY,       VIRTKEY, CONTROL, NOINVERT
     "O",            ID_FILES_OPENROM,       VIRTKEY, CONTROL, NOINVERT
     "P",            ID_CPU_ACCURATE_SYNCHRO, VIRTKEY, CONTROL, NOINVERT
@@ -1164,8 +1177,8 @@ IDR_DEBUGZIP            RCDATA  DISCARDABLE     "resource\\debug_S.zip"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,7,1,0
- PRODUCTVERSION 0,7,1,0
+ FILEVERSION 0,7,3,0
+ PRODUCTVERSION 0,7,3,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1183,14 +1196,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "SpritesMind\0"
             VALUE "FileDescription", "Gens KMod\0"
-            VALUE "FileVersion", "0, 7, 2, 0\0"
+            VALUE "FileVersion", "0, 7, 3, 0\0"
             VALUE "InternalName", "Gens KMod\0"
-            VALUE "LegalCopyright", "Copyright © 2014\0"
+            VALUE "LegalCopyright", "Copyright © 2015\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "gens.exe\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "Gens KMod\0"
-            VALUE "ProductVersion", "0, 7, 2, 0\0"
+            VALUE "ProductVersion", "0, 7, 3, 0\0"
             VALUE "SpecialBuild", "\0"
         END
     END

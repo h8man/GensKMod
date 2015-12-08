@@ -148,7 +148,7 @@
  **				0x62: start record gmv
  **				0x63: stop record gmv
  **				0x64: start gmv
- **				0x65: stop gmv						
+ **				0x65: stop gmv
  ** - spy unpaused Z80 access
  ** - debug.s updated
  ** - GMV Tools to compress GMV for use in demos replay
@@ -167,7 +167,7 @@
  ** - M68K ROM/RAM viewer and linked disassembly (no more 'current' PC)
  ** - S68K PRAM/WRAM viewer and linked disassembly (no more 'current' PC)
  ** - debug.s/.h updaded (warning! func name updated too...sorry for that, but it's now more 'pro')
- ** - dump CD Word RAM to BMP 
+ ** - dump CD Word RAM to BMP
  **
  ****** 0.7
  ** - bug : create file and directories at ROM place when 'opened from..' (Pascal/TmEE)
@@ -200,6 +200,36 @@
  ** - enable/disable YM2612 sound channel (TmEE)
  ** - better message view (hangs if too much messages!)
  ** - bug : SH2 disassembler in 0.7c has the registers "shifted" one step. So the value displayed for R0 is actually the value of R1, the value displayed for R1 is the value of R2, and so on. (ob1,_mic)
+ ****** 0.7.2 - Graz release
+ ** - GDB
+ ** - remove 16bit flick
+ ** - drag & drop support
+ ** - always on top
+ ** - optimize tile, sprite and register window
+ ** - plane explorer
+ ** - bug : z80 issue
+ ****** 0.7.3
+ ** - bug : crash on screenshot
+ ** - bug : unreadable plane info
+ ** - bug : crash on joypad key mapping
+ ** - bug : Gens hangs when Message reach limit
+ ** - bug : YM2612 wrong AM value (AlyJ)
+ ** - bug : YM2612 wrong FMS value (AlyJ)
+ ** - bug : PSG wrong noise type (AlyJ)
+ ** - bug : YM2612 Chan6 enable status is wrong
+ ** - bug : VDP tile ID wrong
+ ** - bug : fake pal no longer works
+ ** - bug : savestate pal wrong (Dr MefistO)
+ ** - rewrite message logs
+ ** - better 68k debug view, with current address and not relative
+ ** - faster plane explorer (Dr MefistO)
+ ** - VS2013 compile
+ ** - WinXP support
+ ** - rethink Sprites list
+ ** - toggle GDB
+ ** - single instance mode
+ ** - pause at start
+ ** - fast reload with ctrl+alt+l
  *********************************************/
 
 /*********************************************
@@ -207,6 +237,7 @@
  ** Mod to do
  **
  ** - bug : Timer not working
+ ** - jump to rom/ram address on Genesis - 68k view
  ** - debug Genesis - Scroll (editable on pause)
  ** - 32x VDP modes handle
  ** - add "jump to"/PC in mem/disasm views
@@ -227,9 +258,6 @@
  ** - spy odd/even RW error
  ** - Flux (MD+MCD)
  ** - true disasm
- ** - breakpoint
- ** - add Halt when value is xxx on Watchers
- ** - symbol file (haroldoop)
  ** - add line sprites limit spy
  **
  *********************************************/
@@ -243,19 +271,12 @@
  **
  *********************************************/
 
-/* bug from Fonzie 
-
-Dans les adresses VRAM (Debug>Genesis>VDP)
-L'adresse s'incremente de 0x10 par ligne, ça devrai être 0x200 par ligne il me semble
--------------
-
-*/ 
 
 /*********************************************
 Bug found by bensimauru (SEF)
 When sound is enabled, the frame rate looks a little choppy, even though my CPU
 isn't maxed and the FPS indicator is hovering around 60.  If I disable sound, it looks much smoother.
-It's pretty visible with Sonic.  Anyone else notice this?  
+It's pretty visible with Sonic.  Anyone else notice this?
 
 It seems to have to do with the audio buffering - if I change
  spec.samples = 1024;
@@ -278,15 +299,8 @@ With no auto frame skip (DirectX version) the sound will periodically wrap aroun
 you'll get lots of static and scratches for awhile. Auto frame skip fixes that, but you're stuck with
 a frame skip every so often instead. I just added some brute force code for myself that determines how
 close the sound buffer is to wrapping around on itself, and toggle the playback frequency between
-44100 and 43900 to ensure it doesn't wrap. Works for me with no scratchy sound and no frame skip.  
+44100 and 43900 to ensure it doesn't wrap. Works for me with no scratchy sound and no frame skip.
  *********************************************/
-
-/*
-#define ITEM_BAD_TYPE		0x00000000
-#define ITEM_CHAR_TYPE		0x01000000
-#define ITEM_INT_TYPE		0x02000000
-#define ITEM_LONG_TYPE		0x04000000
-*/
 
 #define TIMER_CYCLES		66480	/* cycles used by timer call */
 
@@ -298,7 +312,7 @@ struct oper {
 struct voice {
 	struct oper op[4];
 	unsigned char	algo;
-	unsigned char	fback;		
+	unsigned char	fback;
 	unsigned char 	padding[14];
 };
 
@@ -562,7 +576,7 @@ int AutoPause_KMod;
 int AutoShot_KMod;
 
 //TODO could be handle by typedef struct channel__ .enabled ?
-BOOL	EnabledChannels[5];
+BOOL	EnabledChannels[6];
 
 // defined on VDP_REND.ASM
 //UCHAR ActiveLayer; /* 0003 ABSW */
@@ -622,44 +636,75 @@ ULONG	timer_KMod;
 HANDLE	KMsgLog;
 UCHAR	msgIdx_KMod, msg_KMod[255];
 char	*errorText_KMod="** Too many messages **";
+UINT logMaxSize, logSize;
+CHAR *logMessages;
+CHAR *logToAdd;
 
-BOOL Msg_KMod( char *msg)
+
+void UpdateMsg_KMod()
 {
-	CHAR *editText;
 	CHAR *editCutText;
-	UINT nSize, nSizeToAdd, nMaxSize;
-	DWORD dwBytesToWrite, dwBytesWritten;
+	UINT nSizeToAdd, nSize;
+
+	if (logMessages == NULL)	return;
+	if (logToAdd == NULL)	return;
 
 	if (KMsgLog)
 	{
-		dwBytesToWrite = strlen( msg );
-		if (dwBytesToWrite)		WriteFile(KMsgLog, msg, dwBytesToWrite, &dwBytesWritten, NULL) ;
+		DWORD dwBytesToWrite, dwBytesWritten;
+
+		dwBytesToWrite = strlen(logToAdd);
+		if (dwBytesToWrite)		WriteFile(KMsgLog, logToAdd, dwBytesToWrite, &dwBytesWritten, NULL);
 	}
 
-	nSizeToAdd = strlen(msg);
-	nSize = (UINT) SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, WM_GETTEXTLENGTH, (WPARAM) 0, (LPARAM) 0);
-	nMaxSize =  (UINT) SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLIMITTEXT, (WPARAM) 0, (LPARAM) 0);
+	nSizeToAdd = strlen(logToAdd) + 1;
+	nSize = logSize; // (UINT)SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, WM_GETTEXTLENGTH, (WPARAM)0, (LPARAM)0);
+	nSize += nSizeToAdd;
 
-	nSize += nSizeToAdd+1;
-	editText = (CHAR *) LocalAlloc( LPTR, nSize);
-	if (editText == NULL)	return FALSE;
-
-	GetDlgItemText(hDMsg, IDC_MSG_EDIT, editText, nSize);	
-	strcat(editText, msg);
-	
-	nSize = strlen(editText);
-	editCutText = editText;
-	while ( nSize >=  nMaxSize)	
+	if (nSize >= logMaxSize)
 	{
-		editCutText = strstr(editCutText, "\r\n");
-		editCutText+=2;
-		nSize = strlen(editCutText);
+		editCutText = logMessages;
+		editCutText += nSizeToAdd;
+		do
+		{
+			editCutText = strstr(editCutText, "\r\n");
+			editCutText += 2;
+			nSize = strlen(editCutText) + nSizeToAdd;
+		} while (nSize > logMaxSize);
+		memmove(logMessages, editCutText, strlen(editCutText)+1);
+	}
+	strcat(logMessages, logToAdd);
+	logSize = strlen(logMessages);
+
+	SetDlgItemText(hDMsg, IDC_MSG_EDIT, logMessages);
+	SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_LINESCROLL, (WPARAM)0, (LPARAM)SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLINECOUNT, (WPARAM)0, (LPARAM)0));
+
+	LocalFree((HLOCAL)logToAdd);
+	logToAdd = NULL;
+}
+
+
+BOOL Msg_KMod( char *msg)
+{
+	if (logToAdd == NULL)
+	{
+		if (logMaxSize == 0)		logMaxSize = (UINT)SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLIMITTEXT, (WPARAM)0, (LPARAM)0);
+
+		logToAdd = (CHAR *)LocalAlloc(LPTR, logMaxSize/2);
+		if (logToAdd == NULL)	return FALSE;
+
+		ZeroMemory(logToAdd, logMaxSize / 2);
 	}
 
-	SetDlgItemText(hDMsg, IDC_MSG_EDIT, editCutText);
-	SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_LINESCROLL, (WPARAM) 0, (LPARAM) SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLINECOUNT, (WPARAM) 0, (LPARAM) 0) );
-	LocalFree( (HLOCAL) editText );
-	editText = NULL;
+	if ((strlen(logToAdd) + strlen(msg)) > (logMaxSize / 2)) 	return TRUE;
+
+	strcat(logToAdd, msg);
+
+	if (strlen(logToAdd) > (logMaxSize / 2))
+	{
+		strcat(logToAdd, "*** too much message per frame ***");
+		strcat(logToAdd, "***.. skipping some messages ..***");
+	}
 
 	return TRUE;
 }
@@ -701,12 +746,12 @@ void MsgBrowse_KMod( HWND hwnd )
     hFr = CreateFile (szFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL) ;
     if (hFr == INVALID_HANDLE_VALUE)
           return;
-	
+
     CloseHandle(hFr);
 
 	strcpy(KConf.logfile ,szFileName);
 
-	WritePrivateProfileString("Debug", "file", KConf.logfile, Conf_File);	
+	WritePrivateProfileString("Debug", "file", KConf.logfile, Conf_File);
 
 	if (KMsgLog)	CloseHandle( KMsgLog );
 	//FILE_SHARE_READ pour pouvoir l'ouvrir dans notepad
@@ -719,15 +764,15 @@ void MsgBrowse_KMod( HWND hwnd )
 
 void IncTimer_KMod( unsigned odom)
 {
-	if (timer_KMod)	timer_KMod += odom;	
+	if (timer_KMod)	timer_KMod += odom;
 }
 
 void SpecialReg( unsigned char a, unsigned char b)
 {
-	
+
 	/* Special new registers :
 	 31 :	sr000000	Timer register, start and output a timer (based on m68k cycles)
-				s=0		Counter output 
+				s=0		Counter output
 				s=1		Counter start
 				r=0		<undefined>
 				r=1		reset counter
@@ -736,7 +781,7 @@ void SpecialReg( unsigned char a, unsigned char b)
 						char to add to string (>= 0x20)
 						automatically shown if 255th char
 						if 0, show and reset message string
-	 
+
 	 29 :	xxxxxxxx	Ask Gens to ....
 			00000000	0x00 : pause
 			00xxxxxx    0x?? : open debug window
@@ -748,9 +793,9 @@ void SpecialReg( unsigned char a, unsigned char b)
 			01100011	0x63 : stop record gmv
 			01100100	0x64 : start gmv
 			01100101	0x65 : stop gmv
-						
+
 	*/
-		
+
 	if (!Game)	return;
 
 	if (!KConf.Special)	return;
@@ -771,9 +816,9 @@ void SpecialReg( unsigned char a, unsigned char b)
 				Msg_KMod(debug_string);
 
 				if (b&0x40)	timer_KMod = 0;
-			}			
+			}
 			break;
-		
+
 		case 30:
 			if (b == 0)
 			{
@@ -793,7 +838,7 @@ void SpecialReg( unsigned char a, unsigned char b)
 			else
 			{
 				msg_KMod[msgIdx_KMod++] = b;
-				if (msgIdx_KMod == 255)	
+				if (msgIdx_KMod == 255)
 					SpecialReg(30, 0); /* flush to msgbox */
 			}
 			break;
@@ -821,7 +866,7 @@ void SpecialReg( unsigned char a, unsigned char b)
 				case 0x51: // dump z80 ram
 					DumpZ80_KMod( hZ80 );
 					break;
-				
+
 				case 0x52: // dump s68k program ram
 					DumpS68KPRam_KMod( hCD_68K );
 					break;
@@ -845,7 +890,7 @@ void SpecialReg( unsigned char a, unsigned char b)
 					Msg_KMod("Start playing a GMV file");
 					GMVPlay_KMod( );
 					break;
-				
+
 				case 0x65:
 					Msg_KMod("Stop playing a GMV file");
 					GMVStop_KMod( );
@@ -867,33 +912,59 @@ void MsgOpen_KMod( HWND hwnd )
 	ShellExecute(hwnd, "open", "notepad", KConf.logfile, NULL, SW_SHOW);
 }
 
+
+void MsgReset_KMod(HWND hwnd)
+{
+	if (KMsgLog)	CloseHandle(KMsgLog);
+	KMsgLog = NULL;
+
+
+	if (logToAdd)		LocalFree((HLOCAL)logToAdd);
+	if (logMessages)	LocalFree((HLOCAL)logMessages);
+	logToAdd = NULL;
+	logMessages = NULL;
+
+
+	msgIdx_KMod = 0;
+	ZeroMemory(msg_KMod, 255);
+}
+
 void MsgInit_KMod( HWND hwnd )
 {
 	unsigned char Conf_File[MAX_PATH];
+	unsigned char fullMsg[MAX_PATH];
 
 	SetCurrentDirectory(Gens_Path);
 	strcpy(Conf_File, Gens_Path);
 	strcat(Conf_File, "GensKMod.cfg");
 
 	GetPrivateProfileString("Log", "file", szKModLog, KConf.logfile, MAX_PATH, Conf_File);
-	WritePrivateProfileString("Debug", "file", KConf.logfile, Conf_File);	
+	WritePrivateProfileString("Debug", "file", KConf.logfile, Conf_File);
 
-	if (KMsgLog)	CloseHandle( KMsgLog );
 	//FILE_SHARE_READ pour pouvoir l'ouvrir dans notepad
 	KMsgLog = CreateFile (szKModLog, GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL) ;
     if (KMsgLog != INVALID_HANDLE_VALUE)	SetFilePointer(KMsgLog, 0, 0, FILE_END);
 
 	SetDlgItemText(hwnd, IDC_MSG_FILE, szKModLog);
 
+	logMaxSize = (UINT)SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLIMITTEXT, (WPARAM)0, (LPARAM)0);
+	logMessages = (CHAR *)LocalAlloc(LPTR, logMaxSize);
+	ZeroMemory(logMessages, logMaxSize);
+	logSize = 0;
+
 	if (!Game)	return;
 
-	Msg_KMod("*******************");
-	Msg_KMod(Rom_Name);
-	Msg_KMod("\r\n");
+	wsprintf(logMessages, "*******************%s\r\n", Rom_Name);
+	logSize = strlen(logMessages);
+
+	if (KMsgLog)
+	{
+		DWORD dwBytesWritten;
+		WriteFile(KMsgLog, logMessages, (DWORD)logSize, &dwBytesWritten, NULL);
+	}
 
 	msgIdx_KMod = 0;
 	ZeroMemory(msg_KMod, 255);
-	
 }
 
 
@@ -909,7 +980,7 @@ BOOL CALLBACK MsgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 			MsgInit_KMod( hwnd );
 			break;
-		
+
 		case WM_COMMAND:
 			switch ( LOWORD(wParam) )
 			{
@@ -941,7 +1012,7 @@ BOOL CALLBACK MsgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			DestroyWindow( hDMsg );
 			PostQuitMessage(0);
 			break;
-		
+
 		default:
             return FALSE;
     }
@@ -951,9 +1022,13 @@ BOOL CALLBACK MsgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 void Spy_KMod( char *log )
 {
-	Msg_KMod("Spy : ");
-	Msg_KMod(log);
-	Msg_KMod("\r\n");
+	char fullMsg[MAX_PATH];
+	wsprintf(fullMsg, "Spy:%s\r\n", log);
+	Msg_KMod(fullMsg);
+	//Msg_KMod("Spy : ");
+	//Msg_KMod(log);
+	//Msg_KMod("\r\n");
+	//Msg_KMod("ddd\r\n");
 }
 
 
@@ -1152,13 +1227,13 @@ void SpyReg( unsigned char a, unsigned char b)
 			{
 				wsprintf(debug_string,"%.5X Reg. %d : wrong H scroll mode (2)", main68k_context.pc, a);
 				Spy_KMod( debug_string );
-			}			
+			}
 
 			if ( (b&0x30) == 0x20 )
 			{
 				wsprintf(debug_string,"%.5X Reg. %d : wrong V scroll mode (2)", main68k_context.pc, a);
 				Spy_KMod( debug_string );
-			}			
+			}
 			break;
 
 		case 17:
@@ -1212,7 +1287,7 @@ void SpySpr( )
 	if (!KConf.Spy )	return;
 
 	if (!KConf.SpySpr )	return;
-	
+
 	Spy_KMod( "More than 80 sprites to draw" );
 }
 
@@ -1266,6 +1341,7 @@ void SpyBadWordRead(unsigned int address )
 
 void SpyBadByteWrite(unsigned int address )
 {
+
 	if (!Game)	return;
 
 	if (!KConf.Spy )	return;
@@ -1303,7 +1379,7 @@ void SpyDMA( )
 		case 0x02:
 			wsprintf(debug_string, "VRAM Fill of %d bytes into %0.4X", VDP_Reg.DMA_Lenght, Ctrl.Address&0xFFFF);
 			break;
-		
+
 		case 0x03:
 			wsprintf(debug_string, "VRAM copy of %d words from %0.6X to %0.4X", VDP_Reg.DMA_Lenght, VDP_Reg.DMA_Address, Ctrl.Address&0xFFFF);
 			if ( (VDP_Reg.DMA_Address/0x020000) != ((VDP_Reg.DMA_Lenght+VDP_Reg.DMA_Address) / 0x020000) )
@@ -1354,7 +1430,7 @@ void SpyCDBiosCall( )
 	short int function;
 
 	if (!Game)	return;
- 
+
 	if (!KConf.CDBios )	return;
 
 	newPC = sub68k_readPC( );
@@ -1416,7 +1492,7 @@ void UpdateWatchers_KMod( )
 {
 	int         i, nbItems;
 	LVITEM		lvItem;
-	char	buf[64];    
+	char	buf[64];
 	DWORD		value;
 	struct str_Watcher *watcher;
 
@@ -1437,7 +1513,7 @@ void UpdateWatchers_KMod( )
 			wsprintf(buf, "0x%0.2X",  M68K_RB(watcher->adr));
 		else if (watcher->size & 2)
 			wsprintf(buf, "0x%0.4X",  M68K_RW(watcher->adr));
-		else 
+		else
 		{
 			value =  M68K_RW(watcher->adr);
 			value <<= 16;
@@ -1450,7 +1526,7 @@ void UpdateWatchers_KMod( )
 		lvItem.pszText = buf;
 		ListView_SetItem(hWatchList, &lvItem);
 */
-		
+
 		ListView_SetItemText(hWatchList, i, 1, watcher->name);
 		ListView_SetItemText(hWatchList, i, 2, buf);
 		ListView_SetItemText(hWatchList, i, 3, GetZoneWatch_KMod(watcher->adr ));
@@ -1490,7 +1566,7 @@ void DeleteWatcher_KMod( int  i )
 	LVITEM		lvItem;
 	struct str_Watcher* watcher;
 
-	/* delete the first selected watch */ 
+	/* delete the first selected watch */
 	if (i==-1)	i = ListView_GetNextItem(hWatchList, -1, LVNI_ALL | LVNI_SELECTED);
 
 	if (i==-1)	return;
@@ -1566,7 +1642,7 @@ void SaveWatchers_KMod( HWND hwnd )
     if (hFr == INVALID_HANDLE_VALUE)
           return;
 
-	
+
 	nbItems = ListView_GetItemCount(hWatchList);
 	if (nbItems < 1)
 	{
@@ -1631,7 +1707,7 @@ void LoadWatchers_KMod( HWND hwnd )
 	OPENFILENAME szFile;
     char szFileName[MAX_PATH];
     HANDLE hFr;
-    
+
 
 
     ZeroMemory(&szFile, sizeof(szFile));
@@ -1657,7 +1733,7 @@ void LoadWatchers_KMod( HWND hwnd )
 
     hFr = CreateFile (szFileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL) ;
     if (hFr == INVALID_HANDLE_VALUE)	return;
-	
+
 	ImportWatchers_KMod( hFr );
 
 	CloseHandle(hFr);
@@ -1693,7 +1769,7 @@ void ImportStructures_KMod( HANDLE hFr )
 			lstrcpyn( StructureKMod[curStruct].name, name, 20);
 			StructureKMod[curStruct].nbElements = 0;
 
-			inStruct = TRUE;			
+			inStruct = TRUE;
 			curElement= 0;
 		}
 		else if ( lstrcmpi( type, "END" ) == 0 )
@@ -1704,7 +1780,7 @@ void ImportStructures_KMod( HANDLE hFr )
 		}
 		else if ( lstrcmpi( type, "CHAR" ) == 0 )
 		{
-			//char	
+			//char
 			if (inStruct)
 			{
 				lstrcpyn( StructureKMod[curStruct].elements[curElement].name, name, 20);
@@ -1716,7 +1792,7 @@ void ImportStructures_KMod( HANDLE hFr )
 		}
 		else if ( lstrcmpi( type, "SHORT" ) == 0 )
 		{
-			//short	
+			//short
 			if (inStruct)
 			{
 				lstrcpyn( StructureKMod[curStruct].elements[curElement].name, name, 20);
@@ -1724,11 +1800,11 @@ void ImportStructures_KMod( HANDLE hFr )
 
 				curElement++;
 				StructureKMod[curStruct].nbElements++;
-			}			
+			}
 		}
 		else if ( lstrcmpi( type, "LONG" ) == 0 )
 		{
-			//long	
+			//long
 			if (inStruct)
 			{
 				lstrcpyn( StructureKMod[curStruct].elements[curElement].name, name, 20);
@@ -1736,7 +1812,7 @@ void ImportStructures_KMod( HANDLE hFr )
 
 				curElement++;
 				StructureKMod[curStruct].nbElements++;
-			}			
+			}
 		}
 
 	}
@@ -1782,7 +1858,7 @@ void AutoLoadWatchers_KMod( )
 		strcat(szFileName, ".str");
 
 		hFr = CreateFile (szFileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL) ;
-	
+
 	}
 
 	if (hFr != INVALID_HANDLE_VALUE)	ImportStructures_KMod( hFr );
@@ -1824,10 +1900,10 @@ void ChangeWatcherStruct_KMod( int item, WORD structIdx)
 {
 /*
 WATCHER_SUBDATA		0x8000
-WATCHER_STRUCT_MASK	0x7F00 
+WATCHER_STRUCT_MASK	0x7F00
 WATCHER_SIZE_MASK	0x00FF
 */
-     
+
 
 	LVITEM		lvItem;
 	struct str_Watcher*	watcher;
@@ -1874,7 +1950,7 @@ WATCHER_SIZE_MASK	0x00FF
 
 		AddWatcher_KMod( newWatcher, item+1+idx );
 
-		adr += StructureKMod[structIdx].elements[idx].size;		
+		adr += StructureKMod[structIdx].elements[idx].size;
 	}
 }
 
@@ -1941,21 +2017,21 @@ void WatcherInit_KMod( HWND hDlg)
 LRESULT ProcessCustomDraw (LPARAM lParam)
 {
 	HFONT hFontBold, hOldFont, hFont;
-                        
+
     LOGFONT lf = { 0 };
-    
+
 
     LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)lParam;
 
 	LVITEM		lvItem;
 	struct str_Watcher*	watcher;
 
-    switch(lplvcd->nmcd.dwDrawStage) 
+    switch(lplvcd->nmcd.dwDrawStage)
     {
         case CDDS_PREPAINT : //Before the paint cycle begins
             //request notifications for individual listview items
             return CDRF_NOTIFYITEMDRAW;
-            
+
         case CDDS_ITEMPREPAINT: //Before an item is drawn
 			lvItem.mask = LVIF_PARAM;
 			lvItem.iItem = (int)lplvcd->nmcd.dwItemSpec;
@@ -1976,14 +2052,14 @@ LRESULT ProcessCustomDraw (LPARAM lParam)
 				DeleteObject(hFontBold);
                 return CDRF_NEWFONT;
             }
-            else{  
+            else{
 				DeleteObject(hFontBold);
                 return CDRF_DODEFAULT;
             }
             break;
 
         //Before a subitem is drawn
-        case CDDS_SUBITEM | CDDS_ITEMPREPAINT: 
+        case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
 			/*
             if ( ListView_GetNextItem(hWatchList, -1, LVNI_ALL | LVNI_SELECTED) == (int)lplvcd->nmcd.dwItemSpec)
             {
@@ -1994,7 +2070,7 @@ LRESULT ProcessCustomDraw (LPARAM lParam)
                     lplvcd->clrTextBk = RGB(255,255,255);
 
                     //To set a custom font:
-                    //SelectObject(lplvcd->nmcd.hdc, 
+                    //SelectObject(lplvcd->nmcd.hdc,
                     //    <your custom HFONT>);
 
                     return CDRF_NEWFONT;
@@ -2002,7 +2078,7 @@ LRESULT ProcessCustomDraw (LPARAM lParam)
                 else if (1 == lplvcd->iSubItem)
                 {
                     //customize subitem appearance for columns 1..n
-                    //Note: setting for column i 
+                    //Note: setting for column i
                     //carries over to columnn i+1 unless
                     //      it is explicitly reset
                     lplvcd->clrTextBk = RGB(255,0,0);
@@ -2035,13 +2111,13 @@ BOOL CALLBACK WatcherDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 
 	struct str_Watcher*	watcher;
 	struct str_Watcher	defWatcher;
-	
+
 	switch(Message)
     {
 		case WM_INITDIALOG:
 			WatcherInit_KMod( hwnd );
 			break;
-		
+
 		case WM_COMMAND:
 			switch ( LOWORD(wParam) )
 			{
@@ -2063,7 +2139,7 @@ BOOL CALLBACK WatcherDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 				case IDC_WATCHER_LOAD:
 					LoadWatchers_KMod( hwnd );
 					break;
-				
+
 				case IDC_WATCHER_BYTE:
 					ChangeWatcherType_KMod( curItem, 1);
 					break;
@@ -2088,7 +2164,7 @@ BOOL CALLBACK WatcherDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			pInfo = (NMHDR *) lParam;
 			i = ListView_GetNextItem(hWatchList, -1, LVNI_ALL | LVNI_SELECTED);
 			switch(pInfo->code)
-			{	
+			{
 				case NM_CUSTOMDRAW:
 					SetWindowLong(hwnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam));
 					break;
@@ -2109,11 +2185,11 @@ BOOL CALLBACK WatcherDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 
 				case NM_RCLICK:
 					if	(pInfo->hwndFrom == hWatchList)
-					{ 
+					{
 						lpnmitem = (LPNMITEMACTIVATE) lParam;
-						 
-						lvhi.pt = lpnmitem->ptAction; 
-						ListView_SubItemHitTest(hWatchList , &lvhi); 
+
+						lvhi.pt = lpnmitem->ptAction;
+						ListView_SubItemHitTest(hWatchList , &lvhi);
 						if (lvhi.iItem !=-1)
 						{
 							curItem = lvhi.iItem;
@@ -2123,7 +2199,7 @@ BOOL CALLBACK WatcherDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 							lvItem.iSubItem = 0;
 							ListView_GetItem(hWatchList, &lvItem);
 							watcher = (struct str_Watcher*) lvItem.lParam;
-							
+
 
 							if (lvhi.iSubItem == 2)
 							{
@@ -2132,9 +2208,9 @@ BOOL CALLBACK WatcherDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 
 								sizeItem = (watcher->size & WATCHER_SIZE_MASK) -1;
 								if (sizeItem == 3)	sizeItem--;
-								
 
-								idStruct = 0;								
+
+								idStruct = 0;
 								if (StructureKMod[idStruct].nbElements)	hSubPopup=CreatePopupMenu();
 
 								for (idStruct=0; idStruct<126, StructureKMod[idStruct].nbElements; idStruct++)
@@ -2171,8 +2247,8 @@ BOOL CALLBACK WatcherDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 							}
 						}
                    }
-					// use GetCursorPos()+ScreenToClient() to get subitem or save it throught LVN_COLUMNCLICK or 
-					// then ListView_SubItemHitTest(), ListView_GetSubItemRect(), ... to display it at the right position) 
+					// use GetCursorPos()+ScreenToClient() to get subitem or save it throught LVN_COLUMNCLICK or
+					// then ListView_SubItemHitTest(), ListView_GetSubItemRect(), ... to display it at the right position)
 
 					break;
 
@@ -2260,7 +2336,7 @@ BOOL CALLBACK WatcherDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			DestroyWindow( hWatchers );
 			PostQuitMessage(0);
 			break;
-		
+
 		default:
             return FALSE;
     }
@@ -2286,7 +2362,7 @@ BOOL CALLBACK LayersDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 		case WM_INITDIALOG:
 			LayersInit_KMod( );
 			break;
-		
+
 		case WM_COMMAND:
 			switch ( LOWORD(wParam) )
 			{
@@ -2331,7 +2407,7 @@ BOOL CALLBACK LayersDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			DestroyWindow( hLayers );
 			PostQuitMessage(0);
 			break;
-		
+
 		default:
             return FALSE;
     }
@@ -2345,6 +2421,7 @@ static COLORREF plane_explorer_palette[256];
 static int old_plane_width = 0;
 static int old_plane_height = 0;
 static int plane_explorer_plane = 0;
+static BOOL show_transparence = FALSE;
 
 static void PlaneExplorerInit_KMod(HWND hDlg)
 {
@@ -2357,7 +2434,7 @@ static void PlaneExplorerInit_KMod(HWND hDlg)
 
     InitCommonControls();
 
-   
+
 	hexplorer = (HWND) GetDlgItem(hDlg, IDC_PLANEXPLEORER_MAIN);
     GetClientRect(hDlg, &rc);
     MoveWindow(hexplorer, 20, 60, (rc.right - rc.left) - 40, (rc.bottom - rc.top) - 80, TRUE);
@@ -2525,7 +2602,7 @@ static void PlaneExplorer_UpdateBitmap(HWND hwnd, int plane)
     {
         for (i = 0; i < plane_width; i++)
         {
-            int trans_color = (IsDlgButtonChecked(hwnd, IDC_PLANEEXPLORER_TRANS) == BST_CHECKED) ? (unsigned char)(((j ^ i) >> 1) & 1) + 254 : -1;
+            int trans_color = show_transparence ? (unsigned char)(((j ^ i) >> 1) & 1) + 254 : -1;
             PlaneExplorer_DrawTile(plane_data[j * plane_width + i], i, j, trans_color);
         }
     }
@@ -2625,7 +2702,7 @@ void PlaneExplorer_GetTipText(int x, int y, char * buffer)
     unsigned int tile_addr = base + ((y >> 3) * plane_size_x + (x >> 3)) * 2;
     union PATTERN_NAME name;
 
-	
+
     if (x >= (plane_size_x * 8) ||
         y >= (plane_size_y * 8))
     {
@@ -2670,6 +2747,7 @@ BOOL CALLBACK PlaneExplorerDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LP
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             case IDC_PLANEEXPLORER_TRANS:
+                show_transparence = (IsDlgButtonChecked(hwnd, IDC_PLANEEXPLORER_TRANS) == BST_CHECKED);
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             default:
@@ -2755,15 +2833,15 @@ void GMVPlay_KMod( )
 
 	if (hGMVFile)	GMVStop_KMod( );
 
-	// try to open it	
+	// try to open it
 	strcpy(szFileName, Gens_Path);
 	strcat(szFileName, Rom_Name);
 	strcat(szFileName, ".gmv");
 
 	hGMVFile = CreateFile (szFileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL) ;
 	if (hGMVFile == INVALID_HANDLE_VALUE)
-		return;		
-		
+		return;
+
 	/* skip header */
 	SetFilePointer(hGMVFile, 0x40, 0, FILE_BEGIN);
 
@@ -2837,10 +2915,10 @@ void GMVUpdatePlay_KMod( )
 	Controller_1_C = state&0x01;
 	state>>=1;
 	Controller_1_Start = state&0x01;
-	
+
 	ReadFile(hGMVFile, &state, 1, &dwBytesRead, NULL);
 	/* ............ */
-	
+
 	ReadFile(hGMVFile, &state, 1, &dwBytesRead, NULL);
 	/* ............ */
 }
@@ -2895,7 +2973,7 @@ void GMVT_BrowseIn_Init( HWND hwndParent, char *szFileName )
     hGMVFile_In = CreateFile (szFileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL) ;
     if (hGMVFile_In == INVALID_HANDLE_VALUE)  return;
 	SetDlgItemText(hwndParent, IDC_GMVT_IN, szFileName);
-	
+
 	if (hGMVFile_Out)	CloseHandle(hGMVFile_Out);
 	szFileName[ strlen(szFileName) -1] = 'c';
 	hGMVFile_Out = CreateFile (szFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL) ;
@@ -2973,18 +3051,18 @@ BOOL GMVTools_Convert(UINT comp, UINT p1, UINT p2, UINT b6)
 	if (p1)		cnt|=0x01;
 	if (p2)		cnt|=0x02;
 	if (b6)		cnt|=0x04;
-	if (comp)	cnt|=0x80;	
+	if (comp)	cnt|=0x80;
 	WriteFile(hGMVFile_Out, &cnt, 1, &dwBytesWritten, NULL);
 	SetFilePointer(hGMVFile_Out, 0x10, 0, FILE_BEGIN); //keep some space
 
 	oldstate[0] = 0xFF;
 	oldstate[1] = 0xFF;
-	oldstate[2] = 0xFF;	
+	oldstate[2] = 0xFF;
 	cnt = 0;
-	
+
 
 	/* skip header */
-	SetFilePointer(hGMVFile_In, 0x40, 0, FILE_BEGIN);	
+	SetFilePointer(hGMVFile_In, 0x40, 0, FILE_BEGIN);
 
 	do
 	{
@@ -3037,7 +3115,7 @@ BOOL GMVTools_Convert(UINT comp, UINT p1, UINT p2, UINT b6)
 		if (p1)	WriteFile(hGMVFile_Out, &oldstate[0], 1, &dwBytesWritten, NULL);
 		if (p2)	WriteFile(hGMVFile_Out, &oldstate[1], 1, &dwBytesWritten, NULL);
 		if (b6)	WriteFile(hGMVFile_Out, &oldstate[2], 1, &dwBytesWritten, NULL);
-	}		
+	}
 
 	Spy_KMod( "Ok");
 
@@ -3050,7 +3128,7 @@ BOOL CALLBACK GMVToolsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 
 	switch(Message)
     {
-		case WM_INITDIALOG:	
+		case WM_INITDIALOG:
 			//GMV default
 			CheckDlgButton(hwnd, IDC_GMVT_P1, BST_CHECKED);
 			CheckDlgButton(hwnd, IDC_GMVT_P2, BST_CHECKED);
@@ -3063,7 +3141,7 @@ BOOL CALLBACK GMVToolsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 				strcat(szFileName, ".gmv");
 
 				GMVT_BrowseIn_Init( hwnd, szFileName );
-				
+
 			}
 			break;
 
@@ -3109,11 +3187,11 @@ void GMVTools_KMod( )
 
 /*********** M68K **************/
 int Current_PC_M68K;
-			
+
 unsigned short Next_Word_M68K(void)
 {
 	unsigned short val;
-	
+
 	val = M68K_RW(Current_PC_M68K);
 
 	Current_PC_M68K += 2;
@@ -3125,7 +3203,7 @@ unsigned short Next_Word_M68K(void)
 unsigned int Next_Long_M68K(void)
 {
 	unsigned int val;
-	
+
 	val = M68K_RW(Current_PC_M68K);
 	val <<= 16;
 	val |= M68K_RW(Current_PC_M68K + 2);
@@ -3146,30 +3224,30 @@ void SwitchM68kViewMode_KMod( )
 	SCROLLINFO si;
 
 	ZeroMemory(&si, sizeof(SCROLLINFO));
-	si.cbSize = sizeof(si); 
-	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS; 
-	si.nMin   = 0; 
-	si.nPage  = 13;
+	si.cbSize = sizeof(si);
+	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS;
+	si.nMin   = 0;
+	si.nPage  = 10;
 
 	if (M68_ViewMode == 0)
 	{
 		// DISASM VIEW
-		si.nPos   = M68k_StartLineDisasm; 
-		si.nMax   = Rom_Size -1;
+		si.nPos   = M68k_StartLineDisasm;
+		si.nMax = Rom_Size - 1; // 0x400000 - 28;
 	}
 	else if (M68_ViewMode == 1)
 	{
 		// ROM VIEW
-		si.nPos   = M68k_StartLineROM; 
-		si.nMax   = (Rom_Size/8) -1;
+		si.nPos   = M68k_StartLineROM;
+		si.nMax = (Rom_Size / 8) - 1; //(0x400000 >> 3) -1;
 	}
 	else
 	{
 		// RAM VIEW
-		si.nPos   = M68k_StartLineRAM; 
+		si.nPos   = M68k_StartLineRAM;
 		si.nMax   = (0x10000/8) -1;
 	}
-	SetScrollInfo(GetDlgItem(hM68K, IDC_68K_SCROLL), SB_CTL, &si, TRUE); 
+	SetScrollInfo(GetDlgItem(hM68K, IDC_68K_SCROLL), SB_CTL, &si, TRUE);
 }
 
 void JumpM68KRam_KMod( DWORD adr )
@@ -3181,12 +3259,12 @@ void JumpM68KRam_KMod( DWORD adr )
 
 void UpdateM68k_KMod( )
 {
-	unsigned int i, PC;	
+	unsigned int i, PC;
 	unsigned char tmp_string[256];
 
 	if ( OpenedWindow_KMod[ 0 ] == FALSE )	return;
 
-	
+
 	SendDlgItemMessage(hM68K , IDC_68K_DISAM, LB_RESETCONTENT, (WPARAM) 0 , (LPARAM) 0);
 	if (M68_ViewMode == 0)
 	{
@@ -3195,7 +3273,15 @@ void UpdateM68k_KMod( )
 		for(i = 0; i < 13; i++)
 		{
 			PC = Current_PC_M68K;
-			wsprintf(debug_string, "%.5X    %-33s", PC, M68KDisasm(Next_Word_M68K, Next_Long_M68K));
+			if (PC >= Rom_Size)
+			{
+				wsprintf(debug_string, "%.6X", PC);
+				Current_PC_M68K += 2;
+			}
+			else
+			{
+			wsprintf(debug_string, "%.6X    %-33s", PC, M68KDisasm(Next_Word_M68K, Next_Long_M68K));
+			}
 			SendDlgItemMessage(hM68K , IDC_68K_DISAM, LB_INSERTSTRING, i , (LPARAM)debug_string);
 		}
 	}
@@ -3205,12 +3291,19 @@ void UpdateM68k_KMod( )
 		M68k_StartLineROM = GetScrollPos(GetDlgItem(hM68K, IDC_68K_SCROLL) ,SB_CTL);
 		for(i = 0; i < 13; i++)
 		{
-			wsprintf(tmp_string, "%.5X ", M68k_StartLineROM*8 + i*8);
-			tmp_string[5] = 0x20;
-			Hexview( (unsigned char *) (Rom_Data + M68k_StartLineROM*8 + i*8), tmp_string + 6);
-			tmp_string[23] = 0x20;
-			Ansiview( (unsigned char *) (Rom_Data + M68k_StartLineROM*8 + i*8), tmp_string + 24);
-			wsprintf(debug_string, "%s", tmp_string);
+			if ((M68k_StartLineROM * 8 + i * 8) > Rom_Size)
+			{
+				wsprintf(debug_string, "%.6X ", M68k_StartLineROM * 8 + i * 8);
+			}
+			else
+			{
+				wsprintf(tmp_string, "%.6X ", M68k_StartLineROM * 8 + i * 8);
+				tmp_string[6] = 0x20;
+				Hexview((unsigned char *)(Rom_Data + M68k_StartLineROM * 8 + i * 8), tmp_string + 7);
+				tmp_string[24] = 0x20;
+				Ansiview((unsigned char *)(Rom_Data + M68k_StartLineROM * 8 + i * 8), tmp_string + 25);
+				wsprintf(debug_string, "%s", tmp_string);
+			}
 			SendDlgItemMessage(hM68K , IDC_68K_DISAM, LB_INSERTSTRING, i , (LPARAM)debug_string);
 		}
 		Byte_Swap(Rom_Data, Rom_Size);
@@ -3221,11 +3314,11 @@ void UpdateM68k_KMod( )
 		M68k_StartLineRAM = GetScrollPos(GetDlgItem(hM68K, IDC_68K_SCROLL) ,SB_CTL);
 		for(i = 0; i < 13; i++)
 		{
-			wsprintf(tmp_string, "%.4X ", M68k_StartLineRAM*8 + i*8);
-			tmp_string[4] = 0x20;
-			Hexview( (unsigned char *) (Ram_68k + M68k_StartLineRAM*8 + i*8), tmp_string + 5);
-			tmp_string[22] = 0x20;
-			Ansiview( (unsigned char *) (Ram_68k + M68k_StartLineRAM*8 + i*8), tmp_string + 23);
+			wsprintf(tmp_string, "FF%.4X ", M68k_StartLineRAM*8 + i*8);
+			tmp_string[6] = 0x20;
+			Hexview( (unsigned char *) (Ram_68k + M68k_StartLineRAM*8 + i*8), tmp_string + 7);
+			tmp_string[24] = 0x20;
+			Ansiview( (unsigned char *) (Ram_68k + M68k_StartLineRAM*8 + i*8), tmp_string + 25);
 			wsprintf(debug_string, "%s", tmp_string);
 			SendDlgItemMessage(hM68K , IDC_68K_DISAM, LB_INSERTSTRING, i , (LPARAM)debug_string);
 		}
@@ -3339,7 +3432,7 @@ BOOL CALLBACK M68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 	switch(Message)
     {
-		case WM_INITDIALOG:			
+		case WM_INITDIALOG:
 			hFont = (HFONT) GetStockObject(OEM_FIXED_FONT)	;
 			SendDlgItemMessage(hwnd, IDC_68K_DISAM, WM_SETFONT, (WPARAM)hFont, TRUE);
 			SendDlgItemMessage(hwnd, IDC_68K_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -3367,7 +3460,7 @@ BOOL CALLBACK M68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				case IDC_68K_VIEW_ROM:
 					M68_ViewMode = !M68_ViewMode;
 					if (M68_ViewMode == 0)
-					{					
+					{
 						SendDlgItemMessage(hwnd, IDC_68K_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View ROM");
 					}
 					else
@@ -3375,14 +3468,14 @@ BOOL CALLBACK M68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 						SendDlgItemMessage(hwnd, IDC_68K_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
 					}
 					SwitchM68kViewMode_KMod( );
-					UpdateWindow (hwnd); 
+					UpdateWindow (hwnd);
 					UpdateM68k_KMod( );
 					break;
 				case IDC_68K_VIEW_RAM:
 					M68_ViewMode = 2; //RAM
 					SendDlgItemMessage(hwnd, IDC_68K_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
 					SwitchM68kViewMode_KMod( );
-					UpdateWindow (hwnd); 
+					UpdateWindow (hwnd);
 					UpdateM68k_KMod( );
 					break;
 
@@ -3391,7 +3484,7 @@ BOOL CALLBACK M68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					{
 						M68k_StartLineDisasm = main68k_context.pc;
 						SwitchM68kViewMode_KMod( );
-						UpdateWindow (hwnd); 
+						UpdateWindow (hwnd);
 						UpdateM68k_KMod( );
 					}
 					break;
@@ -3401,37 +3494,37 @@ BOOL CALLBACK M68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 		case WM_VSCROLL:
 			ZeroMemory(&si, sizeof(SCROLLINFO));
-			si.cbSize = sizeof(si); 
-			si.fMask  = SIF_ALL; //SIF_RANGE | SIF_PAGE | SIF_POS | SIF_TRACKPOS; 
+			si.cbSize = sizeof(si);
+			si.fMask  = SIF_ALL; //SIF_RANGE | SIF_PAGE | SIF_POS | SIF_TRACKPOS;
 			GetScrollInfo((HWND) lParam, SB_CTL, &si);
-			switch(LOWORD (wParam)) 
-			{ 
-				case SB_PAGEUP: 
-					 si.nPos -= si.nPage; 
-					 break; 
-				case SB_PAGEDOWN: 
-					 si.nPos += si.nPage;
-					 break; 
-				case SB_LINEUP: 
-					 si.nPos--; 
+			switch(LOWORD (wParam))
+			{
+				case SB_PAGEUP:
+					 si.nPos -= si.nPage;
 					 break;
-				case SB_LINEDOWN: 
-					 si.nPos++; 
-					 break; 
+				case SB_PAGEDOWN:
+					 si.nPos += si.nPage;
+					 break;
+				case SB_LINEUP:
+					 si.nPos--;
+					 break;
+				case SB_LINEDOWN:
+					 si.nPos++;
+					 break;
 //				case SB_THUMBPOSITION:
-				case SB_THUMBTRACK: 
+				case SB_THUMBTRACK:
 					// don't change!! else you'll loose the 32bits value for a 16bits value
-//					 si.nPos = HIWORD(wParam); 
+//					 si.nPos = HIWORD(wParam);
 					 si.nPos = si.nTrackPos;
-					 break; 
-			} 
- 
-			si.cbSize = sizeof(si); 
-			si.fMask  = SIF_POS; 
-			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE); 
-			UpdateWindow (hwnd); 
+					 break;
+			}
+
+			si.cbSize = sizeof(si);
+			si.fMask  = SIF_POS;
+			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE);
+			UpdateWindow (hwnd);
 			UpdateM68k_KMod( );
-			return 0; 
+			return 0;
 
 		case WM_CLOSE:
 			CloseWindow_KMod( DMODE_68K );
@@ -3456,27 +3549,27 @@ unsigned int  Z80_StartLineDisasm, Z80_StartLineMem;
 
 void SwitchZ80ViewMode_KMod( )
 {
-	SCROLLINFO si; 
+	SCROLLINFO si;
 
 	ZeroMemory(&si, sizeof(SCROLLINFO));
-	si.cbSize = sizeof(si); 
-	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS; 
-	si.nMin   = 0; 
+	si.cbSize = sizeof(si);
+	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS;
+	si.nMin   = 0;
 	si.nPage  = 13;
 
 	if (Z80_ViewMode)
 	{
 		// MEM VIEW
-		si.nPos   = Z80_StartLineMem; 
+		si.nPos   = Z80_StartLineMem;
 		si.nMax   = (1024) -1;
 	}
 	else
 	{
 		// DISASM VIEW
-		si.nPos   = Z80_StartLineDisasm; 
+		si.nPos   = Z80_StartLineDisasm;
 		si.nMax   = (1024*8) -1;
 	}
-	SetScrollInfo(GetDlgItem(hZ80, IDC_Z80_SCROLL), SB_CTL, &si, TRUE); 
+	SetScrollInfo(GetDlgItem(hZ80, IDC_Z80_SCROLL), SB_CTL, &si, TRUE);
 }
 
 void UpdateZ80_KMod( )
@@ -3486,7 +3579,7 @@ void UpdateZ80_KMod( )
 
 	if ( OpenedWindow_KMod[ 1 ] == FALSE )	return;
 
-	
+
 	SendDlgItemMessage(hZ80 , IDC_Z80_DISAM, LB_RESETCONTENT, (WPARAM) 0 , (LPARAM) 0);
 	if (Z80_ViewMode == 0)
 	{
@@ -3521,7 +3614,7 @@ void UpdateZ80_KMod( )
 
 	wsprintf(debug_string, "IX =%.4X IY =%.4X SP =%.4X ", M_Z80.IX.w.IX, M_Z80.IY.w.IY, M_Z80.SP.w.SP);
 	SendDlgItemMessage(hZ80 , IDC_Z80_STATUS_RS3, WM_SETTEXT, 0 , (LPARAM)debug_string);
-	
+
 	wsprintf(debug_string, "IFF1=%d IFF2=%d I=%.2X R=%.2X IM=%.2X", M_Z80.IFF.b.IFF1, M_Z80.IFF.b.IFF2, M_Z80.I, M_Z80.R.b.R1, M_Z80.IM);
 	SendDlgItemMessage(hZ80 , IDC_Z80_STATUS_MISC, WM_SETTEXT, 0 , (LPARAM)debug_string);
 
@@ -3583,20 +3676,20 @@ void DumpZ80_KMod( HWND hwnd )
 BOOL CALLBACK Z80DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	HFONT hFont = NULL;
-	SCROLLINFO si; 
+	SCROLLINFO si;
 
 	switch(Message)
     {
-		case WM_INITDIALOG:			
+		case WM_INITDIALOG:
 			hFont = (HFONT) GetStockObject(OEM_FIXED_FONT);
 			SendDlgItemMessage(hwnd, IDC_Z80_DISAM, WM_SETFONT, (WPARAM)hFont, TRUE);
 			SendDlgItemMessage(hwnd, IDC_Z80_STATUS_RS1, WM_SETFONT, (WPARAM)hFont, TRUE);
 			SendDlgItemMessage(hwnd, IDC_Z80_STATUS_RS2, WM_SETFONT, (WPARAM)hFont, TRUE);
 			SendDlgItemMessage(hwnd, IDC_Z80_STATUS_RS3, WM_SETFONT, (WPARAM)hFont, TRUE);
-			SendDlgItemMessage(hwnd, IDC_Z80_STATUS_MISC, WM_SETFONT, (WPARAM)hFont, TRUE);	
-			SendDlgItemMessage(hwnd, IDC_Z80_STATUS_FLAG, WM_SETFONT, (WPARAM)hFont, TRUE);	
-			SendDlgItemMessage(hwnd, IDC_Z80_STATUS_BANK, WM_SETFONT, (WPARAM)hFont, TRUE);	
-			
+			SendDlgItemMessage(hwnd, IDC_Z80_STATUS_MISC, WM_SETFONT, (WPARAM)hFont, TRUE);
+			SendDlgItemMessage(hwnd, IDC_Z80_STATUS_FLAG, WM_SETFONT, (WPARAM)hFont, TRUE);
+			SendDlgItemMessage(hwnd, IDC_Z80_STATUS_BANK, WM_SETFONT, (WPARAM)hFont, TRUE);
+
 			Z80_ViewMode = 0; //disasm
 			Z80_StartLineDisasm = Z80_StartLineMem = 0;
 			SwitchZ80ViewMode_KMod(  ); // init with wrong values (since no game loaded by default)
@@ -3616,7 +3709,7 @@ BOOL CALLBACK Z80DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				case IDC_Z80_VIEW_MEM :
 					Z80_ViewMode = !Z80_ViewMode;
 					if (Z80_ViewMode == 0)
-					{					
+					{
 						SendDlgItemMessage(hwnd, IDC_Z80_VIEW_MEM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Memory");
 					}
 					else
@@ -3624,7 +3717,7 @@ BOOL CALLBACK Z80DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 						SendDlgItemMessage(hwnd, IDC_Z80_VIEW_MEM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
 					}
  					SwitchZ80ViewMode_KMod( );
-					UpdateWindow (hwnd); 
+					UpdateWindow (hwnd);
 					UpdateZ80_KMod( );
 					break;
 
@@ -3633,45 +3726,45 @@ BOOL CALLBACK Z80DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					{
 						Z80_StartLineDisasm = z80_Get_PC(&M_Z80);
 						SwitchZ80ViewMode_KMod( );
-						UpdateWindow (hwnd); 
+						UpdateWindow (hwnd);
 						UpdateZ80_KMod( );
 					}
 					break;
 			}
-					
+
 			break;
 
 		case WM_VSCROLL:
 			ZeroMemory(&si, sizeof(SCROLLINFO));
-			si.cbSize = sizeof(si); 
-			si.fMask  = SIF_ALL; 
+			si.cbSize = sizeof(si);
+			si.fMask  = SIF_ALL;
 			GetScrollInfo((HWND) lParam, SB_CTL, &si);
-			switch(LOWORD (wParam)) 
-			{ 
-				case SB_PAGEUP: 
-					 si.nPos -= si.nPage; 
-					 break; 
-				case SB_PAGEDOWN: 
-					 si.nPos += si.nPage;
-					 break; 
-				case SB_LINEUP: 
-					 si.nPos--; 
+			switch(LOWORD (wParam))
+			{
+				case SB_PAGEUP:
+					 si.nPos -= si.nPage;
 					 break;
-				case SB_LINEDOWN: 
-					 si.nPos++; 
-					 break; 
-				case SB_THUMBTRACK: 
-					 //si.nPos = HIWORD(wParam); 
+				case SB_PAGEDOWN:
+					 si.nPos += si.nPage;
+					 break;
+				case SB_LINEUP:
+					 si.nPos--;
+					 break;
+				case SB_LINEDOWN:
+					 si.nPos++;
+					 break;
+				case SB_THUMBTRACK:
+					 //si.nPos = HIWORD(wParam);
 					 si.nPos = si.nTrackPos;
-					 break; 
-			} 
- 
-			si.cbSize = sizeof(si); 
-			si.fMask  = SIF_POS; 
-			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE); 
-			UpdateWindow (hwnd); 
+					 break;
+			}
+
+			si.cbSize = sizeof(si);
+			si.fMask  = SIF_POS;
+			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE);
+			UpdateWindow (hwnd);
 			UpdateZ80_KMod( );
-			return 0; 
+			return 0;
 
 
 		case WM_CLOSE:
@@ -3699,6 +3792,12 @@ USHORT tile_KMod;
 HWND hWndRedArrow;
 HWND hWndPal;
 RECT rcArrow, rcPal, rcTiles;
+COLORREF cgaPal[16] = {
+	RGB(0, 0, 0), RGB(0, 0, 0xAA), RGB(0, 0xAA, 0), RGB(0, 0xAA, 0xAA),
+	RGB(0xAA, 0, 0), RGB(0xAA, 0, 0xAA), RGB(0xAA, 0x55, 0), RGB(0xAA, 0xAA, 0xAA),
+	RGB(0x55, 0x55, 0x55), RGB(0x55, 0x55, 0xFF), RGB(0x55, 0xFF, 0x55), RGB(0x55, 0xFF, 0xFF),
+	RGB(0xFF, 0x55, 0x55), RGB(0xFF, 0x55, 0xFF), RGB(0xFF, 0xFF, 0x55), RGB(0xFF, 0xFF, 0xFF),
+};
 
 static COLORREF GetPal_KMod(unsigned int numPal, unsigned int numColor)
 {
@@ -3707,26 +3806,26 @@ static COLORREF GetPal_KMod(unsigned int numPal, unsigned int numColor)
 	unsigned short int md_color;
 	COLORREF newColor;
 
+	// handle our false CGA pal
+	if (numPal == 4)	return ( cgaPal[numColor] );
+
 	/* B */
 	newColor = (COLORREF) CRam[ 2*16*numPal + 2*numColor + 1];
-	newColor <<= 20; 
+	newColor <<= 20;
 
 	/* G */
 	md_color = (unsigned short int) ( CRam[ 2*16*numPal + 2*numColor]&0xF0 );
 	md_color <<= 8;
-	newColor |= md_color; 
+	newColor |= md_color;
 
 	/* R */
 	md_color = (unsigned short int) ( CRam[ 2*16*numPal + 2*numColor]&0x0F );
 	md_color <<= 4;
-	newColor |= md_color; 
+	newColor |= md_color;
 
+	//transform genny white to true white
 	if (newColor == 0x00E0E0E0)
 		newColor = 0x00FFFFFF;
-
-	// handle our false pal ;)
-	if (numPal==4)
-		newColor = PALETTEINDEX(numColor);
 
 	return newColor;
 }
@@ -3795,7 +3894,7 @@ static void DrawTile_KMod(HDC hDCMain, unsigned short int numTile, WORD x, WORD 
         8, 8,
         tile_data,
         (const BITMAPINFO *)&bmi,
-        DIB_RGB_COLORS,
+		DIB_RGB_COLORS,
         SRCCOPY);
 }
 
@@ -3829,7 +3928,7 @@ void DrawVDP_Pal_KMod( LPDRAWITEMSTRUCT hlDIS  )
 			rc.right = rc.left + palH;
 
 			newBrush =  CreateSolidBrush( GetPal_KMod(j, i) );
-			
+
 			FillRect(hlDIS->hDC, &rc, newBrush);
 		}
 	}
@@ -3846,17 +3945,17 @@ void DrawVDP_Tiles_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	WORD posX, posY, maxY, maxX;
 	unsigned short int numTile = 0;
 	SCROLLINFO si;
-   
+
 	HDC hDC;
 	HBITMAP hBitmap, hOldBitmap;
 
 	hDC = CreateCompatibleDC( hlDIS->hDC );
 	hBitmap = CreateCompatibleBitmap( hlDIS->hDC,  hlDIS->rcItem.right - hlDIS->rcItem.left, hlDIS->rcItem.bottom - hlDIS->rcItem.top);
 	hOldBitmap = SelectObject(hDC, hBitmap);
-	
+
 	ZeroMemory(&si, sizeof(SCROLLINFO));
-	si.cbSize = sizeof(si); 
-	si.fMask  = SIF_POS; 
+	si.cbSize = sizeof(si);
+	si.fMask  = SIF_POS;
 	GetScrollInfo((HWND) GetDlgItem(hVDP, IDC_VDP_SCROLL), SB_CTL, &si);
 
 	numTile = si.nPos*32; //tileBank_KMod*16;
@@ -3874,16 +3973,16 @@ void DrawVDP_Tiles_KMod( LPDRAWITEMSTRUCT hlDIS  )
 
 	BitBlt(
 		hlDIS->hDC, // handle to destination device context
-		0,  // x-coordinate of destination rectangle's upper-left 
+		0,  // x-coordinate of destination rectangle's upper-left
                // corner
-		(Paused?0:TileCurDraw*maxY),  // y-coordinate of destination rectangle's upper-left 
+		(Paused?0:TileCurDraw*maxY),  // y-coordinate of destination rectangle's upper-left
                // corner
 		maxX,  // width of destination rectangle
 		maxY, // height of destination rectangle
 		hDC,  // handle to source device context
-		0,   // x-coordinate of source rectangle's upper-left 
+		0,   // x-coordinate of source rectangle's upper-left
                // corner
-		0,   // y-coordinate of source rectangle's upper-left 
+		0,   // y-coordinate of source rectangle's upper-left
                // corner
 		SRCCOPY  // raster operation code
 	);
@@ -3896,14 +3995,7 @@ void DrawVDP_Tiles_KMod( LPDRAWITEMSTRUCT hlDIS  )
 
 void DrawVDPZoom_Tiles_KMod( LPDRAWITEMSTRUCT hlDIS  )
 {
-	SCROLLINFO si;
-	
-	ZeroMemory(&si, sizeof(SCROLLINFO));
-	si.cbSize = sizeof(si); 
-	si.fMask  = SIF_POS; 
-	GetScrollInfo((HWND) GetDlgItem(hVDP, IDC_VDP_SCROLL), SB_CTL, &si);
-
-	DrawTile_KMod( hlDIS->hDC, (si.nPos*32) + tile_KMod, 0, 0, pal_KMod, zoomTile_KMod);
+	DrawTile_KMod( hlDIS->hDC, tile_KMod, 0, 0, pal_KMod, zoomTile_KMod);
 }
 
 void DumpTiles_KMod( HWND hwnd )
@@ -3923,7 +4015,7 @@ void DumpTiles_KMod( HWND hwnd )
 
 	COLORREF		tmpColor;
 	DWORD			j;
-	
+
 	unsigned short int numTile;
 	unsigned char		TileData;
 
@@ -3997,7 +4089,7 @@ void DumpTiles_KMod( HWND hwnd )
 				pBits[ posX*4 + (124-posY)*8*16*4 + (7-j)*16*4 + 2] = TileData;
 
 				TileData = VRam[numTile*32 + j*4 + 2];
-				pBits[ posX*4 + (124-posY)*8*16*4 + (7-j)*16*4 + 3] = TileData;			
+				pBits[ posX*4 + (124-posY)*8*16*4 + (7-j)*16*4 + 3] = TileData;
 			}
 			numTile++;
 		}
@@ -4064,7 +4156,7 @@ void DumpVRAM_KMod( HWND hwnd )
     WriteFile(hFr, VRam, dwBytesToWrite, &dwBytesWritten, NULL) ;
 
     CloseHandle(hFr);
-	
+
 	Put_Info("VRAM dumped", 1500);
 }
 
@@ -4126,6 +4218,12 @@ void VDPPal_Choose( )
 void VDPTile_Choose( )
 {
 	POINT pt;
+	SCROLLINFO si;
+
+	ZeroMemory(&si, sizeof(SCROLLINFO));
+	si.cbSize = sizeof(si);
+	si.fMask  = SIF_POS;
+	GetScrollInfo((HWND) GetDlgItem(hVDP, IDC_VDP_SCROLL), SB_CTL, &si);
 
 	GetCursorPos(&pt);
 	ScreenToClient(hVDP, &pt);
@@ -4135,11 +4233,13 @@ void VDPTile_Choose( )
 	pt.y -= rcTiles.top;
 	tile_KMod = (unsigned char) (pt.y/8);
 	tile_KMod *= 32;
+	tile_KMod += si.nPos * 32;
+
 
 	pt.x -= rcTiles.left;
 	tile_KMod += (unsigned char) (pt.x/8);
 
-    wsprintf(debug_string, "0x%.4X", tile_KMod);
+    wsprintf(debug_string, "Tile 0x%.4X", tile_KMod);
     SendDlgItemMessage(hVDP, IDC_VDP_TILE_ZOOM_ADR, WM_SETTEXT, 0, (LPARAM)debug_string);
 
 	if (Paused)	UpdateVDP_KMod( );
@@ -4166,17 +4266,19 @@ void VDPInit_KMod( HWND hwnd )
 
     hWndRedArrow = GetDlgItem(hwnd, IDC_VDP_PAL_ARROW);
 	GetClientRect(hWndRedArrow, &rcArrow);
-			
+
 	MapWindowPoints( hWndPal, hwnd, (LPPOINT) &rcPal, 2 );
 
-	GetClientRect(GetDlgItem(hwnd, IDC_VDP_TILES), &rcTiles);			
+	GetClientRect(GetDlgItem(hwnd, IDC_VDP_TILES), &rcTiles);
 	MapWindowPoints( GetDlgItem(hwnd, IDC_VDP_TILES), hwnd, (LPPOINT) &rcTiles, 2 );
-	
+
 	rcTiles.bottom = rcTiles.top+32*8;
 	rcTiles.right = rcTiles.left+32*8;
 	MoveWindow(GetDlgItem(hwnd, IDC_VDP_TILES), rcTiles.left, rcTiles.top, rcTiles.right-rcTiles.left, rcTiles.bottom-rcTiles.top, TRUE);
-
 	MoveWindow(GetDlgItem(hwnd, IDC_VDP_SCROLL), rcTiles.right, rcTiles.top, GetSystemMetrics(SM_CXVSCROLL), rcTiles.bottom-rcTiles.top, TRUE);
+
+	MoveWindow(GetDlgItem(hwnd, IDC_VDP_TILE_ZOOM_ADR), rcTiles.left, rcTiles.bottom + 8, TZoomRect.right - TZoomRect.left, 16, TRUE);
+	MoveWindow(GetDlgItem(hwnd, IDC_VDP_PREVIEW), rcTiles.left, rcTiles.bottom + 8+16+4, TZoomRect.right - TZoomRect.left, TZoomRect.bottom - TZoomRect.top, TRUE);
 
 	CheckDlgButton( hwnd, IDC_VDP_PAL_1, BST_CHECKED);
 	CheckDlgButton( hwnd, IDC_VDP_PAL_2, BST_CHECKED);
@@ -4187,8 +4289,8 @@ void VDPInit_KMod( HWND hwnd )
 	TileCurDraw = 0;
 
 	ZeroMemory(&si, sizeof(SCROLLINFO));
-	si.cbSize = sizeof(si); 
-	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS; 
+	si.cbSize = sizeof(si);
+	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS;
 	si.nMin   = 0;
 	si.nPage  = 8;
 	si.nPos   = 0;
@@ -4204,7 +4306,7 @@ BOOL CALLBACK VDPDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 	switch(Message)
     {
-		case WM_INITDIALOG:			
+		case WM_INITDIALOG:
 			VDPInit_KMod( hwnd );
 			break;
 
@@ -4237,7 +4339,7 @@ BOOL CALLBACK VDPDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					if (tileBank_KMod)	tileBank_KMod--;
 					wsprintf(debug_string, "0x%.4X", tileBank_KMod*16);
 					SendDlgItemMessage(hVDP , IDC_VDP_TILES_ADR, WM_SETTEXT, 0 , (LPARAM)debug_string);
-				
+
 					if (Paused)	UpdateVDP_KMod( );
 					break;
 				case IDC_VDP_TILES_DWN:
@@ -4284,39 +4386,39 @@ BOOL CALLBACK VDPDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 		case WM_VSCROLL:
 			ZeroMemory(&si, sizeof(SCROLLINFO));
-			si.cbSize = sizeof(si); 
-			si.fMask  = SIF_ALL; 
+			si.cbSize = sizeof(si);
+			si.fMask  = SIF_ALL;
 			GetScrollInfo((HWND) lParam, SB_CTL, &si);
-			switch(LOWORD (wParam)) 
-			{ 
-				case SB_PAGEUP: 
-					 si.nPos -= si.nPage; 
-					 break; 
-				case SB_PAGEDOWN: 
-					 si.nPos += si.nPage;
-					 break; 
-				case SB_LINEUP: 
-					 si.nPos--; 
+			switch(LOWORD (wParam))
+			{
+				case SB_PAGEUP:
+					 si.nPos -= si.nPage;
 					 break;
-				case SB_LINEDOWN: 
-					 si.nPos++; 
-					 break; 
-				case SB_THUMBTRACK: 
-//					 si.nPos = HIWORD(wParam); 
+				case SB_PAGEDOWN:
+					 si.nPos += si.nPage;
+					 break;
+				case SB_LINEUP:
+					 si.nPos--;
+					 break;
+				case SB_LINEDOWN:
+					 si.nPos++;
+					 break;
+				case SB_THUMBTRACK:
+//					 si.nPos = HIWORD(wParam);
 					 si.nPos = si.nTrackPos;
-					 break; 
-			} 
- 
-			si.cbSize = sizeof(SCROLLINFO); 
-			si.fMask  = SIF_POS; 
-			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE); 
-			
-			wsprintf(debug_string, "0x%.4X", si.nPos*32);
+					 break;
+			}
+
+			si.cbSize = sizeof(SCROLLINFO);
+			si.fMask  = SIF_POS;
+			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE);
+
+			wsprintf(debug_string, "Offset 0x%.4X", si.nPos*32);
 			SendDlgItemMessage(hVDP , IDC_VDP_TILES_ADR, WM_SETTEXT, 0 , (LPARAM)debug_string);
-			
+
 			UpdateVDP_KMod( );
 			UpdateWindow (hwnd);
-			return 0; 
+			return 0;
 
 		case WM_CLOSE:
 			CloseWindow_KMod( DMODE_VDP );
@@ -4335,11 +4437,11 @@ BOOL CALLBACK VDPDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 /************ CD 68K **************/
 
 int Current_PC_S68K;
-			
+
 unsigned short Next_Word_S68K(void)
 {
 	unsigned short val;
-	
+
 	val = S68K_RW(Current_PC_S68K);
 
 	Current_PC_S68K += 2;
@@ -4351,7 +4453,7 @@ unsigned short Next_Word_S68K(void)
 unsigned int Next_Long_S68K(void)
 {
 	unsigned int val;
-	
+
 	val = S68K_RW(Current_PC_S68K);
 	val <<= 16;
 	val |= S68K_RW(Current_PC_S68K + 2);
@@ -4369,13 +4471,13 @@ unsigned int  S68k_StartLineDisasm, S68k_StartLineWRAM, S68k_StartLinePRAM;
 
 void SwitchS68kViewMode_KMod( )
 {
-	SCROLLINFO si; 
+	SCROLLINFO si;
 
 	ZeroMemory(&si, sizeof(SCROLLINFO));
-	si.cbSize = sizeof(si); 
-	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS; 
-	si.nMin   = 0; 
-	si.nPage  = 13;
+	si.cbSize = sizeof(si);
+	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS;
+	si.nMin   = 0;
+	si.nPage  = 10;
 
 
 	if (S68k_ViewMode&2)
@@ -4383,14 +4485,14 @@ void SwitchS68kViewMode_KMod( )
 		if (S68k_ViewMode&1)
 		{
 			// DISASM VIEW
-			si.nPos   = S68k_StartLineDisasm; 
+			si.nPos   = S68k_StartLineDisasm;
 			si.nMax   = Rom_Size -1;
 			SendDlgItemMessage(hCD_68K, IDC_S68K_VIEW_PRAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View PRAM");
 		}
 		else
 		{
 			// Program RAM VIEW
-			si.nPos   = S68k_StartLinePRAM; 
+			si.nPos   = S68k_StartLinePRAM;
 			si.nMax   = ((512 * 1024)/8) -1;
 			SendDlgItemMessage(hCD_68K, IDC_S68K_VIEW_PRAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
 		}
@@ -4398,10 +4500,10 @@ void SwitchS68kViewMode_KMod( )
 	else if (S68k_ViewMode&8)
 	{
 		// Word RAM VIEW
-		si.nPos   = S68k_StartLineWRAM; 
+		si.nPos   = S68k_StartLineWRAM;
 		si.nMax   = ((256 * 1024)/8) -1;
 	}
-	SetScrollInfo(GetDlgItem(hCD_68K, IDC_S68K_SCROLL), SB_CTL, &si, TRUE); 
+	SetScrollInfo(GetDlgItem(hCD_68K, IDC_S68K_SCROLL), SB_CTL, &si, TRUE);
 }
 
 
@@ -4509,7 +4611,7 @@ void DumpS68KPRam_KMod( HWND hwnd )
     if (hFr == INVALID_HANDLE_VALUE)
           return;
 
-	
+
 	dwBytesToWrite = 512 * 1024;
 	Byte_Swap(Ram_Prg, dwBytesToWrite);
     WriteFile(hFr, Ram_Prg, dwBytesToWrite, &dwBytesWritten, NULL) ;
@@ -4566,11 +4668,11 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 {
 
 	HFONT hFont = NULL;
-	SCROLLINFO si; 
+	SCROLLINFO si;
 
 	switch(Message)
     {
-		case WM_INITDIALOG:			
+		case WM_INITDIALOG:
 			hFont = (HFONT) GetStockObject(OEM_FIXED_FONT)	;
 			SendDlgItemMessage(hwnd, IDC_S68K_DISAM, WM_SETFONT, (WPARAM)hFont, TRUE);
 			SendDlgItemMessage(hwnd, IDC_S68K_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -4602,7 +4704,7 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 					S68k_ViewMode ^= 0x1;
 					S68k_ViewMode |= 0x2;
 					SwitchS68kViewMode_KMod( );
-					UpdateWindow (hwnd); 
+					UpdateWindow (hwnd);
 					UpdateCD_68K_KMod( );
 					break;
 
@@ -4611,7 +4713,7 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 					S68k_ViewMode ^= 0x4;
 					S68k_ViewMode |= 0x8;
 					SwitchS68kViewMode_KMod( );
-					UpdateWindow (hwnd); 
+					UpdateWindow (hwnd);
 					UpdateCD_68K_KMod( );
 					break;
 
@@ -4624,7 +4726,7 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 						S68k_StartLineDisasm = sub68k_context.pc;
 						S68k_StartLinePRAM = S68k_StartLineDisasm/8;
 						SwitchS68kViewMode_KMod( );
-						UpdateWindow (hwnd); 
+						UpdateWindow (hwnd);
 						UpdateCD_68K_KMod( );
 					}
 					break;
@@ -4634,41 +4736,41 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
 		case WM_VSCROLL:
 			ZeroMemory(&si, sizeof(SCROLLINFO));
-			si.cbSize = sizeof(si); 
-			si.fMask  = SIF_ALL; 
+			si.cbSize = sizeof(si);
+			si.fMask  = SIF_ALL;
 			GetScrollInfo((HWND) lParam, SB_CTL, &si);
-			switch(LOWORD (wParam)) 
-			{ 
-				case SB_PAGEUP: 
-					 si.nPos -= si.nPage; 
-					 break; 
-				case SB_PAGEDOWN: 
-					 si.nPos += si.nPage;
-					 break; 
-				case SB_LINEUP: 
-					 si.nPos--; 
+			switch(LOWORD (wParam))
+			{
+				case SB_PAGEUP:
+					 si.nPos -= si.nPage;
 					 break;
-				case SB_LINEDOWN: 
-					 si.nPos++; 
-					 break; 
-				case SB_THUMBTRACK: 
-//					 si.nPos = HIWORD(wParam); 
+				case SB_PAGEDOWN:
+					 si.nPos += si.nPage;
+					 break;
+				case SB_LINEUP:
+					 si.nPos--;
+					 break;
+				case SB_LINEDOWN:
+					 si.nPos++;
+					 break;
+				case SB_THUMBTRACK:
+//					 si.nPos = HIWORD(wParam);
 					 si.nPos = si.nTrackPos;
-					 break; 
-			} 
- 
-			si.cbSize = sizeof(si); 
-			si.fMask  = SIF_POS; 
-			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE); 
-			UpdateWindow (hwnd); 
+					 break;
+			}
+
+			si.cbSize = sizeof(si);
+			si.fMask  = SIF_POS;
+			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE);
+			UpdateWindow (hwnd);
 			UpdateCD_68K_KMod( );
-			return 0; 
+			return 0;
 
 		case WM_CLOSE:
 			CloseWindow_KMod( DMODE_CD_68K );
 			break;
 
-		case WM_DESTROY:			
+		case WM_DESTROY:
 			DeleteObject( (HGDIOBJ) hFont );
 			DestroyWindow(hCD_68K);
 			PostQuitMessage(0);
@@ -4702,7 +4804,7 @@ void CD_CDCInit_KMod( HWND hwnd)
 	lvColumn.cx = 80;
 	lvColumn.pszText = szString[0];
 	ListView_InsertColumn(hCDCDCList, 0, &lvColumn);
-	
+
 	lvColumn.cx = 80;
 	lvColumn.pszText = szString[1];
 	ListView_InsertColumn(hCDCDCList, 1, &lvColumn);
@@ -4798,7 +4900,7 @@ void CD_CDCInit_KMod( HWND hwnd)
 	wsprintf(buf, "0x%0.8X",  CDC.CTRL);
 	lvItem.pszText = buf;
 	ListView_SetItem(hCDCDCList, &lvItem);
-	
+
 //	lvItem.mask = LVIF_TEXT;
 	lvItem.iItem = 8;
 	lvItem.iSubItem = 0;
@@ -4889,7 +4991,7 @@ void UpdateCD_CDC_KMod( )
 	wsprintf(buf, "0x%0.8X",  CDC.CTRL);
 	lvItem.pszText = buf;
 	ListView_SetItem(hCDCDCList, &lvItem);
-	
+
 //	lvItem.mask = LVIF_TEXT;
 	lvItem.iItem = 8;
 //	lvItem.iSubItem = 1;
@@ -4919,7 +5021,7 @@ BOOL CALLBACK CD_CDCDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			CloseWindow_KMod( DMODE_CD_CDC );
 			break;
 
-		case WM_DESTROY:			
+		case WM_DESTROY:
 			DestroyWindow(hCD_CDC);
 			PostQuitMessage(0);
 			break;
@@ -4954,7 +5056,7 @@ void DumpTilesCD_KMod( HWND hwnd )
 
 	COLORREF		tmpColor;
 	DWORD			j;
-	
+
 	unsigned short int numTile=0;
 	unsigned char		TileData;
 
@@ -5030,7 +5132,7 @@ void DumpTilesCD_KMod( HWND hwnd )
 
 				TileData = Ram_Word_2M[numTile*64 + j*4 + 2];
 				pBits[(bmiHeader.biHeight - (posY+j))*bmiHeader.biWidth/2 + posX +3 ] = TileData;
-			}	
+			}
 
 			for(j = 0; j < 8; j++)
 			{
@@ -5076,7 +5178,7 @@ void DumpTilesCD_KMod( HWND hwnd )
 	Put_Info("WRAM Tiles dumped", 1500);
 }
 
-	
+
 void DrawTileCD_KMod( HDC hDCMain, unsigned short int numTile, WORD x, WORD y, UCHAR pal, UCHAR zoom)
 {
 	unsigned char j;
@@ -5118,7 +5220,7 @@ void DrawTileCD_KMod( HDC hDCMain, unsigned short int numTile, WORD x, WORD y, U
 
 		TileData = Ram_Word_2M[numTile*64 + j*4 + 2]&0x0F;
 		SetPixelV(hDC, 7, j, GetPal_KMod(pal, TileData) );
-	}	
+	}
 
 	for(j = 0; j < 8; j++)
 	{
@@ -5153,16 +5255,16 @@ void DrawTileCD_KMod( HDC hDCMain, unsigned short int numTile, WORD x, WORD y, U
 
 	StretchBlt(
 		hDCMain, // handle to destination device context
-		x,  // x-coordinate of destination rectangle's upper-left 
+		x,  // x-coordinate of destination rectangle's upper-left
                // corner
-		y,  // y-coordinate of destination rectangle's upper-left 
+		y,  // y-coordinate of destination rectangle's upper-left
                // corner
 		8*zoom,  // width of destination rectangle
 		16*zoom, // height of destination rectangle
 		hDC,  // handle to source device context
-		0,   // x-coordinate of source rectangle's upper-left 
+		0,   // x-coordinate of source rectangle's upper-left
 			// corner
-		0,   // y-coordinate of source rectangle's upper-left 
+		0,   // y-coordinate of source rectangle's upper-left
                // corner
 		8,
 		16,
@@ -5193,8 +5295,8 @@ void DrawCD_GFX_KMod( LPDRAWITEMSTRUCT hlDIS )
 //	numTile = CDtileBank_KMod*32;
 
 	ZeroMemory(&si, sizeof(SCROLLINFO));
-	si.cbSize = sizeof(si); 
-	si.fMask  = SIF_POS; 
+	si.cbSize = sizeof(si);
+	si.fMask  = SIF_POS;
 	GetScrollInfo((HWND) GetDlgItem(hCD_GFX, IDC_CD_GFX_SCROLL), SB_CTL, &si);
 
 	numTile = si.nPos*32;
@@ -5205,11 +5307,11 @@ void DrawCD_GFX_KMod( LPDRAWITEMSTRUCT hlDIS )
 	}
 	else
 	{
-		// speed up emulation by redrawing 1/4 each refresh 
+		// speed up emulation by redrawing 1/4 each refresh
 		maxY = 4*16;
 		numTile += CDTileCurDraw*4*32;
 	}
-	
+
 
 	maxX = 32*8;
 	for(posY = 0; posY < maxY; posY+=16)
@@ -5223,16 +5325,16 @@ void DrawCD_GFX_KMod( LPDRAWITEMSTRUCT hlDIS )
 
 	BitBlt(
 		hlDIS->hDC, // handle to destination device context
-		0,  // x-coordinate of destination rectangle's upper-left 
+		0,  // x-coordinate of destination rectangle's upper-left
                // corner
-		(Paused?0:CDTileCurDraw*maxY),  // y-coordinate of destination rectangle's upper-left 
+		(Paused?0:CDTileCurDraw*maxY),  // y-coordinate of destination rectangle's upper-left
                // corner
 		maxX,  // width of destination rectangle
 		maxY, // height of destination rectangle
 		hDC,  // handle to source device context
-		0,   // x-coordinate of source rectangle's upper-left 
+		0,   // x-coordinate of source rectangle's upper-left
                // corner
-		0,   // y-coordinate of source rectangle's upper-left 
+		0,   // y-coordinate of source rectangle's upper-left
                // corner
 		SRCCOPY  // raster operation code
 	);
@@ -5264,17 +5366,17 @@ void CD_GFXInit_KMod( HWND hwnd )
 	CDtileBank_KMod = 0;
 
 	ZeroMemory(&si, sizeof(SCROLLINFO));
-	si.cbSize = sizeof(si); 
-	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS; 
-	si.nMin   = 0; 
+	si.cbSize = sizeof(si);
+	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS;
+	si.nMin   = 0;
 	si.nPage  = 1;
-	si.nPos   = 0; 
+	si.nPos   = 0;
 	si.nMax   = 64-16;
 
 	SetScrollInfo(GetDlgItem(hwnd, IDC_CD_GFX_SCROLL), SB_CTL, &si, TRUE);
 
 
-	GetClientRect(GetDlgItem(hwnd, IDC_CD_GFX), &rc);			
+	GetClientRect(GetDlgItem(hwnd, IDC_CD_GFX), &rc);
 	MapWindowPoints( GetDlgItem(hwnd, IDC_CD_GFX), hwnd, (LPPOINT) &rc, 2 );
 
 	rc.bottom = rc.top+16*16;
@@ -5293,7 +5395,7 @@ BOOL CALLBACK CD_GFXDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
 	switch(Message)
     {
-		case WM_INITDIALOG:			
+		case WM_INITDIALOG:
 			CD_GFXInit_KMod(hwnd );
 			break;
 
@@ -5302,7 +5404,7 @@ BOOL CALLBACK CD_GFXDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			{
 				case IDC_CD_GFX_DUMP:
 					break;
-				
+
 				case IDC_CD_GFX_BMP:
 					DumpTilesCD_KMod( hCD_GFX );
 					break;
@@ -5311,39 +5413,39 @@ BOOL CALLBACK CD_GFXDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
 		case WM_VSCROLL:
 			ZeroMemory(&si, sizeof(SCROLLINFO));
-			si.cbSize = sizeof(si); 
-			si.fMask  = SIF_ALL; 
+			si.cbSize = sizeof(si);
+			si.fMask  = SIF_ALL;
 			GetScrollInfo((HWND) lParam, SB_CTL, &si);
-			switch(LOWORD (wParam)) 
-			{ 
-				case SB_PAGEUP: 
-					 si.nPos -= si.nPage; 
-					 break; 
-				case SB_PAGEDOWN: 
-					 si.nPos += si.nPage;
-					 break; 
-				case SB_LINEUP: 
-					 si.nPos--; 
+			switch(LOWORD (wParam))
+			{
+				case SB_PAGEUP:
+					 si.nPos -= si.nPage;
 					 break;
-				case SB_LINEDOWN: 
-					 si.nPos++; 
-					 break; 
-				case SB_THUMBTRACK: 
-//					 si.nPos = HIWORD(wParam); 
+				case SB_PAGEDOWN:
+					 si.nPos += si.nPage;
+					 break;
+				case SB_LINEUP:
+					 si.nPos--;
+					 break;
+				case SB_LINEDOWN:
+					 si.nPos++;
+					 break;
+				case SB_THUMBTRACK:
+//					 si.nPos = HIWORD(wParam);
 					 si.nPos = si.nTrackPos;
-					 break; 
-			} 
- 
-			si.cbSize = sizeof(si); 
-			si.fMask  = SIF_POS; 
-			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE); 
-			
+					 break;
+			}
+
+			si.cbSize = sizeof(si);
+			si.fMask  = SIF_POS;
+			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE);
+
 			wsprintf(debug_string, "0x%.5X", (32*si.nPos)*0x500);
 			SendDlgItemMessage(hCD_GFX , IDC_CD_GFX_ADR, WM_SETTEXT, 0 , (LPARAM)debug_string);
 
 			UpdateCD_GFX_KMod( );
 			UpdateWindow (hwnd);
-			return 0; 
+			return 0;
 
 		case WM_DRAWITEM:
 			if ( (UINT) wParam == IDC_CD_GFX )
@@ -5354,7 +5456,7 @@ BOOL CALLBACK CD_GFXDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			CloseWindow_KMod( DMODE_CD_GFX );
 			break;
 
-		case WM_DESTROY:		
+		case WM_DESTROY:
 			DestroyWindow(hCD_GFX);
 			PostQuitMessage(0);
 			break;
@@ -5387,7 +5489,7 @@ void CDRegInit_KMod( HWND hwnd)
 	lvColumn.cx = 80; // ((rSize.right - rSize.left -5)/3);
 	lvColumn.pszText = szString[0];
 	ListView_InsertColumn(hCDRegList, 0, &lvColumn);
-	
+
 	lvColumn.cx = 0x75;
 	lvColumn.pszText = szString[1];
 	ListView_InsertColumn(hCDRegList, 1, &lvColumn);
@@ -5395,7 +5497,7 @@ void CDRegInit_KMod( HWND hwnd)
 	lvColumn.cx = 0x75;
 	lvColumn.pszText = szString[2];
 	ListView_InsertColumn(hCDRegList, 2, &lvColumn);
-	
+
 	ListView_SetExtendedListViewStyle(hCDRegList, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES );
 
 	for (i=0; i<= 0x4A; i+=2)
@@ -5414,11 +5516,11 @@ void CDRegInit_KMod( HWND hwnd)
 			wsprintf(buf, "0x%0.4X",  M68K_RW(0xA12000 | i));
 		lvItem.pszText = buf;
 		ListView_SetItem(hCDRegList, &lvItem);
-		
+
 		lvItem.iSubItem = 2;
 		wsprintf(buf, "0x%0.4X", S68K_RW(0xFF8000 | i));
 		lvItem.pszText = buf;
-		ListView_SetItem(hCDRegList, &lvItem);	
+		ListView_SetItem(hCDRegList, &lvItem);
 	}
 }
 
@@ -5442,7 +5544,7 @@ void UpdateCD_Reg_KMod( )
 			wsprintf(buf, "0x%0.4X",  M68K_RW(0xA12000 | i));
 		lvItem.pszText = buf;
 		ListView_SetItem(hCDRegList, &lvItem);
-		
+
 		lvItem.iSubItem = 2;
 		wsprintf(buf, "0x%0.4X", S68K_RW(0xFF8000 | i));
 		lvItem.pszText = buf;
@@ -5464,7 +5566,7 @@ BOOL CALLBACK CD_RegDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			CloseWindow_KMod( DMODE_CD_REG );
 			break;
 
-		case WM_DESTROY:			
+		case WM_DESTROY:
 			DestroyWindow(hCD_Reg);
 			PostQuitMessage(0);
 			break;
@@ -5481,7 +5583,7 @@ unsigned int  MSH2_StartLineROMDisasm, MSH2_StartLineRAMDisasm, MSH2_StartLineRA
 
 void UpdateMSH2_KMod( )
 {
-	unsigned int i, PC;	
+	unsigned int i, PC;
 	unsigned char tmp_string[256];
 
 	if ( OpenedWindow_KMod[ 6 ] == FALSE )	return;
@@ -5586,7 +5688,7 @@ void UpdateMSH2_KMod( )
 
 	wsprintf(debug_string, "GBR=%.8X VBR=%.8X PR=%.8X\nMACH=%.8X MACL=%.8X\nIL=%.2X IV=%.2X", SH2_Get_GBR(&M_SH2), SH2_Get_VBR(&M_SH2), SH2_Get_PR(&M_SH2), SH2_Get_MACH(&M_SH2), SH2_Get_MACL(&M_SH2), M_SH2.INT.Prio,M_SH2.INT.Vect);
 	SendDlgItemMessage(hMSH2 , IDC_MSH2_STATUS_DATA, WM_SETTEXT, 0 , (LPARAM)debug_string);
-	
+
 	wsprintf(debug_string, "PC=%.8X", SH2_Get_PC(&M_SH2));//(M_SH2.PC - M_SH2.Base_PC) - 4);
 	SendDlgItemMessage(hMSH2, IDC_MSH2_PC, WM_SETTEXT, (WPARAM)0, (LPARAM) debug_string);
 
@@ -5715,24 +5817,24 @@ void SwitchMSH2ViewMode_KMod(  )
 	SCROLLINFO si;
 
 	ZeroMemory(&si, sizeof(SCROLLINFO));
-	si.cbSize = sizeof(si); 
-	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS; 
-	si.nMin   = 0; 
-	si.nPage  = 13;
+	si.cbSize = sizeof(si);
+	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS;
+	si.nMin   = 0;
+	si.nPage  = 10;
 
 	if (MSH2_ViewMode&2)
 	{
 		if (MSH2_ViewMode&1)
 		{
 			// ROM DISASM VIEW
-			si.nPos   = MSH2_StartLineROMDisasm; 
+			si.nPos   = MSH2_StartLineROMDisasm;
 			si.nMax   = ((4 * 1024 * 1024)/2) -1;
 			SendDlgItemMessage(hMSH2, IDC_MSH2_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View ROM");
 		}
-		else 
+		else
 		{
 			// ROM VIEW
-			si.nPos   = MSH2_StartLineROM; 
+			si.nPos   = MSH2_StartLineROM;
 			si.nMax   = ((4 * 1024 * 1024)/8) -1;
 			SendDlgItemMessage(hMSH2, IDC_MSH2_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
 		}
@@ -5742,14 +5844,14 @@ void SwitchMSH2ViewMode_KMod(  )
 		if (MSH2_ViewMode&4)
 		{
 			// RAM DISASM VIEW
-			si.nPos   = MSH2_StartLineRAMDisasm; 
+			si.nPos   = MSH2_StartLineRAMDisasm;
 			si.nMax   = ((256 * 1024)/2) -1;
 			SendDlgItemMessage(hMSH2, IDC_MSH2_VIEW_RAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View RAM");
 		}
 		else
 		{
 			// RAM VIEW
-			si.nPos   = MSH2_StartLineRAM; 
+			si.nPos   = MSH2_StartLineRAM;
 			si.nMax   = ((256 * 1024)/8) -1;
 			SendDlgItemMessage(hMSH2, IDC_MSH2_VIEW_RAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
 		}
@@ -5760,20 +5862,20 @@ void SwitchMSH2ViewMode_KMod(  )
 		if (MSH2_ViewMode&0x10)
 		{
 			// CACHE DISASM VIEW
-			si.nPos   = MSH2_StartLineRAMDisasm; 
+			si.nPos   = MSH2_StartLineRAMDisasm;
 			si.nMax   = ((256 * 1024)/2) -1;
 			SendDlgItemMessage(hMSH2, IDC_MSH2_VIEW_RAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View RAM");
 		}
 		else
 		{*/
 			// CACHE VIEW
-			si.nPos   = MSH2_StartLineCache; 
+			si.nPos   = MSH2_StartLineCache;
 			si.nMax   = (0x1000/8) -1;
 /*
 			SendDlgItemMessage(hMSH2, IDC_MSH2_VIEW_RAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
 		}*/
 	}
-	SetScrollInfo(GetDlgItem(hMSH2, IDC_MSH2_SCROLL), SB_CTL, &si, TRUE); 
+	SetScrollInfo(GetDlgItem(hMSH2, IDC_MSH2_SCROLL), SB_CTL, &si, TRUE);
 }
 
 BOOL CALLBACK MSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -5796,7 +5898,7 @@ BOOL CALLBACK MSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 		case WM_SHOWWINDOW:
 			SwitchMSH2ViewMode_KMod( );
-			break;	
+			break;
 
 		case WM_COMMAND:
 			switch( LOWORD(wParam) )
@@ -5815,7 +5917,7 @@ BOOL CALLBACK MSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					MSH2_ViewMode ^= 0x1;
 					MSH2_ViewMode |= 0x2;
 					SwitchMSH2ViewMode_KMod( );
-					UpdateWindow (hwnd); 
+					UpdateWindow (hwnd);
 					UpdateMSH2_KMod( );
 					break;
 				case IDC_MSH2_VIEW_RAM:
@@ -5824,7 +5926,7 @@ BOOL CALLBACK MSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					MSH2_ViewMode |= 0x8;
 
 					SwitchMSH2ViewMode_KMod(  );
-					UpdateWindow (hwnd); 
+					UpdateWindow (hwnd);
 					UpdateMSH2_KMod( );
 					break;
 				case IDC_MSH2_VIEW_CACHE:
@@ -5833,7 +5935,7 @@ BOOL CALLBACK MSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					MSH2_ViewMode |= 0x20;
 
 					SwitchMSH2ViewMode_KMod(  );
-					UpdateWindow (hwnd); 
+					UpdateWindow (hwnd);
 					UpdateMSH2_KMod( );
 					break;
 
@@ -5855,8 +5957,8 @@ BOOL CALLBACK MSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 						MSH2_StartLineRAMDisasm = (curPC-0x06000000)/2;
 						SwitchMSH2ViewMode_KMod( );
 					}
-					
-					UpdateWindow (hwnd); 
+
+					UpdateWindow (hwnd);
 					UpdateMSH2_KMod( );
 					break;
 
@@ -5865,44 +5967,44 @@ BOOL CALLBACK MSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 		case WM_VSCROLL:
 			ZeroMemory(&si, sizeof(SCROLLINFO));
-			si.cbSize = sizeof(si); 
-			si.fMask  = SIF_ALL; //SIF_RANGE | SIF_PAGE | SIF_POS | SIF_TRACKPOS; 
+			si.cbSize = sizeof(si);
+			si.fMask  = SIF_ALL; //SIF_RANGE | SIF_PAGE | SIF_POS | SIF_TRACKPOS;
 			GetScrollInfo((HWND) lParam, SB_CTL, &si);
-			switch(LOWORD (wParam)) 
-			{ 
-				case SB_PAGEUP: 
-					 si.nPos -= si.nPage; 
-					 break; 
-				case SB_PAGEDOWN: 
-					 si.nPos += si.nPage;
-					 break; 
-				case SB_LINEUP: 
-					 si.nPos--; 
+			switch(LOWORD (wParam))
+			{
+				case SB_PAGEUP:
+					 si.nPos -= si.nPage;
 					 break;
-				case SB_LINEDOWN: 
-					 si.nPos++; 
-					 break; 
+				case SB_PAGEDOWN:
+					 si.nPos += si.nPage;
+					 break;
+				case SB_LINEUP:
+					 si.nPos--;
+					 break;
+				case SB_LINEDOWN:
+					 si.nPos++;
+					 break;
 //				case SB_THUMBPOSITION:
-				case SB_THUMBTRACK: 
+				case SB_THUMBTRACK:
 					// don't change!! else you'll loose the 32bits value for a 16bits value
-//					 si.nPos = HIWORD(wParam); 
+//					 si.nPos = HIWORD(wParam);
 					 si.nPos = si.nTrackPos;
-					 break; 
-			} 
- 
-			si.cbSize = sizeof(si); 
-			si.fMask  = SIF_POS; 
-			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE); 
-			UpdateWindow (hwnd); 
+					 break;
+			}
+
+			si.cbSize = sizeof(si);
+			si.fMask  = SIF_POS;
+			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE);
+			UpdateWindow (hwnd);
 			UpdateMSH2_KMod( );
-			return 0; 
+			return 0;
 
 		case WM_CLOSE:
 			CloseWindow_KMod( DMODE_32_MSH2 );
 			break;
 
 		case WM_DESTROY:
-			DeleteObject( (HGDIOBJ) hFont );			
+			DeleteObject( (HGDIOBJ) hFont );
 			DestroyWindow(hMSH2);
 			PostQuitMessage(0);
 			break;
@@ -5918,7 +6020,7 @@ unsigned int  SSH2_StartLineROMDisasm, SSH2_StartLineRAMDisasm, SSH2_StartLineRA
 
 void UpdateSSH2_KMod( )
 {
-	unsigned int i, PC;	
+	unsigned int i, PC;
 	unsigned char tmp_string[256];
 
 	if ( OpenedWindow_KMod[ 7 ] == FALSE )	return;
@@ -6023,7 +6125,7 @@ void UpdateSSH2_KMod( )
 
 	wsprintf(debug_string, "GBR=%.8X VBR=%.8X PR=%.8X\nMACH=%.8X MACL=%.8X\nIL=%.2X IV=%.2X", SH2_Get_GBR(&S_SH2), SH2_Get_VBR(&S_SH2), SH2_Get_PR(&S_SH2), SH2_Get_MACH(&S_SH2), SH2_Get_MACL(&S_SH2), S_SH2.INT.Prio,S_SH2.INT.Vect);
 	SendDlgItemMessage(hSSH2 , IDC_SSH2_STATUS_DATA, WM_SETTEXT, 0 , (LPARAM)debug_string);
-	
+
 	wsprintf(debug_string, "PC=%.8X", SH2_Get_PC(&S_SH2));//(S_SH2.PC - S_SH2.Base_PC) - 4);
 	SendDlgItemMessage(hSSH2, IDC_SSH2_PC, WM_SETTEXT, (WPARAM)0, (LPARAM) debug_string);
 
@@ -6073,24 +6175,24 @@ void SwitchSSH2ViewMode_KMod(  )
 	SCROLLINFO si;
 
 	ZeroMemory(&si, sizeof(SCROLLINFO));
-	si.cbSize = sizeof(si); 
-	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS; 
-	si.nMin   = 0; 
-	si.nPage  = 13;
+	si.cbSize = sizeof(si);
+	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS;
+	si.nMin   = 0;
+	si.nPage  = 10;
 
 	if (SSH2_ViewMode&2)
 	{
 		if (SSH2_ViewMode&1)
 		{
 			// ROM DISASM VIEW
-			si.nPos   = SSH2_StartLineROMDisasm; 
+			si.nPos   = SSH2_StartLineROMDisasm;
 			si.nMax   = ((1 * 1024)/2) -1;
 			SendDlgItemMessage(hSSH2, IDC_SSH2_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View ROM");
 		}
-		else 
+		else
 		{
 			// ROM VIEW
-			si.nPos   = SSH2_StartLineROM; 
+			si.nPos   = SSH2_StartLineROM;
 			si.nMax   = ((1 * 1024)/8) -1;
 			SendDlgItemMessage(hSSH2, IDC_SSH2_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
 		}
@@ -6100,14 +6202,14 @@ void SwitchSSH2ViewMode_KMod(  )
 		if (SSH2_ViewMode&4)
 		{
 			// RAM DISASM VIEW
-			si.nPos   = SSH2_StartLineRAMDisasm; 
+			si.nPos   = SSH2_StartLineRAMDisasm;
 			si.nMax   = ((256 * 1024)/2) -1;
 			SendDlgItemMessage(hSSH2, IDC_SSH2_VIEW_RAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View RAM");
 		}
 		else
 		{
 			// RAM VIEW
-			si.nPos   = SSH2_StartLineRAM; 
+			si.nPos   = SSH2_StartLineRAM;
 			si.nMax   = ((256 * 1024)/8) -1;
 			SendDlgItemMessage(hSSH2, IDC_SSH2_VIEW_RAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
 		}
@@ -6118,20 +6220,20 @@ void SwitchSSH2ViewMode_KMod(  )
 		if (SSH2_ViewMode&0x10)
 		{
 			// CACHE DISASM VIEW
-			si.nPos   = SSH2_StartLineRAMDisasm; 
+			si.nPos   = SSH2_StartLineRAMDisasm;
 			si.nMax   = ((256 * 1024)/2) -1;
 			SendDlgItemMessage(hSSH2, IDC_SSH2_VIEW_RAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View RAM");
 		}
 		else
 		{*/
 			// CACHE VIEW
-			si.nPos   = SSH2_StartLineCache; 
+			si.nPos   = SSH2_StartLineCache;
 			si.nMax   = (0x1000/8) -1;
 /*
 			SendDlgItemMessage(hSSH2, IDC_SSH2_VIEW_RAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
 		}*/
 	}
-	SetScrollInfo(GetDlgItem(hSSH2, IDC_SSH2_SCROLL), SB_CTL, &si, TRUE); 
+	SetScrollInfo(GetDlgItem(hSSH2, IDC_SSH2_SCROLL), SB_CTL, &si, TRUE);
 }
 
 BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -6154,7 +6256,7 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 		case WM_SHOWWINDOW:
 			SwitchSSH2ViewMode_KMod( );
-			break;	
+			break;
 
 		case WM_COMMAND:
 			switch( LOWORD(wParam) )
@@ -6173,7 +6275,7 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					SSH2_ViewMode ^= 0x1;
 					SSH2_ViewMode |= 0x2;
 					SwitchSSH2ViewMode_KMod( );
-					UpdateWindow (hwnd); 
+					UpdateWindow (hwnd);
 					UpdateSSH2_KMod( );
 					break;
 				case IDC_SSH2_VIEW_RAM:
@@ -6182,7 +6284,7 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					SSH2_ViewMode |= 0x8;
 
 					SwitchSSH2ViewMode_KMod(  );
-					UpdateWindow (hwnd); 
+					UpdateWindow (hwnd);
 					UpdateSSH2_KMod( );
 					break;
 				case IDC_SSH2_VIEW_CACHE:
@@ -6191,7 +6293,7 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					SSH2_ViewMode |= 0x20;
 
 					SwitchSSH2ViewMode_KMod(  );
-					UpdateWindow (hwnd); 
+					UpdateWindow (hwnd);
 					UpdateSSH2_KMod( );
 					break;
 
@@ -6213,8 +6315,8 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 						SSH2_StartLineRAMDisasm = (curPC-0x6000000)/2;
 						SwitchSSH2ViewMode_KMod( );
 					}
-					
-					UpdateWindow (hwnd); 
+
+					UpdateWindow (hwnd);
 					UpdateSSH2_KMod( );
 					break;
 
@@ -6223,44 +6325,44 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 		case WM_VSCROLL:
 			ZeroMemory(&si, sizeof(SCROLLINFO));
-			si.cbSize = sizeof(si); 
-			si.fMask  = SIF_ALL; //SIF_RANGE | SIF_PAGE | SIF_POS | SIF_TRACKPOS; 
+			si.cbSize = sizeof(si);
+			si.fMask  = SIF_ALL; //SIF_RANGE | SIF_PAGE | SIF_POS | SIF_TRACKPOS;
 			GetScrollInfo((HWND) lParam, SB_CTL, &si);
-			switch(LOWORD (wParam)) 
-			{ 
-				case SB_PAGEUP: 
-					 si.nPos -= si.nPage; 
-					 break; 
-				case SB_PAGEDOWN: 
-					 si.nPos += si.nPage;
-					 break; 
-				case SB_LINEUP: 
-					 si.nPos--; 
+			switch(LOWORD (wParam))
+			{
+				case SB_PAGEUP:
+					 si.nPos -= si.nPage;
 					 break;
-				case SB_LINEDOWN: 
-					 si.nPos++; 
-					 break; 
+				case SB_PAGEDOWN:
+					 si.nPos += si.nPage;
+					 break;
+				case SB_LINEUP:
+					 si.nPos--;
+					 break;
+				case SB_LINEDOWN:
+					 si.nPos++;
+					 break;
 //				case SB_THUMBPOSITION:
-				case SB_THUMBTRACK: 
+				case SB_THUMBTRACK:
 					// don't change!! else you'll loose the 32bits value for a 16bits value
-//					 si.nPos = HIWORD(wParam); 
+//					 si.nPos = HIWORD(wParam);
 					 si.nPos = si.nTrackPos;
-					 break; 
-			} 
- 
-			si.cbSize = sizeof(si); 
-			si.fMask  = SIF_POS; 
-			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE); 
-			UpdateWindow (hwnd); 
+					 break;
+			}
+
+			si.cbSize = sizeof(si);
+			si.fMask  = SIF_POS;
+			SetScrollInfo((HWND) lParam, SB_CTL, &si, TRUE);
+			UpdateWindow (hwnd);
 			UpdateSSH2_KMod( );
-			return 0; 
+			return 0;
 
 		case WM_CLOSE:
 			CloseWindow_KMod( DMODE_32_SSH2 );
 			break;
 
 		case WM_DESTROY:
-			DeleteObject( (HGDIOBJ) hFont );			
+			DeleteObject( (HGDIOBJ) hFont );
 			DestroyWindow(hSSH2);
 			PostQuitMessage(0);
 			break;
@@ -6307,7 +6409,7 @@ void Draw32XPal_KMod( LPDRAWITEMSTRUCT hlDIS  )
 			rc.left = i*palH;
 			rc.right = rc.left + palH;
 
-			// COLORREF = 0x00bbggrr 
+			// COLORREF = 0x00bbggrr
 			// pix = bgr (3*5bit)
 			pix = _32X_VDP_CRam[ i + j*4];
 			col = 0x000000;
@@ -6324,11 +6426,11 @@ void Draw32XPal_KMod( LPDRAWITEMSTRUCT hlDIS  )
 			FillRect(hlDIS->hDC, &rc, newBrush);
 
 			if (pix&0x80)
-			{				
+			{
 				//FillRect(hlDIS->hDC, &rc, (HBRUSH) (COLOR_WINDOWFRAME+1));
 
 				hPen = CreatePen(  PS_DOT, 1, col);
-				hPenOld = SelectObject(hlDIS->hDC, hPen); 
+				hPenOld = SelectObject(hlDIS->hDC, hPen);
 
 				for (h=rc.top; h < rc.bottom; h+=4)
 				{
@@ -6338,8 +6440,8 @@ void Draw32XPal_KMod( LPDRAWITEMSTRUCT hlDIS  )
 					LineTo(hlDIS->hDC, rc.right, h+2);
 				}
 
-				SelectObject(hlDIS->hDC, hPenOld); 
-                DeleteObject(hPen); 
+				SelectObject(hlDIS->hDC, hPenOld);
+                DeleteObject(hPen);
 
 			}
 
@@ -6359,14 +6461,14 @@ void Draw32XVDP_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	WORD *VRAM, *lineTable;
 	COLORREF col;
 	WORD posX, posY, maxY, maxX;
- 
+
 	HDC hDC;
 	HBITMAP hBitmap, hOldBitmap;
 
 	hDC = CreateCompatibleDC( hlDIS->hDC );
 	hBitmap = CreateCompatibleBitmap( hlDIS->hDC,  hlDIS->rcItem.right - hlDIS->rcItem.left, hlDIS->rcItem.bottom - hlDIS->rcItem.top);
 	hOldBitmap = SelectObject(hDC, hBitmap);
-	
+
 
 	toDraw = (unsigned char) _32X_VDP.State&1;
 	if ( IsDlgButtonChecked(h32X_VDP,IDC_32XVDP_FB2)==BST_CHECKED )
@@ -6377,7 +6479,7 @@ void Draw32XVDP_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	{
 		toDraw = 1;
 	}
-	
+
 	lineTable = (WORD *)(_32X_VDP_Ram + ((unsigned int)toDraw * 0x20000));
 
 	maxX = 320;
@@ -6390,7 +6492,7 @@ void Draw32XVDP_KMod( LPDRAWITEMSTRUCT hlDIS  )
 		VRAM = lineTable + lineToDraw;
 		for(posX = 0; posX < maxX; posX++)
 		{
-			// COLORREF = 0x00bbggrr 
+			// COLORREF = 0x00bbggrr
 			// pix = bgr (3*5bit)
 			pix = VRAM[ posX ];
 			col = 0x000000;
@@ -6411,16 +6513,16 @@ void Draw32XVDP_KMod( LPDRAWITEMSTRUCT hlDIS  )
 
 	BitBlt(
 		hlDIS->hDC, // handle to destination device context
-		0,  // x-coordinate of destination rectangle's upper-left 
+		0,  // x-coordinate of destination rectangle's upper-left
                // corner
-		0,  // y-coordinate of destination rectangle's upper-left 
+		0,  // y-coordinate of destination rectangle's upper-left
                // corner
 		maxX,  // width of destination rectangle
 		maxY, // height of destination rectangle
 		hDC,  // handle to source device context
-		0,   // x-coordinate of source rectangle's upper-left 
+		0,   // x-coordinate of source rectangle's upper-left
                // corner
-		0,   // y-coordinate of source rectangle's upper-left 
+		0,   // y-coordinate of source rectangle's upper-left
                // corner
 		SRCCOPY  // raster operation code
 	);
@@ -6438,14 +6540,14 @@ void Draw32XVDPRaw_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	WORD *VRAM;
 	COLORREF col;
 	WORD posX, posY, maxY, maxX;
- 
+
 	HDC hDC;
 	HBITMAP hBitmap, hOldBitmap;
 
 	hDC = CreateCompatibleDC( hlDIS->hDC );
 	hBitmap = CreateCompatibleBitmap( hlDIS->hDC,  hlDIS->rcItem.right - hlDIS->rcItem.left, hlDIS->rcItem.bottom - hlDIS->rcItem.top);
 	hOldBitmap = SelectObject(hDC, hBitmap);
-	
+
 
 	toDraw = (unsigned char) _32X_VDP.State&1;
 	if ( IsDlgButtonChecked(h32X_VDP,IDC_32XVDP_FB2)==BST_CHECKED )
@@ -6456,10 +6558,10 @@ void Draw32XVDPRaw_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	{
 		toDraw = 1;
 	}
-	
+
 	VRAM = (WORD *)(_32X_VDP_Ram + ((unsigned int)toDraw * 0x20000) + 256 * 2); //skip 256 words of line table
 
-	
+
 	maxX = 320;
 	maxY = 240;
 
@@ -6467,7 +6569,7 @@ void Draw32XVDPRaw_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	{
 		for(posX = 0; posX < maxX; posX++)
 		{
-		// COLORREF = 0x00bbggrr 
+		// COLORREF = 0x00bbggrr
 		// pix = bgr (3*5bit)
 		pix = VRAM[ posX + (posY*maxX) ];
 		col = 0x000000;
@@ -6489,16 +6591,16 @@ void Draw32XVDPRaw_KMod( LPDRAWITEMSTRUCT hlDIS  )
 
 	BitBlt(
 		hlDIS->hDC, // handle to destination device context
-		0,  // x-coordinate of destination rectangle's upper-left 
+		0,  // x-coordinate of destination rectangle's upper-left
                // corner
-		0,  // y-coordinate of destination rectangle's upper-left 
+		0,  // y-coordinate of destination rectangle's upper-left
                // corner
 		maxX,  // width of destination rectangle
 		maxY, // height of destination rectangle
 		hDC,  // handle to source device context
-		0,   // x-coordinate of source rectangle's upper-left 
+		0,   // x-coordinate of source rectangle's upper-left
                // corner
-		0,   // y-coordinate of source rectangle's upper-left 
+		0,   // y-coordinate of source rectangle's upper-left
                // corner
 		SRCCOPY  // raster operation code
 	);
@@ -6664,11 +6766,11 @@ void _32X_RegInit_KMod( HWND hwnd)
 	lvColumn.cx = 80;
 	lvColumn.pszText = szString[1];
 	ListView_InsertColumn(h32XRegList, 1, &lvColumn);
-	
+
 	lvColumn.cx = 60;
 	lvColumn.pszText = szString[2];
 	ListView_InsertColumn(h32XRegList, 2, &lvColumn);
-	
+
 	lvColumn.cx = 60;
 	lvColumn.pszText = szString[3];
 	ListView_InsertColumn(h32XRegList, 3, &lvColumn);
@@ -6680,7 +6782,7 @@ void _32X_RegInit_KMod( HWND hwnd)
 	lvColumn.cx = 140;
 	lvColumn.pszText = szString[5];
 	ListView_InsertColumn(h32XRegList, 5, &lvColumn);
-	
+
 	ListView_SetExtendedListViewStyle(h32XRegList, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES );
 
 
@@ -6704,7 +6806,7 @@ void _32X_RegInit_KMod( HWND hwnd)
 			wsprintf(buf, "0x%0.6X", adr);
 			lvItem.pszText = buf;
 			ListView_SetItem(h32XRegList, &lvItem);
-		
+
 		}
 
 		if (_32X_register[i].side&2)
@@ -6716,16 +6818,16 @@ void _32X_RegInit_KMod( HWND hwnd)
 			wsprintf(buf, "0x%0.6X", adr);
 			lvItem.pszText = buf;
 			ListView_SetItem(h32XRegList, &lvItem);
-		
+
 		}
 
 
 		lvItem.iSubItem = 5;
 		lvItem.pszText =  _32X_register[i].description32X;
 		ListView_SetItem(h32XRegList, &lvItem);
-		
+
 		i++;
-	
+
 	}
 	ListView_Scroll(h32XRegList, 100, 0);
 }
@@ -6760,9 +6862,9 @@ void Update32X_Reg_KMod( )
 			lvItem.pszText = buf;
 			ListView_SetItem(h32XRegList, &lvItem);
 		}
-		
+
 		i++;
-		
+
 	}
 }
 
@@ -6780,7 +6882,7 @@ BOOL CALLBACK _32X_RegDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 			CloseWindow_KMod( DMODE_32_REG );
 			break;
 
-		case WM_DESTROY:			
+		case WM_DESTROY:
 			DestroyWindow(h32X_Reg);
 			PostQuitMessage(0);
 			break;
@@ -6812,7 +6914,7 @@ void VDPRegInit_KMod( HWND hwnd)
 	lvColumn.cx = 40;
 	lvColumn.pszText = "Reg";
 	ListView_InsertColumn(hVDPReg_List, 0, &lvColumn);
-	
+
 	lvColumn.cx = 40;
 	lvColumn.pszText = "Value";
 	ListView_InsertColumn(hVDPReg_List, 1, &lvColumn);
@@ -6835,10 +6937,10 @@ void VDPRegInit_KMod( HWND hwnd)
 		lvItem.iSubItem = 1;
 		lvItem.pszText = "";
 		ListView_SetItem(hVDPReg_List, &lvItem);
-		
+
 		lvItem.iSubItem = 2;
 		lvItem.pszText = "";
-		ListView_SetItem(hVDPReg_List, &lvItem);	
+		ListView_SetItem(hVDPReg_List, &lvItem);
 		*/
 	}
 }
@@ -6857,7 +6959,7 @@ void UpdateVDPReg_KMod( )
     memcpy(&old_regs, &VDP_Reg, sizeof(old_regs));
 
 	lvItem.mask = LVIF_TEXT;
-	
+
 	// Reg 0
 	valReg = VDP_Reg.Set1;
 	lvItem.iItem = 0;
@@ -6936,7 +7038,7 @@ void UpdateVDPReg_KMod( )
 	lvItem.iSubItem = 2;
 	lvItem.pszText = debug_string;
 	ListView_SetItem(hVDPReg_List, &lvItem);
-	
+
 	// Reg 5
 	valReg = VDP_Reg.Spr_Att_Adr;
 	lvItem.iItem = 5;
@@ -7011,7 +7113,7 @@ void UpdateVDPReg_KMod( )
 	lvItem.iSubItem = 2;
 	lvItem.pszText = debug_string;
 	ListView_SetItem(hVDPReg_List, &lvItem);
-	
+
 	// Reg 11
 	valReg = VDP_Reg.Set3;
 	lvItem.iItem = 11;
@@ -7091,7 +7193,7 @@ void UpdateVDPReg_KMod( )
 	lvItem.iSubItem = 2;
 	lvItem.pszText = debug_string;
 	ListView_SetItem(hVDPReg_List, &lvItem);
-	
+
 	// Reg 14
 	valReg = VDP_Reg.Reg14;
 	lvItem.iItem = 14;
@@ -7157,7 +7259,7 @@ void UpdateVDPReg_KMod( )
 	lvItem.iSubItem = 2;
 	lvItem.pszText = debug_string;
 	ListView_SetItem(hVDPReg_List, &lvItem);
-	
+
 	// Reg 17
 	valReg = VDP_Reg.Win_H_Pos;
 	lvItem.iItem = 17;
@@ -7297,6 +7399,8 @@ BOOL CALLBACK VDPRegDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
 
 /******************** SPRITES ***************/
+HWND hSpriteList;
+
 unsigned char TrueSize_KMod( unsigned short int data )
 {
 	switch( data)
@@ -7314,70 +7418,126 @@ unsigned char TrueSize_KMod( unsigned short int data )
 	return 0;
 }
 
+
+void SpritesInit_KMod(HWND hDlg)
+{
+	LV_COLUMN   lvColumn;
+	int         i;
+	TCHAR       szString[8][7] = { "Num", "Ypos", "XPos", "Size", "Link", "Pal", "Tile", "Flags*" };
+	LVITEM		lvItem;
+	char		buf[64];
+
+
+	hSpriteList = GetDlgItem(hDlg, IDC_SPRITES_LIST);
+	ListView_DeleteAllItems(hSpriteList);
+
+	lvColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
+	lvColumn.fmt = LVCFMT_LEFT;
+	lvColumn.cx = 53;
+	for (i = 0; i < 8; i++)
+	{
+		lvColumn.pszText = szString[i];
+		ListView_InsertColumn(hSpriteList, i, &lvColumn);
+	}
+
+	ListView_SetExtendedListViewStyle(hSpriteList, LVS_EX_FULLROWSELECT |LVS_EX_GRIDLINES);
+
+	for (i = 0; i < 80; i++)
+	{
+		wsprintf(buf, "%0.2d", i);
+
+		lvItem.mask = LVIF_TEXT;
+		lvItem.iItem = i;
+		lvItem.iSubItem = 0;
+		lvItem.pszText = buf;
+		ListView_InsertItem(hSpriteList, &lvItem);
+	}
+
+}
+
 void UpdateSprites_KMod( )
 {
-	unsigned int i, topIdx, selIdx;
+	unsigned int i;
 	unsigned short int *sprData, tmp;
 	unsigned char tmp_string[32];
     static unsigned short data_copy[80 * 4];
+	static unsigned int forceRefreshCounter;
+	LVITEM		lvItem;
+
 
 	if ( OpenedWindow_KMod[ 10 ] == FALSE )
         return;
 
     sprData = (unsigned short *)(VRam + (VDP_Reg.Spr_Att_Adr << 9));
 
+
     if (!memcmp(sprData, data_copy, sizeof(data_copy)))
     {
-        return;
+		//sometimes miss the last update... so force refresh every n frame
+		if (--forceRefreshCounter > 0 )	return;
     }
-
+	forceRefreshCounter = 0xFFFF;
     memcpy(data_copy, sprData, sizeof(data_copy));
 
-    SendDlgItemMessage(hSprites, IDC_SPRITES_LIST, WM_SETREDRAW, (WPARAM)FALSE, (LPARAM)0);
 
-	topIdx = SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_GETTOPINDEX  , (WPARAM) 0 , (LPARAM) 0);
-	selIdx = SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_GETCURSEL , (WPARAM) 0 , (LPARAM) 0);
-
-
-	SendDlgItemMessage(hSprites, IDC_SPRITES_LIST, LB_RESETCONTENT, (WPARAM)0 , (LPARAM) 0);
-    SendDlgItemMessage(hSprites, IDC_SPRITES_LIST, LB_INITSTORAGE, (WPARAM)80, 0);
 	for(i = 0; i < 80; i++)
 	{
-		wsprintf(debug_string, "%.2d",i);
-		wsprintf(tmp_string, "  %4d", sprData[0]&0x03FF);
-		lstrcat(debug_string, tmp_string);
-		wsprintf(tmp_string, "  %4d", sprData[3]&0x03FF);
-		lstrcat(debug_string, tmp_string);
-		wsprintf(tmp_string,"  %.2dx", TrueSize_KMod( ((sprData[1]&0x0C00)>>10) ) );
-		lstrcat(debug_string, tmp_string);
-		wsprintf(tmp_string,"%.2d", TrueSize_KMod( ((sprData[1]&0x0300)>>8) ) );
-		lstrcat(debug_string, tmp_string);
-		wsprintf(tmp_string,"  %2d", sprData[1]&0x007F);
-		lstrcat(debug_string, tmp_string);
-		wsprintf(tmp_string," %2d", (sprData[2]&0x6000)>>13 );
-		lstrcat(debug_string, tmp_string);
-		wsprintf(tmp_string,"  %4d", (sprData[2]&0x07FF) );
-		lstrcat(debug_string, tmp_string);
+		lvItem.iItem = i;
+		lvItem.iSubItem = LVIF_TEXT;
+		ListView_GetItem(hSpriteList, &lvItem);
+
+		/*
+		// not needed
+		// index
+		wsprintf(tmp_string, "%.2d", i);
+		ListView_SetItemText(hSpriteList, i, 0, tmp_string);
+		*/
+
+		// yPos
+		wsprintf(tmp_string, "%4d", sprData[0] & 0x03FF);
+		ListView_SetItemText(hSpriteList, i, 1, tmp_string);
+
+		// xPos
+		wsprintf(tmp_string, "%4d", sprData[3] & 0x03FF);
+		ListView_SetItemText(hSpriteList, i, 2, tmp_string);
+
+		// size
+		wsprintf(tmp_string, "%.2dx%.2d",
+			TrueSize_KMod(((sprData[1] & 0x0C00) >> 10)),
+			TrueSize_KMod(((sprData[1] & 0x0300) >> 8)));
+		ListView_SetItemText(hSpriteList, i, 3, tmp_string);
+
+		// link
+		wsprintf(tmp_string, "%.2d", sprData[1] & 0x007F);
+		ListView_SetItemText(hSpriteList, i, 4, tmp_string);
+
+		// pal
+		wsprintf(tmp_string, "%2d", (sprData[2] & 0x6000) >> 13);
+		ListView_SetItemText(hSpriteList, i, 5, tmp_string);
+
+		// tile
+		wsprintf(tmp_string, "%4d", (sprData[2] & 0x07FF));
+		ListView_SetItemText(hSpriteList, i, 6, tmp_string);
+
+		// flags
 		tmp = 0;
+		/*
 		if ( sprData[2]&0x8000)	tmp +=100;
 		if ( sprData[2]&0x1000)	tmp +=010;
 		if ( sprData[2]&0x0800)	tmp +=001;
-		wsprintf(tmp_string,"  %.3d", tmp );
-		lstrcat(debug_string, tmp_string);
-		SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_ADDSTRING, 0, (LPARAM) debug_string);
+		wsprintf(tmp_string, "%.3d", tmp);
+		*/
+		if (sprData[2] & 0x8000)	tmp |= 4;
+		if (sprData[2] & 0x1000)	tmp |= 2;
+		if (sprData[2] & 0x0800)	tmp |= 1;
+		wsprintf(tmp_string, "%c%c%c", tmp & 4 ? 'P' : '0', tmp & 2 ? 'V' : '0', tmp & 1 ? 'H' : '0');
+		ListView_SetItemText(hSpriteList, i, 7, tmp_string);
 
 		sprData += 4;
 	}
 
-	SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_SETCURSEL , (WPARAM) selIdx , (LPARAM) 0);
-	SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_SETTOPINDEX   , (WPARAM) topIdx , (LPARAM) 0);
-
-	SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, WM_SETREDRAW   , (WPARAM) TRUE , (LPARAM) 0);
-
-//    RedrawWindow(hSprites, NULL, NULL, RDW_INVALIDATE);
     RedrawWindow(GetDlgItem(hSprites, IDC_SPRITES_PREVIEW), NULL, NULL, RDW_INVALIDATE);
     RedrawWindow(GetDlgItem(hSprites, IDC_SPRITES_PREVIEW2), NULL, NULL, RDW_INVALIDATE);
-
 }
 
 
@@ -7391,8 +7551,8 @@ void DrawSprite_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	HDC hDC;
 	HBITMAP hBitmap, hOldBitmap;
 
-	selIdx = SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_GETCURSEL , (WPARAM) 0 , (LPARAM) 0);
-	if (selIdx == LB_ERR)
+	selIdx = SendMessage(hSpriteList, LVM_GETNEXTITEM, -1, LVNI_FOCUSED); // return item selected
+	if (selIdx == -1)
 		return;
 
 	sprData = (unsigned short *)(VRam + ( VDP_Reg.Spr_Att_Adr << 9 ));
@@ -7418,16 +7578,16 @@ void DrawSprite_KMod( LPDRAWITEMSTRUCT hlDIS  )
 
 	BitBlt(
 		hlDIS->hDC, // handle to destination device context
-		0,  // x-coordinate of destination rectangle's upper-left 
+		0,  // x-coordinate of destination rectangle's upper-left
                // corner
-		0,  // y-coordinate of destination rectangle's upper-left 
+		0,  // y-coordinate of destination rectangle's upper-left
                // corner
 		32,  // width of destination rectangle
 		32, // height of destination rectangle
 		hDC,  // handle to source device context
-		0,   // x-coordinate of source rectangle's upper-left 
+		0,   // x-coordinate of source rectangle's upper-left
                // corner
-		0,   // y-coordinate of source rectangle's upper-left 
+		0,   // y-coordinate of source rectangle's upper-left
                // corner
 		SRCCOPY  // raster operation code
 	);
@@ -7450,8 +7610,8 @@ void DrawSpriteZoom_KMod( LPDRAWITEMSTRUCT hlDIS  )
 	HDC hDC;
 	HBITMAP hBitmap, hOldBitmap;
 
-	selIdx = SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_GETCURSEL , (WPARAM) 0 , (LPARAM) 0);
-	if (selIdx == LB_ERR)
+	selIdx = SendMessage(hSpriteList, LVM_GETNEXTITEM, -1, LVNI_FOCUSED); // return item selected
+	if (selIdx == -1)
 		return;
 
 	sprData = (unsigned short *)(VRam + ( VDP_Reg.Spr_Att_Adr << 9 ));
@@ -7481,16 +7641,16 @@ void DrawSpriteZoom_KMod( LPDRAWITEMSTRUCT hlDIS  )
 
 	BitBlt(
 		hlDIS->hDC, // handle to destination device context
-		0,  // x-coordinate of destination rectangle's upper-left 
+		0,  // x-coordinate of destination rectangle's upper-left
                // corner
-		0,  // y-coordinate of destination rectangle's upper-left 
+		0,  // y-coordinate of destination rectangle's upper-left
                // corner
 		32*zoom,  // width of destination rectangle
 		32*zoom, // height of destination rectangle
 		hDC,  // handle to source device context
-		0,   // x-coordinate of source rectangle's upper-left 
+		0,   // x-coordinate of source rectangle's upper-left
                // corner
-		0,   // y-coordinate of source rectangle's upper-left 
+		0,   // y-coordinate of source rectangle's upper-left
                // corner
 		SRCCOPY  // raster operation code
 	);
@@ -7520,16 +7680,15 @@ void DumpSprite_KMod( HWND hwnd )
 	unsigned char		TileData, sizeH, sizeV, posX, posY, j, pal, tmp;
 	unsigned short int	*sprData;
 
-	selIdx = (unsigned short)SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_GETCURSEL , (WPARAM) 0 , (LPARAM) 0);
-	if (selIdx == LB_ERR)
+	selIdx = SendMessage(hSpriteList, LVM_GETNEXTITEM, -1, LVNI_FOCUSED); // return item selected
+	if (selIdx == -1)
 		return;
 
+
+	szFileName[0] = 0;  /*WITHOUT THIS, CRASH */
+	wsprintf(szFileName, "%s_sprite_%.2d", Rom_Name, selIdx);
+
     ZeroMemory(&szFile, sizeof(szFile));
-    szFileName[0] = 0;  /*WITHOUT THIS, CRASH */
-
-	strcpy(szFileName, Rom_Name);
-	strcat(szFileName, "_Spr");
-
     szFile.lStructSize = sizeof(szFile);
     szFile.hwndOwner = hwnd;
     szFile.lpstrFilter = "16Colors Bitmap file (*.bmp)\0*.bmp\0\0";
@@ -7567,8 +7726,8 @@ void DumpSprite_KMod( HWND hwnd )
 	bmfh.bfType = 0x4d42;        // 0x42 = "B" 0x4d = "M"
 	bmfh.bfSize = (DWORD) (sizeof(BITMAPFILEHEADER) +  sizeof(BITMAPINFOHEADER) + 16 * sizeof(RGBQUAD) + bmiHeader.biSizeImage);
 	bmfh.bfOffBits = (DWORD) (sizeof(BITMAPFILEHEADER) +  sizeof(BITMAPINFOHEADER) + 16 * sizeof(RGBQUAD) );
-	
-	
+
+
 	for(j = 0; j < 16; j++)
 	{
 		tmpColor = GetPal_KMod(pal, j);
@@ -7605,7 +7764,7 @@ void DumpSprite_KMod( HWND hwnd )
 
 				TileData = VRam[numTile*32 + j*4 + 2];
 				tmp = posX/2 + ((sizeV-1)-(posY+j))*sizeH/2 + 3;
-				pBits[ tmp ] = TileData;			
+				pBits[ tmp ] = TileData;
 			}
 			numTile++;
 		}
@@ -7633,26 +7792,17 @@ void DumpSprite_KMod( HWND hwnd )
     CloseHandle(hFr);
 
 	LocalFree((HLOCAL) pBits);
-	
+
 	Put_Info("Sprite dumped", 1500);
 
 }
 
 BOOL CALLBACK SpritesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	HFONT hFont = NULL;
-	DWORD i;
-
 	switch(Message)
     {
-		case WM_INITDIALOG:			
-			hFont = (HFONT) GetStockObject(ANSI_FIXED_FONT);
-			SendDlgItemMessage(hwnd, IDC_SPRITES_LIST, WM_SETFONT, (WPARAM)hFont, TRUE);
-			for(i = 0; i < 80; i++)
-			{
-				wsprintf(debug_string, "%.2d",i);
-				SendDlgItemMessage(hSprites , IDC_SPRITES_LIST, LB_INSERTSTRING, (WPARAM) i , (LPARAM) debug_string);
-			}
+		case WM_INITDIALOG:
+			SpritesInit_KMod( hwnd );
 
 			break;
 		case WM_DRAWITEM:
@@ -7662,21 +7812,24 @@ BOOL CALLBACK SpritesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 				DrawSpriteZoom_KMod( (LPDRAWITEMSTRUCT) lParam);
 			break;
 
-        case WM_COMMAND: 
+        case WM_COMMAND:
 			switch (LOWORD(wParam))
-			{ 
- 
-                case IDC_SPRITES_LIST:  
-					switch (HIWORD(wParam))
-					{ 
-                        case LBN_SELCHANGE:
-						    RedrawWindow( GetDlgItem(hSprites, IDC_SPRITES_PREVIEW), NULL, NULL, RDW_INVALIDATE);
-						    RedrawWindow( GetDlgItem(hSprites, IDC_SPRITES_PREVIEW2), NULL, NULL, RDW_INVALIDATE);
-							break;
-					}
-					break;
+			{
 				case IDC_SPRITES_DUMP:
 					DumpSprite_KMod( hSprites );
+					break;
+			}
+			break;
+
+		case WM_NOTIFY:
+			switch (LOWORD(wParam))
+			{
+				case IDC_SPRITES_LIST:
+					if (((LPNMHDR)lParam)->code == NM_CLICK)
+					{
+						RedrawWindow(GetDlgItem(hSprites, IDC_SPRITES_PREVIEW), NULL, NULL, RDW_INVALIDATE);
+						RedrawWindow(GetDlgItem(hSprites, IDC_SPRITES_PREVIEW2), NULL, NULL, RDW_INVALIDATE);
+					}
 					break;
 			}
 			break;
@@ -7685,7 +7838,8 @@ BOOL CALLBACK SpritesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			break;
 
 		case WM_DESTROY:
-			DeleteObject( (HGDIOBJ) hFont );
+			ListView_DeleteAllItems(hSpriteList);
+
 			DestroyWindow( hSprites );
 			PostQuitMessage(0);
 			break;
@@ -7751,9 +7905,9 @@ void UpdateYM2612_KMod( )
 			break;
 		default:
 			chan = 0;
-			
+
 	}
-	
+
 	op = YM2612.REG[0][0x28]&0xF0;
 	op >>=4;
 
@@ -7776,8 +7930,8 @@ void UpdateYM2612_KMod( )
 		notes[chan][3] = BST_CHECKED;
 	else
 		notes[chan][3] = BST_UNCHECKED;
-		
-	
+
+
 	if ( OpenedWindow_KMod[ 11 ] == FALSE )	return;
 
 
@@ -7803,9 +7957,9 @@ void UpdateYM2612_KMod( )
 		wsprintf(tmp_string,"0x%0.2X\n", YM2612.REG[part][0x50 + chan + 4*op]&0x1F);
 		lstrcat(debug_string, tmp_string);
 		if (YM2612.REG[0][0x60]&0x80)
-			lstrcat(debug_string, "Yes\n");
+			lstrcat(debug_string, "ON\n");
 		else
-			lstrcat(debug_string, "No\n");
+			lstrcat(debug_string, "OFF\n");
 		wsprintf(tmp_string,"0x%0.2X\n", YM2612.REG[part][0x60 + chan + 4*op]&0x1F);
 		lstrcat(debug_string, tmp_string);
 		wsprintf(tmp_string,"0x%0.2X\n", YM2612.REG[part][0x70 + chan + 4*op]&0x1F);
@@ -7829,12 +7983,12 @@ void UpdateYM2612_KMod( )
 	wsprintf(tmp_string,"0x%0.2X\n", YM2612.REG[part][0xA4 + chan]&0x38>>2);
 	lstrcat(debug_string, tmp_string);
 	SetDlgItemText(hYM2612, IDC_YM2612_FREQ, debug_string);
-	
-	wsprintf(debug_string,"0x%0.2X\n", (YM2612.REG[part][0xB4 + chan]&0x30)>>4);
-	wsprintf(tmp_string,"0x%0.2X\n", YM2612.REG[part][0xB4 + chan]&0x08 );
+
+	wsprintf(debug_string,"0x%0.2X\n", (YM2612.REG[part][0xB4 + chan]&0x30)>>4); //AMS
+	wsprintf(tmp_string,"0x%0.2X\n", YM2612.REG[part][0xB4 + chan]&0x07 ); //FMS
 	lstrcat(debug_string, tmp_string);
 	SetDlgItemText(hYM2612, IDC_YM2612_MOD, debug_string);
-	
+
 	if ( YM2612.REG[part][0xB4 + chan]&0x80)
 		CheckDlgButton(hYM2612, IDC_YM2612_LEFT,BST_CHECKED);
 	else
@@ -7921,7 +8075,7 @@ void UpdateYM2612_KMod( )
 		case 0xC0:
 		default:
 			lstrcpy(debug_string,"Illegal");
-			
+
 	}
 	SetDlgItemText(hYM2612, IDC_YM2612_C3MODE, debug_string);
 
@@ -7979,7 +8133,7 @@ void YM2612_ToggleMute_KMod( HWND hwnd )
 	else
 	{
 		EnabledChannels[tabIndex] = FALSE;
-		tab.iImage = 1;		
+		tab.iImage = 1;
 	}
 
 	TabCtrl_SetItem(hTabYM2612, tabIndex, &tab);
@@ -7998,7 +8152,7 @@ void DumpYM2612_KMod( HWND hwnd )
 
 	strcpy(szFileName, Rom_Name);
 	strcat(szFileName, "_Chan");
- 
+
     szFile.lStructSize = sizeof(szFile);
     szFile.hwndOwner = hwnd;
     szFile.lpstrFilter = "YM2612 voice dump (*.y12)\0*.y12\0TFM'ucker instrument (*.tfi)\0*.tfi\0VED voice dump (*.ff)\0*.ff\0\0";
@@ -8014,7 +8168,7 @@ void DumpYM2612_KMod( HWND hwnd )
     if (GetSaveFileName(&szFile)!=TRUE)   return;
 
 
-		
+
 	curSel = TabCtrl_GetCurSel(hTabYM2612);
 	part = 0;
 	chan = curSel % 3;
@@ -8048,7 +8202,7 @@ void DumpYM2612_KMod( HWND hwnd )
 
 	if (szFile.nFilterIndex == 1)
 	{
-		/* y12 */		
+		/* y12 */
 		strncpy(KM2612.name, Rom_Name,16);
 		strncpy(KM2612.dumper, Rom_Name,16);
 		strncpy(KM2612.game, Rom_Name,16);
@@ -8106,7 +8260,7 @@ void DumpYM2612_KMod( HWND hwnd )
 			//SSG-EG
 			tmp = (UCHAR) (KM2612.ym.op[op].op_data[6])&0x0F;
 			WriteFile(hFr, &tmp, dwBytesToWrite, &dwBytesWritten, NULL) ;
-		
+
 		}
 	}
 	else if (szFile.nFilterIndex == 3)
@@ -8124,10 +8278,10 @@ void DumpYM2612_KMod( HWND hwnd )
 		tmp = (UCHAR) (YM2612.REG[part][0xB0 + chan])&0xFF;
 		dwBytesToWrite = 1;
 		WriteFile(hFr, &tmp, dwBytesToWrite, &dwBytesWritten, NULL) ;
-		
+
 		strncpy(KM2612.name, Rom_Name,7);
 		dwBytesToWrite = 7;
-		WriteFile(hFr, KM2612.name, dwBytesToWrite, &dwBytesWritten, NULL);	
+		WriteFile(hFr, KM2612.name, dwBytesToWrite, &dwBytesWritten, NULL);
 	}
 
     CloseHandle(hFr);
@@ -8143,7 +8297,7 @@ BOOL CALLBACK YM2612DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 		case WM_INITDIALOG:
 			{
 			HIMAGELIST himl = NULL;
-			TCITEM tie; 
+			TCITEM tie;
 			int i;
 
 			curAlgo = 0;
@@ -8156,7 +8310,7 @@ BOOL CALLBACK YM2612DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			TabCtrl_DeleteAllItems(hTabYM2612);
 
 			tie.mask = TCIF_TEXT | TCIF_IMAGE;
-			tie.iImage  = 0; 
+			tie.iImage  = 0;
 			tie.pszText = "Channel 1";
 			i = TabCtrl_InsertItem(hTabYM2612, 0, &tie);
 
@@ -8205,12 +8359,12 @@ BOOL CALLBACK YM2612DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				YM2612_ToggleMute_KMod( hwnd );
 			break;
 
-		case WM_NOTIFY: 
+		case WM_NOTIFY:
             switch (((NMHDR *)lParam)->code)
-			{ 
-				case TCN_SELCHANGE:		
+			{
+				case TCN_SELCHANGE:
 					YM2612_ChangeChannel( hwnd );
-                    break; 
+                    break;
 
 			}
 			break;
@@ -8252,7 +8406,7 @@ void UpdatePSG_KMod( )
 	SetDlgItemText(hPSG, IDC_PSG_FREQ_3, debug_string);
 	wsprintf(debug_string,"%d", PSG.Register[4] );
 	SetDlgItemText(hPSG, IDC_PSG_DATA_3, debug_string);
-	wsprintf(debug_string,"%s", (PSG.Register[6]>>2)==1 ? "Periodic" : "White");
+	wsprintf(debug_string,"%s", (PSG.Register[6]>>2)==1 ? "White":"Periodic");
 	SetDlgItemText(hPSG, IDC_PSG_FEEDBACK, debug_string);
 	if((PSG.Register[6]&0x03)==0)
 	{
@@ -8347,7 +8501,7 @@ void SaveConfig_KMod( )
 
 	wsprintf(debug_string, "%d", KConf.SpyRW);
 	WritePrivateProfileString("Debug", "Spy3", debug_string, Conf_File);
-	
+
 	wsprintf(debug_string, "%d", KConf.SpyDMA);
 	WritePrivateProfileString("Debug", "Spy4", debug_string, Conf_File);
 
@@ -8362,9 +8516,17 @@ void SaveConfig_KMod( )
 
 	wsprintf(debug_string, "%d", KConf.bBluePause);
 	WritePrivateProfileString("Debug", "BluePause", debug_string, Conf_File);
+	wsprintf(debug_string, "%d", KConf.pausedAtStart);
+	WritePrivateProfileString("Debug", "pausedAtStart", debug_string, Conf_File);
+	wsprintf(debug_string, "%d", KConf.singleInstance);
+	WritePrivateProfileString("Debug", "singleInstance", debug_string, Conf_File);
 
 	wsprintf(debug_string, "%d", KConf.Special);
 	WritePrivateProfileString("Debug", "Special", debug_string, Conf_File);
+
+
+	wsprintf(debug_string, "%d", KConf.useGDB);
+	WritePrivateProfileString("Debug", "gdb", debug_string, Conf_File);
 
     wsprintf(debug_string, "%d", KConf.gdb_m68kport);
     WritePrivateProfileString("Debug", "gdbm68k", debug_string, Conf_File);
@@ -8386,7 +8548,7 @@ void LoadConfig_KMod( )
 	SetCurrentDirectory(Gens_Path);
 	strcpy(Conf_File, Gens_Path);
 	strcat(Conf_File, "GensKMod.cfg");
-	
+
 	KConf.bAutoWatch = (BOOL) GetPrivateProfileInt("Debug", "AutoLoadW", FALSE, Conf_File);
 	KConf.Spy = (BOOL) GetPrivateProfileInt("Debug", "Spy", FALSE, Conf_File);
 	KConf.SpyReg = (BOOL) GetPrivateProfileInt("Debug", "Spy1", FALSE, Conf_File);
@@ -8396,8 +8558,11 @@ void LoadConfig_KMod( )
 	KConf.CDBios = (BOOL) GetPrivateProfileInt("Debug", "SpyCD", FALSE, Conf_File);
 	KConf.noCDBSTAT = (BOOL) GetPrivateProfileInt("Debug", "SpyCD1", FALSE, Conf_File);
 	KConf.noCDCSTAT = (BOOL) GetPrivateProfileInt("Debug", "SpyCD2", FALSE, Conf_File);
-	KConf.bBluePause = (BOOL) GetPrivateProfileInt("Debug", "BluePause", TRUE, Conf_File);
-	KConf.Special = (BOOL) GetPrivateProfileInt("Debug", "Special", FALSE, Conf_File);
+	KConf.bBluePause = (BOOL)GetPrivateProfileInt("Debug", "BluePause", TRUE, Conf_File);
+	KConf.pausedAtStart = (BOOL)GetPrivateProfileInt("Debug", "pausedAtStart", FALSE, Conf_File);
+	KConf.singleInstance = (BOOL)GetPrivateProfileInt("Debug", "singleInstance", FALSE, Conf_File);
+	KConf.Special = (BOOL)GetPrivateProfileInt("Debug", "Special", FALSE, Conf_File);
+	KConf.useGDB = (BOOL)GetPrivateProfileInt("Debug", "gdb", FALSE, Conf_File);
     KConf.gdb_m68kport = GetPrivateProfileInt("Debug", "gdbm68k", 6868, Conf_File);
     KConf.gdb_s68kport = GetPrivateProfileInt("Debug", "gdbs68k", 6869, Conf_File);
     KConf.gdb_msh2port = GetPrivateProfileInt("Debug", "gdbmsh2", 6870, Conf_File);
@@ -8409,15 +8574,27 @@ void RefreshSpyButtons( HWND hwnd )
 	long i;
 	BOOL bEnable = FALSE;
 
-	bEnable = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPY);	
+	bEnable = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPY);
 	for( i = IDC_DCONFIG_SPY1; i<= IDC_DCONFIG_SPY4; i++)
 		EnableWindow( GetDlgItem( hwnd, i) , bEnable );
 
-	bEnable = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPYCD);	
+	bEnable = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPYCD);
 	for( i = IDC_DCONFIG_SPYCD1; i<= IDC_DCONFIG_SPYCD2; i++)
 		EnableWindow( GetDlgItem( hwnd, i) , bEnable );
 }
 
+void RefreshGDBControls(HWND hwnd)
+{
+	BOOL bEnable = FALSE;
+
+	bEnable = IsDlgButtonChecked(hwnd, IDC_DCONFIG_GDB);
+
+	EnableWindow(GetDlgItem(hwnd, IDC_DCONFIG_GDBPORTM68K), bEnable);
+	EnableWindow(GetDlgItem(hwnd, IDC_DCONFIG_GDBPORTS68K), bEnable);
+	EnableWindow(GetDlgItem(hwnd, IDC_DCONFIG_GDBPORTMSH2), bEnable);
+	EnableWindow(GetDlgItem(hwnd, IDC_DCONFIG_GDBPORTSSH2), bEnable);
+
+}
 
 void Get_DebugZip_KMod( HWND hwnd )
 {
@@ -8525,15 +8702,25 @@ BOOL CALLBACK ConfigKDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			if ( KConf.bBluePause )
 				CheckDlgButton(hwnd, IDC_DCONFIG_BSCREEN, BST_CHECKED);
 
+			if (KConf.pausedAtStart)
+				CheckDlgButton(hwnd, IDC_DCONFIG_PAUSE_START, BST_CHECKED);
+
+			if (KConf.singleInstance)
+				CheckDlgButton(hwnd, IDC_DCONFIG_SINGLE, BST_CHECKED);
+
 			if ( KConf.Special )
 				CheckDlgButton(hwnd, IDC_DCONFIG_SPECIAL, BST_CHECKED);
 
-            SetUIntToEdit(hwnd, ICD_DCONFIG_GDBPORTM68K, KConf.gdb_m68kport);
-            SetUIntToEdit(hwnd, ICD_DCONFIG_GDBPORTS68K, KConf.gdb_s68kport);
-            SetUIntToEdit(hwnd, ICD_DCONFIG_GDBPORTMSH2, KConf.gdb_msh2port);
-            SetUIntToEdit(hwnd, ICD_DCONFIG_GDBPORTSSH2, KConf.gdb_ssh2port);
+			if (KConf.useGDB)
+				CheckDlgButton(hwnd, IDC_DCONFIG_GDB, BST_CHECKED);
+
+            SetUIntToEdit(hwnd, IDC_DCONFIG_GDBPORTM68K, KConf.gdb_m68kport);
+            SetUIntToEdit(hwnd, IDC_DCONFIG_GDBPORTS68K, KConf.gdb_s68kport);
+            SetUIntToEdit(hwnd, IDC_DCONFIG_GDBPORTMSH2, KConf.gdb_msh2port);
+            SetUIntToEdit(hwnd, IDC_DCONFIG_GDBPORTSSH2, KConf.gdb_ssh2port);
 
 			RefreshSpyButtons( hwnd );
+			RefreshGDBControls( hwnd );
 
 			break;
 
@@ -8544,7 +8731,10 @@ BOOL CALLBACK ConfigKDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 					break;
 				case IDC_DCONFIG_SPY:
 				case IDC_DCONFIG_SPYCD:
-					RefreshSpyButtons( hwnd );				
+					RefreshSpyButtons( hwnd );
+					break;
+				case IDC_DCONFIG_GDB:
+					RefreshGDBControls(hwnd);
 					break;
 				case IDC_DCONFIG_ZIP:
 					Get_DebugZip_KMod( hwnd );
@@ -8559,12 +8749,16 @@ BOOL CALLBACK ConfigKDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 					KConf.CDBios = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPYCD);
 					KConf.noCDBSTAT = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPYCD1);
 					KConf.noCDCSTAT = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPYCD2);
-					KConf.bBluePause  = IsDlgButtonChecked(hwnd, IDC_DCONFIG_BSCREEN);
+					KConf.bBluePause = IsDlgButtonChecked(hwnd, IDC_DCONFIG_BSCREEN);
+					KConf.pausedAtStart = IsDlgButtonChecked(hwnd, IDC_DCONFIG_PAUSE_START);
+					KConf.singleInstance = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SINGLE);
 					KConf.Special  = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPECIAL);
-                    KConf.gdb_m68kport = GetUIntFromEdit(hwnd, ICD_DCONFIG_GDBPORTM68K);
-                    KConf.gdb_s68kport = GetUIntFromEdit(hwnd, ICD_DCONFIG_GDBPORTS68K);
-                    KConf.gdb_msh2port = GetUIntFromEdit(hwnd, ICD_DCONFIG_GDBPORTMSH2);
-                    KConf.gdb_ssh2port = GetUIntFromEdit(hwnd, ICD_DCONFIG_GDBPORTSSH2);
+
+					KConf.useGDB = IsDlgButtonChecked(hwnd, IDC_DCONFIG_GDB);
+                    KConf.gdb_m68kport = GetUIntFromEdit(hwnd, IDC_DCONFIG_GDBPORTM68K);
+                    KConf.gdb_s68kport = GetUIntFromEdit(hwnd, IDC_DCONFIG_GDBPORTS68K);
+                    KConf.gdb_msh2port = GetUIntFromEdit(hwnd, IDC_DCONFIG_GDBPORTMSH2);
+                    KConf.gdb_ssh2port = GetUIntFromEdit(hwnd, IDC_DCONFIG_GDBPORTSSH2);
                     SaveConfig_KMod();
                     EndDialog(hwnd, IDOK);
                     break;
@@ -8589,7 +8783,7 @@ void Init_KMod( )
 	strcpy(szWatchDir,Gens_Path);
 	strcat(szWatchDir,"watchers\\");
 	CreateDirectory( szWatchDir, NULL);
-	
+
 	// fichier log par defaut
 	strcpy(szKModLog,Gens_Path);
 	strcat(szKModLog,"gens_KMod.log");
@@ -8636,13 +8830,11 @@ void Init_KMod( )
 	HandleWindow_KMod[16] = hCD_Reg;
 	HandleWindow_KMod[17] = h32X_Reg;
     HandleWindow_KMod[18] = hPlaneExplorer;
-
-	ResetDebug_KMod( );
-
 }
 
 void Update_KMod( )
 {
+	UpdateMsg_KMod();
 	UpdateM68k_KMod( );
 	UpdateZ80_KMod( );
 	UpdateVDP_KMod( );
@@ -8666,13 +8858,13 @@ void Update_KMod( )
 		Paused = 1;
 		AutoPause_KMod = 0;
 	}
-	
+
 	if (SegaCD_Started)
 	{
 		UpdateCD_68K_KMod( );
 		UpdateCD_CDC_KMod( );
 		UpdateCD_GFX_KMod( );
-		UpdateCD_Reg_KMod( );		
+		UpdateCD_Reg_KMod( );
 	}
 
 	if (_32X_Started)
@@ -8684,49 +8876,53 @@ void Update_KMod( )
 	}
 }
 
-void ResetDebug_KMod(  )
+
+void CloseDebug_KMod()
 {
 	UCHAR mode;
-	UCHAR i,j;
-
-
+	UCHAR i, j;
 
 	for (mode = 0; mode < WIN_NUMBER; mode++)
 	{
-		if ( OpenedWindow_KMod[ mode ] && mode != (DMODE_MSG-1) )
+		if (OpenedWindow_KMod[mode] && mode != (DMODE_MSG - 1))
 		{
-			CloseWindow_KMod( (UCHAR) (mode+1) );
+			CloseWindow_KMod((UCHAR)(mode + 1));
 		}
 	}
 
-	
+
 	//reset ym2612 channel
-	for(i=0; i<5; i++)
+	for (i = 0; i<6; i++)
 	{
 		EnabledChannels[i] = TRUE;
 	}
-	
+
 	//start_tiles = 0;
 	ListView_DeleteAllItems(GetDlgItem(hWatchers, IDC_WATCHER_LIST));
-	
-	LayersInit_KMod( );
-	VDPInit_KMod( hVDP );
-	CD_GFXInit_KMod( hCD_GFX );
-	MsgInit_KMod( hDMsg );
-	GMVStop_KMod( );
+
+	MsgReset_KMod(hDMsg);
+	GMVStop_KMod();
 
 	AutoPause_KMod = 0;
 	AutoShot_KMod = 0;
 
-	for(i=0;i<6; i++)
+	for (i = 0; i<6; i++)
 	{
-		for(j=0; j<4; j++)
+		for (j = 0; j<4; j++)
 		{
 			notes[i][j] = BST_UNCHECKED;
 		}
 	}
 
-		
+}
+
+void ResetDebug_KMod(  )
+{
+	LayersInit_KMod();
+	VDPInit_KMod(hVDP);
+	CD_GFXInit_KMod(hCD_GFX);
+	MsgInit_KMod(hDMsg);
+
 	Put_Info("Debug reset", 1500);
 }
 

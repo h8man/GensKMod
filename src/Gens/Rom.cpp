@@ -7,6 +7,7 @@
 #include "Rom.h"
 #include "G_dsound.h"
 #include "G_main.h"
+#include "G_gfx.h"
 #include "gens.h"
 #include "ggenie.h"
 #include "cpu_68k.h"
@@ -19,6 +20,7 @@
 #include "misc.h"
 #include "unzip.h"
 #include "wave.h"
+#include "kmod.h"
 
 
 int File_Type_Index;
@@ -78,11 +80,25 @@ void Get_Dir_From_Path(const char *Full_Path, char *Dir)
 void Update_Recent_Rom(const char *Path)
 {
 	int i;
+	int romIdx = 0xFF;
+	int idxToGetDown = 8;
 
-	for(i = 0; i < 9; i++)
-		if (!(strcmp(Recent_Rom[i], Path))) return;
-		
-	for(i = 8; i > 0; i--) strcpy(Recent_Rom[i], Recent_Rom[i - 1]);
+	for (i = 0; i < 9; i++)
+	{
+		if (!(strcmp(Recent_Rom[i], Path)))
+		{
+			romIdx = i;
+			break;
+		}
+	}
+
+	if (romIdx == 0)	return; //nothing to do, already first one
+
+	if (romIdx != 0xFF)
+		idxToGetDown = romIdx;
+	
+	for (i = idxToGetDown; i > 0; i--)
+		strcpy(Recent_Rom[i], Recent_Rom[i - 1]);
 
 	strcpy(Recent_Rom[0], Path);
 }
@@ -139,6 +155,7 @@ void Update_CD_Rom_Name(char *Name)
 	}
 
 	Rom_Name[j + 1] = 0;
+
 }
 
 
@@ -327,6 +344,7 @@ void Fill_Infos(void)
 	My_Rom->Modem_Infos[12] = 0;
 	My_Rom->Description[40] = 0;
 	My_Rom->Countries[3] = 0;
+
 }
 
 int Run_Rom(HWND hWnd, const char * Name, int File_Type_Index)
@@ -434,19 +452,28 @@ int Get_Rom(HWND hWnd)
 int Pre_Load_Rom(HWND hWnd, const char *Name)
 {
 	HANDLE Rom_File;
+	char errorStr[1024];
 	int sys;
 
 	SetCurrentDirectory(Gens_Path);
 
+	//chack if exit
 	Rom_File = CreateFile(Name, GENERIC_READ, FILE_SHARE_READ, 
 		NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
-	if (Rom_File == INVALID_HANDLE_VALUE) return 0;
-
+	if (Rom_File == INVALID_HANDLE_VALUE)
+	{
+		wsprintf(errorStr, "File %s not found", Name);
+		Put_Info(errorStr, 3000);
+		return 0;
+	}
 	CloseHandle(Rom_File);
 
+	//close previous
 	Free_Rom(Game);
 
+
+	//
 	sys = Detect_Format(Name);
 
 	if (sys < 1) return -1;
@@ -879,6 +906,10 @@ int IPS_Patching(void)
 
 void Free_Rom(Rom *Rom_MD)
 {
+#ifdef GENS_KMOD
+	CloseDebug_KMod();
+#endif
+
 	if (Game == NULL) return;
 	
 #ifdef CC_SUPPORT
@@ -891,6 +922,9 @@ void Free_Rom(Rom *Rom_MD)
 	if (WAV_Dumping) Stop_WAV_Dump();
 	if (GYM_Dumping) Stop_GYM_Dump();
 	if (SegaCD_Started) Stop_CD();
+
+
+
 	Net_Play = 0;
 	Genesis_Started = 0;
 	_32X_Started = 0;

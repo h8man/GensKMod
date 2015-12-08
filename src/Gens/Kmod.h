@@ -25,7 +25,10 @@ struct ConfigKMod_struct {
 	BOOL	noCDBSTAT;
 	BOOL	noCDCSTAT;
 	BOOL	bBluePause;
+	BOOL	pausedAtStart;
+	BOOL	singleInstance;
 	BOOL	Special;
+	BOOL	useGDB;
     unsigned int gdb_m68kport;
     unsigned int gdb_s68kport;
     unsigned int gdb_msh2port;
@@ -36,6 +39,7 @@ struct ConfigKMod_struct {
 void Init_KMod( );
 void ResetDebug_KMod( );
 void Update_KMod( );
+void CloseDebug_KMod();
 void ToggleWindow_KMod( HWND hWnd, int Debug_Mode);
 BOOL IsDialogMsg_KMod( LPMSG lpMsg );
 void FrameStep_KMod( );
@@ -58,9 +62,10 @@ void SpyCDBiosCall( );
 void SpyYM2612DAC( );
 
 void Watchers_KMod( );
+void AutoWatcher_KMod();
 
 void Config_KMod( );
-void AutoWatcher_KMod( );
+void LoadConfig_KMod();
 
 void GMVRecord_KMod( );
 void GMVStop_KMod( );
@@ -72,7 +77,7 @@ extern struct ConfigKMod_struct KConf;
 extern UCHAR ActiveLayer;
 extern UCHAR ActivePal;
 extern int AutoShot_KMod;
-extern BOOL	EnabledChannels[5];
+extern BOOL	EnabledChannels[6];
 
 #endif //GENS_KMOD
 

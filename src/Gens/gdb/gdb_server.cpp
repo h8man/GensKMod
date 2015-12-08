@@ -377,7 +377,7 @@ void gdbServerConnection::HandleAllRegisterRead(const char * packet)
 // Memory read: $mNNNN,MMMMM#CC
 void gdbServerConnection::HandleMemoryRead(const char * packet)
 {
-    char base_str[12];
+	char base_str[12];
     char length_str[12];
     unsigned char buffer[1024];
     unsigned int base;
@@ -386,7 +386,7 @@ void gdbServerConnection::HandleMemoryRead(const char * packet)
     const char * p;
     char * q;
 
-    q = base_str;
+	q = base_str; 
     p = packet + 2;
     while (*p != ',')
     {
@@ -403,7 +403,7 @@ void gdbServerConnection::HandleMemoryRead(const char * packet)
     *q = 0;
 
     char * send_buffer = m_send_buffer;
-    base = strtol(base_str, NULL, 16);
+    base = strtoul(base_str, NULL, 16);
     length = strtol(length_str, NULL, 16);
 
     static const char hex[] = "0123456789abcdef";
@@ -458,7 +458,7 @@ void gdbServerConnection::HandleMemoryWrite(const char * packet)
     *q = 0;
     p++;
 
-    base = strtol(base_str, NULL, 16);
+    base = strtoul(base_str, NULL, 16);
     length = strtol(length_str, NULL, 16);
 
     while (length != 0)

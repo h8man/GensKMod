@@ -60,6 +60,11 @@ extern "C" void Read_To_68K_Space(int adr);
 #define GENS_VERSION   2.12
 #define GENS_VERSION_H 2 * 65536 + 12
 
+#define STR_HELPER(x) #x
+#define	STR(x)	STR_HELPER(x)
+#define GENS_CLASS	"GENS_UDLRABCStart_" STR(GENS_VERSION)
+#define CMD_LINE_DATA 0x6548
+
 #define MINIMIZE								\
 if (Sound_Initialised) Clear_Sound_Buffer();	\
 if (Full_Screen)								\
@@ -1453,6 +1458,8 @@ void CC_End_Callback(char mess[256])
 
 void Init_GDBStubs(void)
 {
+	if (KConf.useGDB == FALSE)	return;
+
     g_gdb_main68k_target = GetMain68KTarget();
     g_gdb_sub68k_target = GetSub68KTarget();
     g_gdb_master_sh2_target = GetMasterSH2Target();
@@ -1475,6 +1482,19 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 {
 	int i;
 	
+	
+	strcpy(Language_Path, Gens_Path);
+	strcpy(Str_Tmp, Gens_Path);
+
+	strcpy(Manual_Path, "");
+	strcpy(CGOffline_Path, "");
+
+	strcat(Language_Path, "language.dat");
+	strcat(Str_Tmp, "gens.cfg");
+
+
+
+
 	Net_Play = 0;
 	Full_Screen = -1;
 	VDP_Num_Vis_Lines = 224;
@@ -1514,7 +1534,7 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 	WndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	WndClass.hbrBackground = NULL;
 	WndClass.lpszMenuName = NULL;
-	WndClass.lpszClassName = "Gens";
+	WndClass.lpszClassName = GENS_CLASS;
 
 	RegisterClass(&WndClass);
 
@@ -1522,7 +1542,7 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 
 	HWnd = CreateWindowEx(
 		NULL,
-		"Gens",
+		GENS_CLASS,
 		"Gens - Idle",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
@@ -1553,19 +1573,7 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 	GetCurrentDirectory(1024, Language_Path);
 	GetCurrentDirectory(1024, Str_Tmp);
 */
-	char* c = Gens_Path + GetModuleFileName(0, Gens_Path, 1024);
-	while(*c != '\\') c--; // c POINTE A LA FIN, RECULER TANT QUE NON '\\'
-	 *c = 0;
 	
-	strcpy(Language_Path, Gens_Path);
-	strcpy(Str_Tmp, Gens_Path);
-
-	strcpy(Manual_Path, "");
-	strcpy(CGOffline_Path, "");
-
-	strcat(Gens_Path, "\\");
-	strcat(Language_Path, "\\language.dat");
-	strcat(Str_Tmp, "\\gens.cfg");
 
 	MSH2_Init();
 	SSH2_Init();
@@ -1621,10 +1629,9 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 
 #ifdef GENS_KMOD
 	InitCommonControls();
-	Init_KMod( );
+	Init_KMod();
+	Init_GDBStubs();
 #endif
-
-    Init_GDBStubs();
 
 	Gens_Running = 1;
 
@@ -1633,6 +1640,8 @@ BOOL Init(HINSTANCE hInst, int nCmdShow)
 
 void End_GDBStubs(void)
 {
+	if (KConf.useGDB == FALSE)	return;
+
     g_gdb_main68k_target->Disconnect();
     g_gdb_sub68k_target->Disconnect();
     g_gdb_master_sh2_target->Disconnect();
@@ -1658,15 +1667,104 @@ void End_All(void)
 	End_Sound();
 	End_CD_Driver();
 	End_Network();
+
+#ifdef GENS_KMOD
     End_GDBStubs();
+#endif
 
 	SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, SS_Actived, NULL, 0);
 }
 
+void parseCommandLine(LPSTR lpCmdLine)
+{
+	int src;
 
+#ifdef CC_SUPPORT
+	//		src = CC_Connect("CCGEN://Stef:gens@emu.consoleclassix.com/sonicthehedgehog2.gen", (char *) Rom_Data, CC_End_Callback);
+	src = CC_Connect(lpCmdLine, (char *)Rom_Data, CC_End_Callback);
+
+	if (src == 0)
+	{
+		Load_Rom_CC(CCRom.RName, CCRom.RSize);
+		Build_Main_Menu();
+	}
+	else if (src == 1)
+	{
+		MessageBox(NULL, "Error during connection", NULL, MB_OK);
+	}
+	else if (src == 2)
+	{
+#endif
+		src = 0;
+
+		if (lpCmdLine[src] == '"')
+		{
+			src++;
+
+			while ((lpCmdLine[src] != '"') && (lpCmdLine[src] != 0))
+			{
+				Str_Tmp[src - 1] = lpCmdLine[src];
+				src++;
+			}
+
+			Str_Tmp[src - 1] = 0;
+		}
+		else
+		{
+			while (lpCmdLine[src] != 0)
+			{
+				Str_Tmp[src] = lpCmdLine[src];
+				src++;
+			}
+
+			Str_Tmp[src] = 0;
+		}
+
+		Pre_Load_Rom(HWnd, Str_Tmp);
+
+#ifdef CC_SUPPORT
+	}
+#endif
+}
 int PASCAL WinMain(HINSTANCE hInst,	HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCmdShow)
 {
 	MSG msg;
+	HANDLE hMutex;
+
+	char* c = Gens_Path + GetModuleFileName(0, Gens_Path, 1024);
+	while (*c != '\\') c--; // c POINTE A LA FIN, RECULER TANT QUE NON '\\'
+	*c = 0;
+
+	strcat(Gens_Path, "\\");
+
+	LoadConfig_KMod();
+	if (KConf.singleInstance)
+	{
+		hMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, "GensMutex");
+
+		if (!hMutex)
+			hMutex = CreateMutex(NULL, FALSE, "GensMutex");
+		else
+		{
+			HWND hInstanceWnd = FindWindow(GENS_CLASS, NULL);
+
+			if (hInstanceWnd != NULL)
+			{
+				if (strlen(lpCmdLine) != 0) {
+					COPYDATASTRUCT cds;
+					cds.dwData = CMD_LINE_DATA;
+					cds.cbData = strlen(lpCmdLine) + 1;
+					cds.lpData = lpCmdLine;
+					SendMessage(hInstanceWnd, WM_COPYDATA, 0, (LPARAM)&cds);
+				}
+				SetForegroundWindow(hInstanceWnd);
+			}
+			return 0;
+		}
+	}
+
+
+
 
 	if( !Init(hInst, nCmdShow) )
 		return -1;
@@ -1676,54 +1774,8 @@ int PASCAL WinMain(HINSTANCE hInst,	HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 
 	if (lpCmdLine[0])
 	{
-		int src;
+		parseCommandLine(lpCmdLine);
 
-#ifdef CC_SUPPORT
-//		src = CC_Connect("CCGEN://Stef:gens@emu.consoleclassix.com/sonicthehedgehog2.gen", (char *) Rom_Data, CC_End_Callback);
-		src = CC_Connect(lpCmdLine, (char *) Rom_Data, CC_End_Callback);
-
-		if (src == 0)
-		{
-			Load_Rom_CC(CCRom.RName, CCRom.RSize);
-			Build_Main_Menu();
-		}
-		else if (src == 1)
-		{
-			MessageBox(NULL, "Error during connection", NULL, MB_OK);
-		}
-		else if (src == 2)
-		{
-#endif
-			src = 0;
-			
-			if (lpCmdLine[src] == '"')
-			{
-				src++;
-				
-				while ((lpCmdLine[src] != '"') && (lpCmdLine[src] != 0))
-				{
-					Str_Tmp[src - 1] = lpCmdLine[src];
-					src++;
-				}
-
-				Str_Tmp[src - 1] = 0;
-			}
-			else
-			{
-				while (lpCmdLine[src] != 0)
-				{
-					Str_Tmp[src] = lpCmdLine[src];
-					src++;
-				}
-
-				Str_Tmp[src] = 0;
-			}
-
-			Pre_Load_Rom(HWnd, Str_Tmp);
-
-#ifdef CC_SUPPORT
-		}
-#endif
 	}
 
 	while (Gens_Running)
@@ -1812,6 +1864,9 @@ int PASCAL WinMain(HINSTANCE hInst,	HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 	Save_Config(Str_Tmp);
 
 	End_All();
+	
+	if (hMutex != NULL)
+		ReleaseMutex(hMutex);
 
 	ChangeDisplaySettings(NULL, 0);
 
@@ -1940,7 +1995,8 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				case ID_FILES_OPENRECENTROM8:
 					if ((Check_If_Kaillera_Running())) return 0;
 					if (GYM_Playing) Stop_Play_GYM();
-					return Pre_Load_Rom(HWnd, Recent_Rom[LOWORD(wParam) - ID_FILES_OPENRECENTROM0]);
+					strcpy(Str_Tmp, Recent_Rom[LOWORD(wParam) - ID_FILES_OPENRECENTROM0]);
+					return Pre_Load_Rom(HWnd, Str_Tmp);
 				
 				case ID_FILES_BOOTCD:
 					if (Num_CD_Drive == 0) return 1;
@@ -1970,9 +2026,7 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					}
 					Free_Rom(Game);
 					Build_Main_Menu();
-#ifdef GENS_KMOD
-					ResetDebug_KMod( );
-#endif
+
 					return 0;
 		
 				case ID_FILES_GAMEGENIE:
@@ -2045,10 +2099,6 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					}
 					else
 					{
-#ifdef GENS_KMOD
-						//ResetDebug_KMod( );
-#endif
-
 						Set_Render(hWnd, 1, Render_FS, true);
 					}
 					return 0;
@@ -2766,6 +2816,21 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 #endif
 
+		case WM_COPYDATA:
+			{
+				COPYDATASTRUCT* pcds = (COPYDATASTRUCT*)lParam;
+				if (pcds->dwData == CMD_LINE_DATA) //coming from another instance
+				{
+					LPSTR lpszString = (LPSTR)(pcds->lpData);
+					wsprintf(Str_Tmp, "Load %s", lpszString);
+					Put_Info(Str_Tmp, 2000);
+
+					parseCommandLine(lpszString);
+				}
+			}
+			break;
+
+
 		case WM_KNUX:
 			MESSAGE_L("Communicating", "Communicating ...", 1000)
 
@@ -3084,7 +3149,7 @@ HMENU Build_Main_Menu(void)
 
 	if (strcmp(Recent_Rom[0], ""))
 	{
-		MENU_L(Files, i++, MF_BYPOSITION | MF_POPUP | MF_STRING, (UINT)FilesHistory, "Rom History", "", "&ROM History");
+		MENU_L(Files, i++, MF_BYPOSITION | MF_POPUP | MF_STRING, (UINT)FilesHistory, "Rom History", "\tCtrl+Alt+L", "&ROM History");
 		InsertMenu(Files, i++, MF_SEPARATOR, NULL, NULL);
 	}
 

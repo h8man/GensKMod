@@ -485,11 +485,8 @@ int Init_Genesis(struct Rom *MD_Rom)
 	SRAM_Start = SRAM_End = SRAM_ON = SRAM_Write = 0;
 	Controller_1_COM = Controller_2_COM = 0;
 
-#ifdef GENS_KMOD
-	ResetDebug_KMod( );
-	AutoWatcher_KMod( );
-#endif
-	
+
+
 	if (!Kaillera_Client_Running)
 	{
 		if ((MD_Rom->Ram_Infos[8] == 'R') && (MD_Rom->Ram_Infos[9] == 'A') && (MD_Rom->Ram_Infos[10] & 0x40))
@@ -515,48 +512,48 @@ int Init_Genesis(struct Rom *MD_Rom)
 		SRAM_Start &= 0xFFFFFFFE;
 		SRAM_End |= 0x00000001;
 
-//		sprintf(Str_Err, "deb = %.8X end = %.8X", SRAM_Start, SRAM_End);
-//		MessageBox(NULL, Str_Err, "", MB_OK);
+		//		sprintf(Str_Err, "deb = %.8X end = %.8X", SRAM_Start, SRAM_End);
+		//		MessageBox(NULL, Str_Err, "", MB_OK);
 
 		if ((SRAM_End - SRAM_Start) <= 2) SRAM_Custom = 1;
 		else SRAM_Custom = 0;
 
 		Load_SRAM();
 	}
-	
-	switch(Country)
+
+	switch (Country)
 	{
-		default:
-		case -1:
-			Detect_Country_Genesis();
-			break;
+	default:
+	case -1:
+		Detect_Country_Genesis();
+		break;
 
-		case 0:
-			Game_Mode = 0;
-			CPU_Mode = 0;
+	case 0:
+		Game_Mode = 0;
+		CPU_Mode = 0;
 
-			break;
+		break;
 
-		case 1:
-			Game_Mode = 1;
-			CPU_Mode = 0;
-			break;
+	case 1:
+		Game_Mode = 1;
+		CPU_Mode = 0;
+		break;
 
-		case 2:
-			Game_Mode = 1;
-			CPU_Mode = 1;
-			break;
+	case 2:
+		Game_Mode = 1;
+		CPU_Mode = 1;
+		break;
 
-		case 3:
-			Game_Mode = 0;
-			CPU_Mode = 1;
-			break;
+	case 3:
+		Game_Mode = 0;
+		CPU_Mode = 1;
+		break;
 	}
 
 	if ((CPU_Mode == 1) || (Game_Mode == 0))
-		sprintf(Str_Err, "Gens - Megadrive : %s",MD_Rom->Rom_Name_W);
+		sprintf(Str_Err, "Gens - Megadrive : %s", MD_Rom->Rom_Name_W);
 	else
-		sprintf(Str_Err, "Gens - Genesis : %s",MD_Rom->Rom_Name_W);
+		sprintf(Str_Err, "Gens - Genesis : %s", MD_Rom->Rom_Name_W);
 
 	SetWindowText(HWnd, Str_Err);
 
@@ -576,10 +573,10 @@ int Init_Genesis(struct Rom *MD_Rom)
 
 	if (CPU_Mode)
 	{
-		CPL_Z80 = Round_Double((((double) CLOCK_PAL / 15.0) / 50.0) / 312.0);
-		CPL_M68K = Round_Double((((double) CLOCK_PAL / 7.0) / 50.0) / 312.0);
-		CPL_MSH2 = Round_Double(((((((double) CLOCK_PAL / 7.0) * 3.0) / 50.0) / 312.0) * (double) MSH2_Speed) / 100.0);
-		CPL_SSH2 = Round_Double(((((((double) CLOCK_PAL / 7.0) * 3.0) / 50.0) / 312.0) * (double) SSH2_Speed) / 100.0);
+		CPL_Z80 = Round_Double((((double)CLOCK_PAL / 15.0) / 50.0) / 312.0);
+		CPL_M68K = Round_Double((((double)CLOCK_PAL / 7.0) / 50.0) / 312.0);
+		CPL_MSH2 = Round_Double(((((((double)CLOCK_PAL / 7.0) * 3.0) / 50.0) / 312.0) * (double)MSH2_Speed) / 100.0);
+		CPL_SSH2 = Round_Double(((((((double)CLOCK_PAL / 7.0) * 3.0) / 50.0) / 312.0) * (double)SSH2_Speed) / 100.0);
 
 		VDP_Num_Lines = 312;
 		VDP_Status |= 0x0001;
@@ -589,10 +586,10 @@ int Init_Genesis(struct Rom *MD_Rom)
 	}
 	else
 	{
-		CPL_Z80 = Round_Double((((double) CLOCK_NTSC / 15.0) / 60.0) / 262.0);
-		CPL_M68K = Round_Double((((double) CLOCK_NTSC / 7.0) / 60.0) / 262.0);
-		CPL_MSH2 = Round_Double(((((((double) CLOCK_NTSC / 7.0) * 3.0) / 60.0) / 262.0) * (double) MSH2_Speed) / 100.0);
-		CPL_SSH2 = Round_Double(((((((double) CLOCK_NTSC / 7.0) * 3.0) / 60.0) / 262.0) * (double) SSH2_Speed) / 100.0);
+		CPL_Z80 = Round_Double((((double)CLOCK_NTSC / 15.0) / 60.0) / 262.0);
+		CPL_M68K = Round_Double((((double)CLOCK_NTSC / 7.0) / 60.0) / 262.0);
+		CPL_MSH2 = Round_Double(((((((double)CLOCK_NTSC / 7.0) * 3.0) / 60.0) / 262.0) * (double)MSH2_Speed) / 100.0);
+		CPL_SSH2 = Round_Double(((((((double)CLOCK_NTSC / 7.0) * 3.0) / 60.0) / 262.0) * (double)SSH2_Speed) / 100.0);
 
 		VDP_Num_Lines = 262;
 		VDP_Status &= 0xFFFE;
@@ -620,6 +617,17 @@ int Init_Genesis(struct Rom *MD_Rom)
 
 	Update_Frame = Do_Genesis_Frame;
 	Update_Frame_Fast = Do_Genesis_Frame_No_VDP;
+
+#ifdef GENS_KMOD
+	ResetDebug_KMod();
+	AutoWatcher_KMod();
+
+	if (KConf.pausedAtStart)
+	{
+		Paused = 1;
+		Put_Info("Paused at start", 1000);
+	}
+#endif
 
 	return 1;
 }
@@ -1170,8 +1178,13 @@ int Init_32X(struct Rom *MD_Rom)
 #ifdef GENS_KMOD
 	ResetDebug_KMod( );
 	AutoWatcher_KMod( );
-#endif
 
+	if (KConf.pausedAtStart)
+	{
+		Paused = 1;
+		Put_Info("Paused at start", 1000);
+	}
+#endif
 
 	return 1;
 }
@@ -1937,8 +1950,14 @@ int Init_SegaCD(const char *iso_name)
 	}
 
 #ifdef GENS_KMOD
-	ResetDebug_KMod( );
-	AutoWatcher_KMod( );
+	ResetDebug_KMod();
+	AutoWatcher_KMod();
+
+	if (KConf.pausedAtStart)
+	{
+		Paused = 1;
+		Put_Info("Paused at start", 1000);
+	}
 #endif
 
 
