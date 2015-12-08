@@ -219,8 +219,10 @@
  ** - bug : YM2612 Chan6 enable status is wrong
  ** - bug : VDP tile ID wrong
  ** - bug : fake pal no longer works
+ ** - bug : savestate pal wrong (Dr MefistO)
  ** - rewrite message logs
  ** - better 68k debug view, with current address and not relative
+ ** - faster plane explorer (Dr MefistO)
  ** - VS2013 compile
  ** - WinXP support
  ** - rethink Sprites list
@@ -269,13 +271,6 @@
  **
  *********************************************/
 
-/* bug from Fonzie
-
-Dans les adresses VRAM (Debug>Genesis>VDP)
-L'adresse s'incremente de 0x10 par ligne, ça devrai être 0x200 par ligne il me semble
--------------
-
-*/
 
 /*********************************************
 Bug found by bensimauru (SEF)
@@ -306,13 +301,6 @@ a frame skip every so often instead. I just added some brute force code for myse
 close the sound buffer is to wrapping around on itself, and toggle the playback frequency between
 44100 and 43900 to ensure it doesn't wrap. Works for me with no scratchy sound and no frame skip.
  *********************************************/
-
-/*
-#define ITEM_BAD_TYPE		0x00000000
-#define ITEM_CHAR_TYPE		0x01000000
-#define ITEM_INT_TYPE		0x02000000
-#define ITEM_LONG_TYPE		0x04000000
-*/
 
 #define TIMER_CYCLES		66480	/* cycles used by timer call */
 
