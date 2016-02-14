@@ -1993,10 +1993,11 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				case ID_FILES_OPENRECENTROM6:
 				case ID_FILES_OPENRECENTROM7:
 				case ID_FILES_OPENRECENTROM8:
+					char fileToLoad[1024];
 					if ((Check_If_Kaillera_Running())) return 0;
 					if (GYM_Playing) Stop_Play_GYM();
-					strcpy(Str_Tmp, Recent_Rom[LOWORD(wParam) - ID_FILES_OPENRECENTROM0]);
-					return Pre_Load_Rom(HWnd, Str_Tmp);
+					strcpy(fileToLoad, Recent_Rom[LOWORD(wParam) - ID_FILES_OPENRECENTROM0]);
+					return Pre_Load_Rom(HWnd, fileToLoad);
 				
 				case ID_FILES_BOOTCD:
 					if (Num_CD_Drive == 0) return 1;

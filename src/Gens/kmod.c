@@ -230,6 +230,8 @@
  ** - single instance mode
  ** - pause at start
  ** - fast reload with ctrl+alt+l
+ ****** 0.7.4
+ ** - bug : fast reload need to be called twice on SRAM based game
  *********************************************/
 
 /*********************************************
