@@ -232,6 +232,7 @@
  ** - fast reload with ctrl+alt+l
  ****** 0.7.4
  ** - bug : fast reload need to be called twice on SRAM based game
+ ** - bug : clear log doesn't really clear it on memory
  *********************************************/
 
 /*********************************************
@@ -670,8 +671,16 @@ void UpdateMsg_KMod()
 		do
 		{
 			editCutText = strstr(editCutText, "\r\n");
-			editCutText += 2;
-			nSize = strlen(editCutText) + nSizeToAdd;
+			if (editCutText == NULL)
+			{
+				editCutText = logMessages;
+				nSize = nSizeToAdd;
+			}
+			else
+			{
+				editCutText += 2;
+				nSize = strlen(editCutText) + nSizeToAdd;
+			}
 		} while (nSize > logMaxSize);
 		memmove(logMessages, editCutText, strlen(editCutText)+1);
 	}
@@ -914,27 +923,33 @@ void MsgOpen_KMod( HWND hwnd )
 	ShellExecute(hwnd, "open", "notepad", KConf.logfile, NULL, SW_SHOW);
 }
 
+void MsgClear_KMod(HWND hwnd)
+{
+	if (logToAdd)		LocalFree((HLOCAL)logToAdd);
+	
+	logToAdd = NULL;
+	
+	ZeroMemory(logMessages, logMaxSize);
+	logSize = 0;
+
+	msgIdx_KMod = 0;
+	ZeroMemory(msg_KMod, 255);
+}
 
 void MsgReset_KMod(HWND hwnd)
 {
 	if (KMsgLog)	CloseHandle(KMsgLog);
 	KMsgLog = NULL;
 
+	MsgClear_KMod(hwnd);
 
-	if (logToAdd)		LocalFree((HLOCAL)logToAdd);
 	if (logMessages)	LocalFree((HLOCAL)logMessages);
-	logToAdd = NULL;
 	logMessages = NULL;
-
-
-	msgIdx_KMod = 0;
-	ZeroMemory(msg_KMod, 255);
 }
 
 void MsgInit_KMod( HWND hwnd )
 {
 	unsigned char Conf_File[MAX_PATH];
-	unsigned char fullMsg[MAX_PATH];
 
 	SetCurrentDirectory(Gens_Path);
 	strcpy(Conf_File, Gens_Path);
@@ -987,7 +1002,7 @@ BOOL CALLBACK MsgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			switch ( LOWORD(wParam) )
 			{
 				case IDC_MSG_CLEAR:
-					SetDlgItemText(hwnd, IDC_MSG_EDIT,"");
+					MsgClear_KMod(hwnd);
 					break;
 
 				case IDC_MSG_OPEN:
