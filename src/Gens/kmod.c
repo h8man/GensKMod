@@ -233,6 +233,7 @@
  ****** 0.7.4
  ** - bug : fast reload need to be called twice on SRAM based game
  ** - bug : clear log doesn't really clear it on memory
+ ** - keyboard now working on VDP Sprite
  *********************************************/
 
 /*********************************************
@@ -7842,7 +7843,7 @@ BOOL CALLBACK SpritesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			switch (LOWORD(wParam))
 			{
 				case IDC_SPRITES_LIST:
-					if (((LPNMHDR)lParam)->code == NM_CLICK)
+					if ( (((LPNMHDR)lParam)->code == NM_CLICK) || (((LPNMHDR)lParam)->code == NM_SETFOCUS) )
 					{
 						RedrawWindow(GetDlgItem(hSprites, IDC_SPRITES_PREVIEW), NULL, NULL, RDW_INVALIDATE);
 						RedrawWindow(GetDlgItem(hSprites, IDC_SPRITES_PREVIEW2), NULL, NULL, RDW_INVALIDATE);
