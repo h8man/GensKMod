@@ -39,6 +39,10 @@
 
 #include "parser.h" //used for struct watchers
 
+#include "kmod\common.h"
+#include "kmod\utils.h"
+#include "kmod\message.h"
+
 /*********************************************
 
   This is a mod I, Kaneda, tried to apply
@@ -558,9 +562,7 @@ struct str_Structure {
 } StructureKMod[126];
 
 
-/* Dirty way to know which window is open, using original Gens Debug values */
-UCHAR OpenedWindow_KMod[ WIN_NUMBER ]; /* 0: Window Closed, 1: Window Opened */
-HWND  HandleWindow_KMod[ WIN_NUMBER ];
+
 
 HWND hM68K, hZ80, hVDP, hMisc, hSprites, hYM2612, hPSG;
 HWND hCD_68K, hCD_CDC, hCD_GFX, hCD_Reg;
@@ -568,11 +570,11 @@ HWND hMSH2, hSSH2, h32X_VDP, h32X_Reg;
 HWND hWatchers;
 HWND hLayers;
 HWND hPlaneExplorer;
-HWND hDMsg;
+
 
 struct ConfigKMod_struct KConf;
 char szWatchDir[MAX_PATH];
-char szKModLog[MAX_PATH];
+
 
 CHAR debug_string[1024];
 
@@ -595,193 +597,8 @@ void GMVStop_KMod( );
 void GMVPlay_KMod( );
 void JumpM68KRam_KMod( DWORD adr );
 
-/******* PRIVATE *********/
-void CloseWindow_KMod( UCHAR mode )
-{
-	if (mode < 1)	return;
-	if (mode > WIN_NUMBER)	return;
-
-	OpenedWindow_KMod[ mode-1 ] = 0;
-	ShowWindow( HandleWindow_KMod[mode-1], SW_HIDE );
-}
-
-void OpenWindow_KMod( UCHAR mode )
-{
-	if (mode < 1)	return;
-	if (mode > WIN_NUMBER)	return;
-
-	OpenedWindow_KMod[ mode-1 ] = 1;
-	ShowWindow( HandleWindow_KMod[mode-1], SW_SHOW	 );
-	Update_KMod( );
-}
-
-
-/// for all memory views
-void Hexview( unsigned char *addr, unsigned char *dest)
-{
-	wsprintf(dest, "%.2X%.2X%.2X%.2X %.2X%.2X%.2X%.2X", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7]);
-}
-
-
-void Ansiview( unsigned char *addr, unsigned char *dest)
-{
-	unsigned char i;
-	for(i=0;i<8;i++)
-	{
-		if (addr[i] == 0)
-			wsprintf(dest+i, "%c", '.');
-		else
-			wsprintf(dest+i, "%c", addr[i]);
-	}
-}
-
-/************ Message **************/
-ULONG	timer_KMod;
-HANDLE	KMsgLog;
-UCHAR	msgIdx_KMod, msg_KMod[255];
-char	*errorText_KMod="** Too many messages **";
-UINT logMaxSize, logSize;
-CHAR *logMessages;
-CHAR *logToAdd;
-
-
-void UpdateMsg_KMod()
-{
-	CHAR *editCutText;
-	UINT nSizeToAdd, nSize;
-
-	if (logMessages == NULL)	return;
-	if (logToAdd == NULL)	return;
-
-	if (KMsgLog)
-	{
-		DWORD dwBytesToWrite, dwBytesWritten;
-
-		dwBytesToWrite = strlen(logToAdd);
-		if (dwBytesToWrite)		WriteFile(KMsgLog, logToAdd, dwBytesToWrite, &dwBytesWritten, NULL);
-	}
-
-	nSizeToAdd = strlen(logToAdd) + 1;
-	nSize = logSize; // (UINT)SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, WM_GETTEXTLENGTH, (WPARAM)0, (LPARAM)0);
-	nSize += nSizeToAdd;
-
-	if (nSize >= logMaxSize)
-	{
-		editCutText = logMessages;
-		editCutText += nSizeToAdd;
-		do
-		{
-			editCutText = strstr(editCutText, "\r\n");
-			if (editCutText == NULL)
-			{
-				editCutText = logMessages;
-				nSize = nSizeToAdd;
-			}
-			else
-			{
-				editCutText += 2;
-				nSize = strlen(editCutText) + nSizeToAdd;
-			}
-		} while (nSize > logMaxSize);
-		memmove(logMessages, editCutText, strlen(editCutText)+1);
-	}
-	strcat(logMessages, logToAdd);
-	logSize = strlen(logMessages);
-
-	SetDlgItemText(hDMsg, IDC_MSG_EDIT, logMessages);
-	SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_LINESCROLL, (WPARAM)0, (LPARAM)SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLINECOUNT, (WPARAM)0, (LPARAM)0));
-
-	LocalFree((HLOCAL)logToAdd);
-	logToAdd = NULL;
-}
-
-
-BOOL Msg_KMod( char *msg)
-{
-	if (logToAdd == NULL)
-	{
-		if (logMaxSize == 0)		logMaxSize = (UINT)SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLIMITTEXT, (WPARAM)0, (LPARAM)0);
-
-		logToAdd = (CHAR *)LocalAlloc(LPTR, logMaxSize/2);
-		if (logToAdd == NULL)	return FALSE;
-
-		ZeroMemory(logToAdd, logMaxSize / 2);
-	}
-
-	if ((strlen(logToAdd) + strlen(msg)) > (logMaxSize / 2)) 	return TRUE;
-
-	strcat(logToAdd, msg);
-
-	if (strlen(logToAdd) > (logMaxSize / 2))
-	{
-		strcat(logToAdd, "*** too much message per frame ***");
-		strcat(logToAdd, "***.. skipping some messages ..***");
-	}
-
-	return TRUE;
-}
-
-
-
-void MsgBrowse_KMod( HWND hwnd )
-{
-	OPENFILENAME szFile;
-    char szFileName[MAX_PATH];
-    HANDLE hFr;
-
-	unsigned char Conf_File[MAX_PATH];
-
-	SetCurrentDirectory(Gens_Path);
-	strcpy(Conf_File, Gens_Path);
-	strcat(Conf_File, "GensKMod.cfg");
-
-    ZeroMemory(&szFile, sizeof(szFile));
-    szFileName[0] = 0;  /*WITHOUT THIS, CRASH */
-
-	strcpy(szFileName, Rom_Name);
-	strcat(szFileName, "_msg");
-
-    szFile.lStructSize = sizeof(szFile);
-    szFile.hwndOwner = hwnd;
-    szFile.lpstrFilter = "Log file (*.log)\0*.log\0\0";
-    szFile.lpstrFile= szFileName;
-    szFile.nMaxFile = sizeof(szFileName);
-    szFile.lpstrFileTitle = (LPSTR)NULL;
-    szFile.lpstrInitialDir = (LPSTR)NULL;
-    szFile.lpstrTitle = "Message Log file";
-    szFile.Flags = OFN_EXPLORER | OFN_LONGNAMES | OFN_NONETWORKBUTTON |
-                    OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST  | OFN_HIDEREADONLY;
-    szFile.lpstrDefExt = "log";
-
-    if (GetSaveFileName(&szFile)!=TRUE)   return;
-
-    hFr = CreateFile (szFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL) ;
-    if (hFr == INVALID_HANDLE_VALUE)
-          return;
-
-    CloseHandle(hFr);
-
-	strcpy(KConf.logfile ,szFileName);
-
-	WritePrivateProfileString("Debug", "file", KConf.logfile, Conf_File);
-
-	if (KMsgLog)	CloseHandle( KMsgLog );
-	//FILE_SHARE_READ pour pouvoir l'ouvrir dans notepad
-	KMsgLog = CreateFile (KConf.logfile, GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL) ;
-    if (KMsgLog != INVALID_HANDLE_VALUE)	SetFilePointer(KMsgLog, 0, 0, FILE_END);
-
-	SetDlgItemText(hwnd, IDC_MSG_FILE, KConf.logfile);
-}
-
-
-void IncTimer_KMod( unsigned odom)
-{
-	if (timer_KMod)	timer_KMod += odom;
-}
-
 void SpecialReg( unsigned char a, unsigned char b)
 {
-
 	/* Special new registers :
 	 31 :	sr000000	Timer register, start and output a timer (based on m68k cycles)
 				s=0		Counter output
@@ -832,27 +649,7 @@ void SpecialReg( unsigned char a, unsigned char b)
 			break;
 
 		case 30:
-			if (b == 0)
-			{
-				if (msgIdx_KMod > 0)
-				{
-					wsprintf(debug_string,"Message : %s\r\n", msg_KMod);
-					Msg_KMod(debug_string);
-
-					msgIdx_KMod = 0;
-					ZeroMemory(msg_KMod, 255);
-				}
-			}
-			else if (b<0x20)
-			{
-				return;
-			}
-			else
-			{
-				msg_KMod[msgIdx_KMod++] = b;
-				if (msgIdx_KMod == 255)
-					SpecialReg(30, 0); /* flush to msgbox */
-			}
+			message_addChar(b);
 			break;
 
 		case 29:
@@ -919,123 +716,8 @@ void SpecialReg( unsigned char a, unsigned char b)
 
 }
 
-void MsgOpen_KMod( HWND hwnd )
-{
-	ShellExecute(hwnd, "open", "notepad", KConf.logfile, NULL, SW_SHOW);
-}
-
-void MsgClear_KMod(HWND hwnd)
-{
-	if (logToAdd)		LocalFree((HLOCAL)logToAdd);
-	
-	logToAdd = NULL;
-	
-	ZeroMemory(logMessages, logMaxSize);
-	logSize = 0;
-
-	msgIdx_KMod = 0;
-	ZeroMemory(msg_KMod, 255);
-}
-
-void MsgReset_KMod(HWND hwnd)
-{
-	if (KMsgLog)	CloseHandle(KMsgLog);
-	KMsgLog = NULL;
-
-	MsgClear_KMod(hwnd);
-
-	if (logMessages)	LocalFree((HLOCAL)logMessages);
-	logMessages = NULL;
-}
-
-void MsgInit_KMod( HWND hwnd )
-{
-	unsigned char Conf_File[MAX_PATH];
-
-	SetCurrentDirectory(Gens_Path);
-	strcpy(Conf_File, Gens_Path);
-	strcat(Conf_File, "GensKMod.cfg");
-
-	GetPrivateProfileString("Log", "file", szKModLog, KConf.logfile, MAX_PATH, Conf_File);
-	WritePrivateProfileString("Debug", "file", KConf.logfile, Conf_File);
-
-	//FILE_SHARE_READ pour pouvoir l'ouvrir dans notepad
-	KMsgLog = CreateFile (szKModLog, GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL) ;
-    if (KMsgLog != INVALID_HANDLE_VALUE)	SetFilePointer(KMsgLog, 0, 0, FILE_END);
-
-	SetDlgItemText(hwnd, IDC_MSG_FILE, szKModLog);
-
-	logMaxSize = (UINT)SendDlgItemMessage(hDMsg, IDC_MSG_EDIT, EM_GETLIMITTEXT, (WPARAM)0, (LPARAM)0);
-	logMessages = (CHAR *)LocalAlloc(LPTR, logMaxSize);
-	ZeroMemory(logMessages, logMaxSize);
-	logSize = 0;
-
-	if (!Game)	return;
-
-	wsprintf(logMessages, "*******************%s\r\n", Rom_Name);
-	logSize = strlen(logMessages);
-
-	if (KMsgLog)
-	{
-		DWORD dwBytesWritten;
-		WriteFile(KMsgLog, logMessages, (DWORD)logSize, &dwBytesWritten, NULL);
-	}
-
-	msgIdx_KMod = 0;
-	ZeroMemory(msg_KMod, 255);
-}
 
 
-BOOL CALLBACK MsgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
-{
-	HFONT hFont = NULL;
-
-	switch(Message)
-    {
-		case WM_INITDIALOG:
-			hFont = (HFONT) GetStockObject(OEM_FIXED_FONT);
-		//	SendDlgItemMessage(hwnd, IDC_MSG_EDIT, WM_SETFONT, (WPARAM)hFont, TRUE);
-
-			MsgInit_KMod( hwnd );
-			break;
-
-		case WM_COMMAND:
-			switch ( LOWORD(wParam) )
-			{
-				case IDC_MSG_CLEAR:
-					MsgClear_KMod(hwnd);
-					break;
-
-				case IDC_MSG_OPEN:
-					MsgOpen_KMod( hwnd );
-					break;
-
-				case IDC_MSG_BROWSE:
-					MsgBrowse_KMod( hwnd );
-					break;
-			}
-			break;
-
-		case WM_CLOSE:
-			CloseWindow_KMod( DMODE_MSG );
-			break;
-
-		case WM_DESTROY:
-			if (KMsgLog)
-				CloseHandle( KMsgLog );
-
-			if (hFont != NULL)
-				DeleteObject( (HGDIOBJ) hFont );
-
-			DestroyWindow( hDMsg );
-			PostQuitMessage(0);
-			break;
-
-		default:
-            return FALSE;
-    }
-    return TRUE;
-}
 /************ Spy **************/
 
 void Spy_KMod( char *log )
@@ -8802,9 +8484,7 @@ void Init_KMod( )
 	strcat(szWatchDir,"watchers\\");
 	CreateDirectory( szWatchDir, NULL);
 
-	// fichier log par defaut
-	strcpy(szKModLog,Gens_Path);
-	strcat(szKModLog,"gens_KMod.log");
+
 
 	LoadConfig_KMod( );
 
@@ -8824,7 +8504,9 @@ void Init_KMod( )
 	hPSG = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGPSG ), HWnd, PSGDlgProc);
 	hWatchers = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_WATCHERS ), HWnd, WatcherDlgProc);
 	hLayers = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_LAYERS), HWnd, LayersDlgProc);
-	hDMsg = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGMSG), HWnd, MsgDlgProc);
+	
+	message_create(ghInstance, HWnd);
+
 	hCD_Reg = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGCD_REG), HWnd, CD_RegDlgProc);
 	h32X_Reg = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUG32X_REG), HWnd, _32X_RegDlgProc);
     hPlaneExplorer = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGPLANEEXPLORER), HWnd, PlaneExplorerDialogProc);
@@ -8844,7 +8526,7 @@ void Init_KMod( )
 	HandleWindow_KMod[12] = hPSG;
 	HandleWindow_KMod[13] = hWatchers;
 	HandleWindow_KMod[14] = hLayers;
-	HandleWindow_KMod[15] = hDMsg;
+	//HandleWindow_KMod[15] = hDMsg;
 	HandleWindow_KMod[16] = hCD_Reg;
 	HandleWindow_KMod[17] = h32X_Reg;
     HandleWindow_KMod[18] = hPlaneExplorer;
@@ -8852,7 +8534,9 @@ void Init_KMod( )
 
 void Update_KMod( )
 {
-	UpdateMsg_KMod();
+	message_update();
+
+
 	UpdateM68k_KMod( );
 	UpdateZ80_KMod( );
 	UpdateVDP_KMod( );
@@ -8918,7 +8602,9 @@ void CloseDebug_KMod()
 	//start_tiles = 0;
 	ListView_DeleteAllItems(GetDlgItem(hWatchers, IDC_WATCHER_LIST));
 
-	MsgReset_KMod(hDMsg);
+	message_reset();
+
+
 	GMVStop_KMod();
 
 	AutoPause_KMod = 0;
@@ -8939,7 +8625,8 @@ void ResetDebug_KMod(  )
 	LayersInit_KMod();
 	VDPInit_KMod(hVDP);
 	CD_GFXInit_KMod(hCD_GFX);
-	MsgInit_KMod(hDMsg);
+
+	message_reset();
 
 	Put_Info("Debug reset", 1500);
 }
