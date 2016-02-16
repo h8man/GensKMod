@@ -63,7 +63,7 @@
       <PrecompiledHeader />
       <ObjectFileName>.\Debug\</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug\</ProgramDataBaseFileName>
-	  <AdditionalIncludeDirectories>..\dx70_min\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\dx70_min\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -89,7 +89,7 @@
       <AdditionalDependencies>wsock32.lib;COMCTL32.LIB;ddraw.lib;dsound.lib;dinput.lib;dxguid.lib;winmm.lib;Vfw32.lib;libs\zlib.lib;libs\htmlhelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <IgnoreSpecificDefaultLibraries>libc.lib</IgnoreSpecificDefaultLibraries>
-	  <AdditionalLibraryDirectories>..\dx70_min\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\dx70_min\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -131,7 +131,7 @@
       <AdditionalDependencies>wsock32.lib;COMCTL32.LIB;ddraw.lib;dsound.lib;dinput.lib;dxguid.lib;winmm.lib;Vfw32.lib;libs\zlib.lib;libs\htmlhelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <IgnoreSpecificDefaultLibraries>libc.lib</IgnoreSpecificDefaultLibraries>
-	  <AdditionalLibraryDirectories>..\dx70_min\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\dx70_min\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -143,6 +143,18 @@
     <ClCompile Include="gdb\gdb_thread.cpp" />
     <ClCompile Include="G_gdi.cpp" />
     <ClCompile Include="G_gfx.cpp" />
+    <ClCompile Include="kmod\common.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="kmod\message.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="kmod\utils.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="mp3_dec\common.c" />
     <ClCompile Include="mp3_dec\dct64_i386.c" />
     <ClCompile Include="mp3_dec\decode_i386.c" />
@@ -343,6 +355,9 @@
     <ClInclude Include="gdb\gdb_thread.h" />
     <ClInclude Include="G_gdi.h" />
     <ClInclude Include="G_gfx.h" />
+    <ClInclude Include="kmod\common.h" />
+    <ClInclude Include="kmod\message.h" />
+    <ClInclude Include="kmod\utils.h" />
     <ClInclude Include="mp3_dec\huffman.h" />
     <ClInclude Include="mp3_dec\mpg123.h" />
     <ClInclude Include="mp3_dec\mpglib.h" />
