@@ -2,9 +2,11 @@
 #include <commctrl.h>
 #include <stdio.h>
 
+#include "..\gens.h"
+
 #include "common.h"
 #include "message.h"
-#include "..\gens.h"
+#include "watchers.h"
 
 ULONG	timer_KMod;
 
@@ -32,6 +34,9 @@ void CloseWindow_KMod(UCHAR mode)
 	case DMODE_MSG:
 		message_show(FALSE);
 		break;
+	case DMODE_WATCHERS:
+		watchers_show(FALSE);
+		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_HIDE);
 	}
@@ -49,6 +54,8 @@ void OpenWindow_KMod(UCHAR mode)
 	case DMODE_MSG:
 		message_show(TRUE);
 		break;
+	case DMODE_WATCHERS:
+		watchers_show(TRUE);
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_SHOW);
 	}
