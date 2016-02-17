@@ -907,7 +907,7 @@ int IPS_Patching(void)
 void Free_Rom(Rom *Rom_MD)
 {
 #ifdef GENS_KMOD
-	CloseDebug_KMod();
+	kmod_close();
 #endif
 
 	if (Game == NULL) return;

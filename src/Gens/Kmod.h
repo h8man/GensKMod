@@ -6,6 +6,7 @@
 							// define it ALSO on nasmhead.inc
 #define NO_MEMORY_LIMIT	0
 
+#include "kmod/common.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,30 +40,20 @@ struct ConfigKMod_struct {
 void Init_KMod( );
 void ResetDebug_KMod( );
 void Update_KMod( );
-void CloseDebug_KMod();
+void kmod_close();
 void ToggleWindow_KMod( HWND hWnd, int Debug_Mode);
 BOOL IsDialogMsg_KMod( LPMSG lpMsg );
 void FrameStep_KMod( );
 void ToggleAutoShot_KMod( );
 
 void SpecialReg( unsigned char a, unsigned char b);
-void IncTimer_KMod( unsigned odom);
 
-void SpyReg( unsigned char a, unsigned char b);
-void SpySpr( );
-void SpyZ80NotPaused(unsigned int address );
-void SpyZ80NotPaused_DMA(unsigned int address );
-void SpyBadByteRead(unsigned int address );
-void SpyBadWordRead(unsigned int address );
-void SpyBadByteWrite(unsigned int address );
-void SpyBadWordWrite(unsigned int address );
-
-void SpyCDBiosCall( );
+//TODO remove
+void JumpM68KRam_KMod(DWORD adr);
 
 void SpyYM2612DAC( );
 
-void Watchers_KMod( );
-void AutoWatcher_KMod();
+
 
 void Config_KMod( );
 void LoadConfig_KMod();

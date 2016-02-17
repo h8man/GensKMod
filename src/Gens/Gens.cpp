@@ -620,13 +620,6 @@ int Init_Genesis(struct Rom *MD_Rom)
 
 #ifdef GENS_KMOD
 	ResetDebug_KMod();
-	AutoWatcher_KMod();
-
-	if (KConf.pausedAtStart)
-	{
-		Paused = 1;
-		Put_Info("Paused at start", 1000);
-	}
 #endif
 
 	return 1;
@@ -1177,13 +1170,6 @@ int Init_32X(struct Rom *MD_Rom)
 
 #ifdef GENS_KMOD
 	ResetDebug_KMod( );
-	AutoWatcher_KMod( );
-
-	if (KConf.pausedAtStart)
-	{
-		Paused = 1;
-		Put_Info("Paused at start", 1000);
-	}
 #endif
 
 	return 1;
@@ -1951,13 +1937,6 @@ int Init_SegaCD(const char *iso_name)
 
 #ifdef GENS_KMOD
 	ResetDebug_KMod();
-	AutoWatcher_KMod();
-
-	if (KConf.pausedAtStart)
-	{
-		Paused = 1;
-		Put_Info("Paused at start", 1000);
-	}
 #endif
 
 
