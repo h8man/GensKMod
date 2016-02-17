@@ -530,13 +530,13 @@ void ResizeWatcher_KMod(HWND hDlg, WORD newWidth, WORD newHeight)
 }
 
 
-void WatcherInit_KMod(HWND hDlg)
+void WatcherInit_KMod( )
 {
 	LV_COLUMN   lvColumn;
 	int         i;
 	TCHAR       szString[4][20] = { "Address (hex)", "Name", "Value", "Type" };
 
-	hWatchList = GetDlgItem(hDlg, IDC_WATCHER_LIST);
+	hWatchList = GetDlgItem(hWatchers, IDC_WATCHER_LIST);
 	ListView_DeleteAllItems(hWatchList);
 
 	lvColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT /*| LVCF_SUBITEM*/;
@@ -944,6 +944,8 @@ void watchers_reset()
 
 	if (KConf.bAutoWatch)
 		AutoLoadWatchers_KMod();
+
+	WatcherInit_KMod( );
 
 }
 void watchers_destroy()

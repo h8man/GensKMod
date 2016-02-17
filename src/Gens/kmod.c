@@ -39,6 +39,7 @@
 #include "kmod\utils.h"
 #include "kmod\message.h"
 #include "kmod\watchers.h"
+#include "kmod\layers.h"
 
 /*********************************************
 
@@ -388,7 +389,7 @@ HWND hM68K, hZ80, hVDP, hMisc, hSprites, hYM2612, hPSG;
 HWND hCD_68K, hCD_CDC, hCD_GFX, hCD_Reg;
 HWND hMSH2, hSSH2, h32X_VDP, h32X_Reg;
 
-HWND hLayers;
+
 HWND hPlaneExplorer;
 
 
@@ -531,77 +532,6 @@ void SpecialReg( unsigned char a, unsigned char b)
 			break;
 	}
 
-}
-
-/**************** Layers *************************/
-void LayersInit_KMod( )
-{
-	CheckDlgButton( hLayers,IDC_LAYER_A, BST_CHECKED);
-	CheckDlgButton( hLayers,IDC_LAYER_B, BST_CHECKED);
-	CheckDlgButton( hLayers,IDC_LAYER_SPRITE, BST_CHECKED);
-	CheckDlgButton( hLayers,IDC_LAYER_WINDOW, BST_CHECKED);
-	CheckDlgButton( hLayers,IDC_LAYER_32X, BST_CHECKED);
-	ActiveLayer = 0x1F;
-}
-
-
-BOOL CALLBACK LayersDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
-{
-	switch(Message)
-    {
-		case WM_INITDIALOG:
-			LayersInit_KMod( );
-			break;
-
-		case WM_COMMAND:
-			switch ( LOWORD(wParam) )
-			{
-				case IDC_LAYER_A:
-					if ( IsDlgButtonChecked(hwnd,IDC_LAYER_A) == BST_CHECKED )
-						ActiveLayer |= 0x08;
-					else
-						ActiveLayer &= 0x17;
-					break;
-				case IDC_LAYER_B:
-					if ( IsDlgButtonChecked(hwnd,IDC_LAYER_B) == BST_CHECKED )
-						ActiveLayer |= 0x04;
-					else
-						ActiveLayer &= 0x1B;
-					break;
-				case IDC_LAYER_SPRITE:
-					if ( IsDlgButtonChecked(hwnd,IDC_LAYER_SPRITE) == BST_CHECKED )
-						ActiveLayer |= 0x02;
-					else
-						ActiveLayer &= 0x1D;
-					break;
-				case IDC_LAYER_WINDOW:
-					if ( IsDlgButtonChecked(hwnd,IDC_LAYER_WINDOW) == BST_CHECKED )
-						ActiveLayer |= 0x01;
-					else
-						ActiveLayer &= 0x1E;
-					break;
-				case IDC_LAYER_32X:
-					if ( IsDlgButtonChecked(hwnd,IDC_LAYER_32X) == BST_CHECKED )
-						ActiveLayer |= 0x10;
-					else
-						ActiveLayer &= 0x0F;
-					break;
-			}
-			break;
-
-		case WM_CLOSE:
-			CloseWindow_KMod( DMODE_LAYERS );
-			break;
-
-		case WM_DESTROY:
-			DestroyWindow( hLayers );
-			PostQuitMessage(0);
-			break;
-
-		default:
-            return FALSE;
-    }
-    return TRUE;
 }
 
 /*********** PLANE EXPLORER ******/
@@ -6989,8 +6919,9 @@ void Init_KMod( )
 	hYM2612 = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGYM2612 ), HWnd, YM2612DlgProc);
 	hPSG = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGPSG ), HWnd, PSGDlgProc);
 
-	hLayers = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_LAYERS), HWnd, LayersDlgProc);
 	
+	
+	layers_create(ghInstance, HWnd);
 	watchers_create(ghInstance, HWnd);
 	message_create(ghInstance, HWnd);
 
@@ -7012,7 +6943,7 @@ void Init_KMod( )
 	HandleWindow_KMod[11] = hYM2612;
 	HandleWindow_KMod[12] = hPSG;
 	//HandleWindow_KMod[13] = hWatchers;
-	HandleWindow_KMod[14] = hLayers;
+	//HandleWindow_KMod[14] = hLayers;
 	//HandleWindow_KMod[15] = hDMsg;
 	HandleWindow_KMod[16] = hCD_Reg;
 	HandleWindow_KMod[17] = h32X_Reg;
@@ -7023,6 +6954,7 @@ void Update_KMod( )
 {
 	watchers_update();
 	message_update();
+//	layers_update(); //no update needed
 
 
 	UpdateM68k_KMod( );
@@ -7032,7 +6964,6 @@ void Update_KMod( )
 	UpdateSprites_KMod( );
 	UpdateYM2612_KMod( );
 	UpdatePSG_KMod( );
-//	UpdateLayers_KMod( ); no update needed
 
     PlaneExplorerUpdate_KMod();
 
@@ -7109,12 +7040,12 @@ void kmod_close()
 //TODO rename kmod_resetOnLoad()
 void ResetDebug_KMod(  )
 {
-	LayersInit_KMod();
 	VDPInit_KMod(hVDP);
 	CD_GFXInit_KMod(hCD_GFX);
 
 	message_reset();
 	watchers_reset();
+	layers_reset();
 
 	if (KConf.pausedAtStart)
 	{
