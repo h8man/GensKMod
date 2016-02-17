@@ -151,6 +151,10 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="kmod\spy.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="kmod\utils.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
@@ -357,6 +361,7 @@
     <ClInclude Include="G_gfx.h" />
     <ClInclude Include="kmod\common.h" />
     <ClInclude Include="kmod\message.h" />
+    <ClInclude Include="kmod\spy.h" />
     <ClInclude Include="kmod\utils.h" />
     <ClInclude Include="mp3_dec\huffman.h" />
     <ClInclude Include="mp3_dec\mpg123.h" />
