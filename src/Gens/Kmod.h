@@ -65,8 +65,7 @@ void GMVUpdatePlay_KMod( );
 void GMVTools_KMod( );
 
 extern struct ConfigKMod_struct KConf;
-extern UCHAR ActiveLayer;
-extern UCHAR ActivePal;
+
 extern int AutoShot_KMod;
 extern BOOL	EnabledChannels[6];
 

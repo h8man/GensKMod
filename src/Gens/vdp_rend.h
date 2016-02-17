@@ -10,6 +10,10 @@ extern unsigned short MD_Palette[256];
 extern unsigned short Palette[0x1000];
 extern unsigned long TAB336[336];
 
+extern UCHAR ActiveLayer;   /* 0003 ABSW */
+extern UCHAR ActivePal; /* 0000 3210 */
+
+
 extern struct
 {
 	int Pos_X;

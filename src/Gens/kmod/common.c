@@ -7,6 +7,7 @@
 #include "common.h"
 #include "message.h"
 #include "watchers.h"
+#include "layers.h"
 
 ULONG	timer_KMod;
 
@@ -37,6 +38,9 @@ void CloseWindow_KMod(UCHAR mode)
 	case DMODE_WATCHERS:
 		watchers_show(FALSE);
 		break;
+	case DMODE_LAYERS:
+		layers_show(FALSE);
+		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_HIDE);
 	}
@@ -56,6 +60,10 @@ void OpenWindow_KMod(UCHAR mode)
 		break;
 	case DMODE_WATCHERS:
 		watchers_show(TRUE);
+		break;
+	case DMODE_LAYERS:
+		layers_show(TRUE);
+		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_SHOW);
 	}
