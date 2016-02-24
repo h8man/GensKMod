@@ -58,11 +58,7 @@ void SpyYM2612DAC( );
 void Config_KMod( );
 void LoadConfig_KMod();
 
-void GMVRecord_KMod( );
-void GMVStop_KMod( );
-void GMVPlay_KMod( );
-void GMVUpdatePlay_KMod( );
-void GMVTools_KMod( );
+
 
 extern struct ConfigKMod_struct KConf;
 

@@ -45,6 +45,8 @@
 #include "gdb/gdb_68k_target.h"
 #include "gdb/gdb_sh2_target.h"
 
+#include "kmod/gmv.h"
+
 static gdbServerThread * g_gdb_main68k_server;
 static gdbServerThread * g_gdb_sub68k_server;
 static gdbTarget * g_gdb_main68k_target;
