@@ -859,19 +859,8 @@ BOOL CALLBACK WatcherDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 		break;
 
 	case WM_DESTROY:
-		for (i = 0; i< ListView_GetItemCount(hWatchList); i++)
-		{
-			lvItem.mask = LVIF_PARAM;
-			lvItem.iItem = i;
-			lvItem.iSubItem = 0;
-			ListView_GetItem(hWatchList, &lvItem);
-			watcher = (struct str_Watcher *) lvItem.lParam;
-			HeapFree(GetProcessHeap(), 0, watcher);
-		}
-
-		ListView_DeleteAllItems(hWatchList);
-
-		DestroyWindow(hWatchers);
+		watchers_destroy();
+		
 		PostQuitMessage(0);
 		break;
 
@@ -950,5 +939,21 @@ void watchers_reset()
 }
 void watchers_destroy()
 {
+	LVITEM		lvItem;
+	int         i;
+	struct str_Watcher*	watcher;
 
+	for (i = 0; i< ListView_GetItemCount(hWatchList); i++)
+	{
+		lvItem.mask = LVIF_PARAM;
+		lvItem.iItem = i;
+		lvItem.iSubItem = 0;
+		ListView_GetItem(hWatchList, &lvItem);
+		watcher = (struct str_Watcher *) lvItem.lParam;
+		HeapFree(GetProcessHeap(), 0, watcher);
+	}
+
+	ListView_DeleteAllItems(hWatchList);
+
+	DestroyWindow(hWatchers);
 }

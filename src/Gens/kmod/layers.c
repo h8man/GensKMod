@@ -64,7 +64,8 @@ BOOL CALLBACK LayersDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 		break;
 
 	case WM_DESTROY:
-		DestroyWindow(hLayers);
+		layers_destroy();
+
 		PostQuitMessage(0);
 		break;
 
@@ -100,5 +101,5 @@ void layers_reset()
 }
 void layers_destroy()
 {
-
+	DestroyWindow(hLayers);
 }
