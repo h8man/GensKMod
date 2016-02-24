@@ -20,6 +20,9 @@ static UINT logMaxSize, logSize;
 static CHAR *logMessages;
 static CHAR *logToAdd;
 
+static HFONT hFont = NULL;
+
+
 
 static void MsgBrowse_KMod(HWND hwnd)
 {
@@ -180,8 +183,7 @@ BOOL Msg_KMod(char *msg)
 
 BOOL CALLBACK MsgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	HFONT hFont = NULL;
-
+	
 	switch (Message)
 	{
 	case WM_INITDIALOG:
@@ -213,13 +215,8 @@ BOOL CALLBACK MsgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_DESTROY:
-		if (KMsgLog)
-			CloseHandle(KMsgLog);
-
-		if (hFont != NULL)
-			DeleteObject((HGDIOBJ)hFont);
-
-		DestroyWindow(hDMsg);
+		message_destroy();
+		
 		PostQuitMessage(0);
 		break;
 
@@ -299,7 +296,13 @@ void message_update()
 
 void message_destroy()
 {
+	if (KMsgLog)
+		CloseHandle(KMsgLog);
 
+	if (hFont != NULL)
+		DeleteObject((HGDIOBJ)hFont);
+
+	DestroyWindow(hDMsg);
 }
 
 

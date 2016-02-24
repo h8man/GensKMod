@@ -370,7 +370,7 @@ BOOL CALLBACK PlaneExplorerDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LP
 		break;
 
 	case WM_DESTROY:
-		DestroyWindow(hPlaneExplorer);
+		planes_destroy();
 		PostQuitMessage(0);
 		break;
 
@@ -433,5 +433,5 @@ void planes_reset()
 }
 void planes_destroy()
 {
-
+	DestroyWindow(hPlaneExplorer);
 }
