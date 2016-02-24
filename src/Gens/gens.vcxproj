@@ -147,6 +147,10 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="kmod\gmv.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="kmod\layers.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
@@ -372,6 +376,7 @@
     <ClInclude Include="G_gdi.h" />
     <ClInclude Include="G_gfx.h" />
     <ClInclude Include="kmod\common.h" />
+    <ClInclude Include="kmod\gmv.h" />
     <ClInclude Include="kmod\layers.h" />
     <ClInclude Include="kmod\message.h" />
     <ClInclude Include="kmod\planes.h" />

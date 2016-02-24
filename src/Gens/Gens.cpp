@@ -30,6 +30,7 @@
 #include "cd_sys.h"
 #include "cd_file.h"
 
+#include "kmod/gmv.h"
 
 int Debug;
 int Frame_Skip;
