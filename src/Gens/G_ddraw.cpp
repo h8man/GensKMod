@@ -1062,6 +1062,7 @@ int Take_Shot()
 	if (Use_GDI)
 	{
 		SaveGDI(RD);
+		return 1;
 	}
 	else
 	{
@@ -1075,8 +1076,9 @@ int Take_Shot()
 			lpDDS_Primary->Unlock(NULL);
 			return 1;
 		}
-		else return 0;
 	}
+
+	return 0;
 }
 
 
