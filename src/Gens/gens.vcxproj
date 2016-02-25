@@ -179,6 +179,10 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="kmod\z80.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="mp3_dec\common.c" />
     <ClCompile Include="mp3_dec\dct64_i386.c" />
     <ClCompile Include="mp3_dec\decode_i386.c" />
@@ -388,6 +392,7 @@
     <ClInclude Include="kmod\spy.h" />
     <ClInclude Include="kmod\utils.h" />
     <ClInclude Include="kmod\watchers.h" />
+    <ClInclude Include="kmod\z80.h" />
     <ClInclude Include="mp3_dec\huffman.h" />
     <ClInclude Include="mp3_dec\mpg123.h" />
     <ClInclude Include="mp3_dec\mpglib.h" />

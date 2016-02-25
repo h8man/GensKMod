@@ -10,6 +10,7 @@
 #include "layers.h"
 #include "planes.h"
 #include "m68k.h"
+#include "z80.h"
 
 ULONG	timer_KMod;
 
@@ -49,6 +50,9 @@ void CloseWindow_KMod(UCHAR mode)
 	case DMODE_68K:
 		m68kdebug_show(FALSE);
 		break;
+	case DMODE_Z80:
+		z80debug_show(FALSE);
+		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_HIDE);
 	}
@@ -77,6 +81,9 @@ void OpenWindow_KMod(UCHAR mode)
 		break;
 	case DMODE_68K:
 		m68kdebug_show(TRUE);
+		break;
+	case DMODE_Z80:
+		z80debug_show(TRUE);
 		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_SHOW);
