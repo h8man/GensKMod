@@ -48,8 +48,7 @@ void ToggleAutoShot_KMod( );
 
 void SpecialReg( unsigned char a, unsigned char b);
 
-//TODO remove
-void JumpM68KRam_KMod(DWORD adr);
+
 
 void SpyYM2612DAC( );
 

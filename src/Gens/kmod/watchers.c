@@ -16,6 +16,7 @@
 
 #include "common.h"
 #include "watchers.h"
+#include "m68k.h"
 
 
 #define WATCHER_SUBDATA		0x8000
@@ -505,7 +506,7 @@ void SeeWatcher_KMod(int item)
 	if (!watcher)	return;
 
 	OpenWindow_KMod(DMODE_68K);
-	JumpM68KRam_KMod(watcher->adr - 0x00FF0000);
+	m68kdebug_jumpRAM(watcher->adr - 0x00FF0000);
 }
 
 
