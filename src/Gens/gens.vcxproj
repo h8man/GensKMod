@@ -167,6 +167,10 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="kmod\s68k.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="kmod\spy.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
@@ -393,6 +397,7 @@
     <ClInclude Include="kmod\m68k.h" />
     <ClInclude Include="kmod\message.h" />
     <ClInclude Include="kmod\planes.h" />
+    <ClInclude Include="kmod\s68k.h" />
     <ClInclude Include="kmod\spy.h" />
     <ClInclude Include="kmod\utils.h" />
     <ClInclude Include="kmod\vdp.h" />

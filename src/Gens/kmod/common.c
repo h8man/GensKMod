@@ -12,6 +12,7 @@
 #include "m68k.h"
 #include "z80.h"
 #include "vdp.h"
+#include "s68k.h"
 
 ULONG	timer_KMod;
 
@@ -57,6 +58,9 @@ void CloseWindow_KMod(UCHAR mode)
 	case DMODE_VDP:
 		vdpdebug_show(FALSE);
 		break;
+	case DMODE_CD_68K:
+		s68kdebug_show(FALSE);
+		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_HIDE);
 	}
@@ -91,6 +95,9 @@ void OpenWindow_KMod(UCHAR mode)
 		break;
 	case DMODE_VDP:
 		vdpdebug_show(TRUE);
+		break;
+	case DMODE_CD_68K:
+		s68kdebug_show(TRUE);
 		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_SHOW);
