@@ -2252,7 +2252,7 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 #ifdef GENS_KMOD
 				case ID_CPU_DEBUG_GENESIS_VDPREG:
 					MINIMIZE
-					Change_Debug(hWnd, DMODE_MISC);
+					Change_Debug(hWnd, DMODE_VDP_REG);
 					return 0;
 
 				case ID_CPU_DEBUG_GENESIS_SPRITES:
