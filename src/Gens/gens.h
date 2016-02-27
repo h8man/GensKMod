@@ -27,7 +27,7 @@ extern "C" {
 #define DMODE_32_VDP	9
 #define DMODE_PREVIEW	0x1000
 
-#define DMODE_MISC		10
+#define DMODE_VDP_REG	10
 #define DMODE_SPRITES	11
 #define DMODE_YM2612	12
 #define DMODE_PSG		13
