@@ -73,8 +73,6 @@ void UpdateVDPReg_KMod()
 	LVITEM		lvItem;
 	static struct Reg_VDP_Type old_regs = { 0, };
 
-	if (OpenedWindow_KMod[9] == FALSE)	return;
-
 	if (!memcmp(&old_regs, &VDP_Reg, sizeof(old_regs)))
 		return;
 
