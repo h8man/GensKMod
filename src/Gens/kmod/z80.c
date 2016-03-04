@@ -53,10 +53,7 @@ void UpdateZ80_KMod()
 {
 	unsigned int i, PC;
 	unsigned char tmp_string[256];
-
-	if (OpenedWindow_KMod[1] == FALSE)	return;
-
-
+	
 	SendDlgItemMessage(hZ80, IDC_Z80_DISAM, LB_RESETCONTENT, (WPARAM)0, (LPARAM)0);
 	if (Z80_ViewMode == 0)
 	{

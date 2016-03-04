@@ -383,7 +383,7 @@ void m68kdebug_show(BOOL visibility)
 
 void m68kdebug_update()
 {
-	if (OpenedWindow_KMod[0] == FALSE)	return;
+	if (OpenedWindow_KMod[DMODE_68K-1] == FALSE)	return;
 
 	UpdateM68k_KMod();
 }

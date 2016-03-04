@@ -887,7 +887,7 @@ void watchers_update()
 	DWORD		value;
 	struct str_Watcher *watcher;
 
-	if (OpenedWindow_KMod[13] == FALSE)	return;
+	if (OpenedWindow_KMod[DMODE_WATCHERS-1] == FALSE)	return;
 
 	nbItems = ListView_GetItemCount(hWatchList);
 	if (nbItems < 1)	return;

@@ -422,7 +422,7 @@ void planes_show(BOOL visibility)
 
 void planes_update()
 {
-	if (OpenedWindow_KMod[18] == FALSE)	return;
+	if (OpenedWindow_KMod[DMODE_PLANEEXPLORER-1] == FALSE)	return;
 
 	RedrawWindow(GetDlgItem(hPlaneExplorer, IDC_PLANEXPLEORER_MAIN), NULL, NULL, RDW_INVALIDATE);
 }

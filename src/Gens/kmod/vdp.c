@@ -40,8 +40,6 @@ static const COLORREF cgaPal[16] = {
 
 void UpdateVDP_KMod()
 {
-	if (OpenedWindow_KMod[2] == FALSE)	return;
-
 	RedrawWindow(hWndPal, NULL, NULL, RDW_INVALIDATE);
 	RedrawWindow(GetDlgItem(hVDP, IDC_VDP_TILES), NULL, NULL, RDW_INVALIDATE);
 	RedrawWindow(GetDlgItem(hVDP, IDC_VDP_PREVIEW), NULL, NULL, RDW_INVALIDATE);

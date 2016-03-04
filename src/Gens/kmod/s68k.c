@@ -95,10 +95,7 @@ void UpdateCD_68K_KMod()
 {
 	unsigned int i, PC;
 	unsigned char tmp_string[256];
-
-	if (OpenedWindow_KMod[3] == FALSE)	return;
-
-
+	
 	SendDlgItemMessage(hCD_68K, IDC_S68K_DISAM, LB_RESETCONTENT, (WPARAM)0, (LPARAM)0);
 	if (S68k_ViewMode & 2)
 	{
