@@ -22,7 +22,6 @@
 
 #include "psg.h"
 
-#include "LC89510.h"
 
 #include "Mem_SH2.h"
 #include "SH2.h"
@@ -39,11 +38,12 @@
 #include "kmod\planes.h"
 #include "kmod\gmv.h"
 #include "kmod\m68k.h"
-#include "kmod\s68k.h"
 #include "kmod\z80.h"
 #include "kmod\vdp.h"
 #include "kmod\vdp_reg.h"
 
+#include "kmod\s68k.h"
+#include "kmod\cdc.h"
 /*********************************************
 
   This is a mod I, Kaneda, tried to apply
@@ -390,7 +390,7 @@ struct _32X_register_struct _32X_register[] =
 
 
 HWND hSprites, hYM2612, hPSG;
-HWND  hCD_CDC, hCD_GFX, hCD_Reg;
+HWND hCD_GFX, hCD_Reg;
 HWND hMSH2, hSSH2, h32X_VDP, h32X_Reg;
 
 struct ConfigKMod_struct KConf;
@@ -525,256 +525,6 @@ void SpecialReg( unsigned char a, unsigned char b)
 
 
 
-
-/************ CD CDC **************/
-HWND hCDCDCList;
-
-void CD_CDCInit_KMod( HWND hwnd)
-{
-	LV_COLUMN   lvColumn;
-	LVITEM		lvItem;
-//	int         i;
-	char		buf[64];
-	RECT		rSize;
-	TCHAR       szString[2][20] = {"Name", "Value"};
-
-	hCDCDCList = GetDlgItem(hwnd, IDC_CDC_LIST);
-	ListView_DeleteAllItems(hCDCDCList);
-
-	GetWindowRect( hCDCDCList, &rSize);
-
-	lvColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT /*| LVCF_SUBITEM*/;
-	lvColumn.fmt = LVCFMT_LEFT;
-	lvColumn.cx = 80;
-	lvColumn.pszText = szString[0];
-	ListView_InsertColumn(hCDCDCList, 0, &lvColumn);
-
-	lvColumn.cx = 80;
-	lvColumn.pszText = szString[1];
-	ListView_InsertColumn(hCDCDCList, 1, &lvColumn);
-
-
-	ListView_SetExtendedListViewStyle(hCDCDCList, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES );
-
-	lvItem.mask = LVIF_TEXT;
-
-	lvItem.iItem = 0;
-	lvItem.iSubItem = 0;
-	lvItem.pszText = "COMIN";
-	ListView_InsertItem(hCDCDCList, &lvItem);
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.2X",  CDC.COMIN);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 1;
-	lvItem.iSubItem = 0;
-	lvItem.pszText = "IFSTAT";
-	ListView_InsertItem(hCDCDCList, &lvItem);
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.2X",  CDC.IFSTAT);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 2;
-	lvItem.iSubItem = 0;
-	lvItem.pszText = "DBC";
-	ListView_InsertItem(hCDCDCList, &lvItem);
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.4X",  CDC.DBC);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 3;
-	lvItem.iSubItem = 0;
-	lvItem.pszText = "HEAD";
-	ListView_InsertItem(hCDCDCList, &lvItem);
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.8X",  CDC.HEAD);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 4;
-	lvItem.iSubItem = 0;
-	lvItem.pszText = "PT";
-	ListView_InsertItem(hCDCDCList, &lvItem);
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.4X",  CDC.PT);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 5;
-	lvItem.iSubItem = 0;
-	lvItem.pszText = "WA";
-	ListView_InsertItem(hCDCDCList, &lvItem);
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.4X",  CDC.WA);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 6;
-	lvItem.iSubItem = 0;
-	lvItem.pszText = "STAT";
-	ListView_InsertItem(hCDCDCList, &lvItem);
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.8X",  CDC.STAT);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 7;
-	lvItem.iSubItem = 0;
-	lvItem.pszText = "CTRL";
-	ListView_InsertItem(hCDCDCList, &lvItem);
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.8X",  CDC.CTRL);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 8;
-	lvItem.iSubItem = 0;
-	lvItem.pszText = "DAC";
-	ListView_InsertItem(hCDCDCList, &lvItem);
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.4X",  CDC.DAC);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 9;
-	lvItem.iSubItem = 0;
-	lvItem.pszText = "IFCTRL";
-	ListView_InsertItem(hCDCDCList, &lvItem);
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.2X",  CDC.IFCTRL);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-}
-
-void UpdateCD_CDC_KMod( )
-{
-//	int         i;
-	char		buf[64];
-	LVITEM		lvItem;
-
-	if ( OpenedWindow_KMod[ 4 ] == FALSE )	return;
-
-	lvItem.mask = LVIF_TEXT;
-	lvItem.iSubItem = 1;
-
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 0;
-//	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.2X",  CDC.COMIN);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 1;
-//	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.2X",  CDC.IFSTAT);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 2;
-//	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.4X",  CDC.DBC);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 3;
-//	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.8X",  CDC.HEAD);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 4;
-//	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.4X",  CDC.PT);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 5;
-//	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.4X",  CDC.WA);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 6;
-//	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.8X",  CDC.STAT);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 7;
-//	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.8X",  CDC.CTRL);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 8;
-//	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.4X",  CDC.DAC);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-
-//	lvItem.mask = LVIF_TEXT;
-	lvItem.iItem = 9;
-//	lvItem.iSubItem = 1;
-	wsprintf(buf, "0x%0.2X",  CDC.IFCTRL);
-	lvItem.pszText = buf;
-	ListView_SetItem(hCDCDCList, &lvItem);
-}
-
-
-BOOL CALLBACK CD_CDCDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
-{
-
-	switch(Message)
-    {
-		case WM_INITDIALOG:
-			CD_CDCInit_KMod( hwnd );
-			break;
-
-		case WM_CLOSE:
-			CloseWindow_KMod( DMODE_CD_CDC );
-			break;
-
-		case WM_DESTROY:
-			DestroyWindow(hCD_CDC);
-			PostQuitMessage(0);
-			break;
-
-		default:
-            return FALSE;
-    }
-    return TRUE;
-}
 
 /************ CD GFX **************/
 //// size WRAM = 256*1024....4096tiles (64b) ==> (32*8)*(64*16)
@@ -4030,30 +3780,31 @@ void Init_KMod( )
 	z80debug_create(ghInstance, HWnd);
 	vdpdebug_create(ghInstance, HWnd);
 	vdpreg_create(ghInstance, HWnd);
+	hSprites = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGSPRITES), HWnd, SpritesDlgProc);
+	hYM2612 = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGYM2612), HWnd, YM2612DlgProc);
+	hPSG = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGPSG), HWnd, PSGDlgProc);
 
 	s68kdebug_create(ghInstance, HWnd);
-	hCD_CDC = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGCD_CDC), HWnd, CD_CDCDlgProc);
+	cdcdebug_create(ghInstance, HWnd);
 	hCD_GFX = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGCD_GFX), HWnd, CD_GFXDlgProc);
+	hCD_Reg = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGCD_REG), HWnd, CD_RegDlgProc);
+
 	hMSH2 = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUG32X_MSH2), HWnd, MSH2DlgProc);
 	hSSH2 = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUG32X_SSH2), HWnd, SSH2DlgProc);
 	h32X_VDP = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUG32X_VDP), HWnd, _32X_VDPDlgProc);
-	hSprites = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGSPRITES), HWnd, SpritesDlgProc);
-	hYM2612 = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGYM2612 ), HWnd, YM2612DlgProc);
-	hPSG = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGPSG ), HWnd, PSGDlgProc);
+	h32X_Reg = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUG32X_REG), HWnd, _32X_RegDlgProc);
 
 	layers_create(ghInstance, HWnd);
 	watchers_create(ghInstance, HWnd);
 	message_create(ghInstance, HWnd);
 	planes_create(ghInstance, HWnd);
 
-	hCD_Reg = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGCD_REG), HWnd, CD_RegDlgProc);
-	h32X_Reg = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUG32X_REG), HWnd, _32X_RegDlgProc);
    
 	//HandleWindow_KMod[0] = hM68K;
 	//HandleWindow_KMod[1] = hZ80;
 	//HandleWindow_KMod[2] = hVDP;
 	//HandleWindow_KMod[3] = hCD_68K;
-	HandleWindow_KMod[4] = hCD_CDC;
+	//HandleWindow_KMod[4] = hCD_CDC;
 	HandleWindow_KMod[5] = hCD_GFX;
 	HandleWindow_KMod[6] = hMSH2;
 	HandleWindow_KMod[7] = hSSH2;
@@ -4103,7 +3854,7 @@ void Update_KMod( )
 	if (SegaCD_Started)
 	{
 		s68kdebug_update();
-		UpdateCD_CDC_KMod( );
+		cdcdebug_update();
 		UpdateCD_GFX_KMod( );
 		UpdateCD_Reg_KMod( );
 	}
@@ -4174,6 +3925,7 @@ void ResetDebug_KMod(  )
 	vdpreg_reset();
 
 	s68kdebug_reset();
+	cdcdebug_reset();
 
 	if (KConf.pausedAtStart)
 	{
