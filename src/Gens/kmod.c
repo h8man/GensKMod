@@ -45,6 +45,7 @@
 #include "kmod\s68k.h"
 #include "kmod\cdc.h"
 #include "kmod\cdgfx.h"
+#include "kmod\cd_reg.h"
 /*********************************************
 
   This is a mod I, Kaneda, tried to apply
@@ -391,7 +392,6 @@ struct _32X_register_struct _32X_register[] =
 
 
 HWND hSprites, hYM2612, hPSG;
-HWND hCD_Reg;
 HWND hMSH2, hSSH2, h32X_VDP, h32X_Reg;
 
 struct ConfigKMod_struct KConf;
@@ -524,115 +524,6 @@ void SpecialReg( unsigned char a, unsigned char b)
 
 }
 
-/************ CD REG **************/
-HWND hCDRegList;
-
-void CDRegInit_KMod( HWND hwnd)
-{
-	LV_COLUMN   lvColumn;
-	LVITEM		lvItem;
-	int         i;
-	char		buf[64];
-	RECT		rSize;
-	TCHAR       szString[3][20] = {"Address (hex)", "MainCPU (0xA12000)", "SubCPU (0xFF8000)"};
-
-	hCDRegList = GetDlgItem(hwnd, IDC_CD_REG_LIST);
-	ListView_DeleteAllItems(hCDRegList);
-
-	GetWindowRect( hCDRegList, &rSize);
-
-	lvColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT /*| LVCF_SUBITEM*/;
-	lvColumn.fmt = LVCFMT_LEFT;
-	lvColumn.cx = 80; // ((rSize.right - rSize.left -5)/3);
-	lvColumn.pszText = szString[0];
-	ListView_InsertColumn(hCDRegList, 0, &lvColumn);
-
-	lvColumn.cx = 0x75;
-	lvColumn.pszText = szString[1];
-	ListView_InsertColumn(hCDRegList, 1, &lvColumn);
-
-	lvColumn.cx = 0x75;
-	lvColumn.pszText = szString[2];
-	ListView_InsertColumn(hCDRegList, 2, &lvColumn);
-
-	ListView_SetExtendedListViewStyle(hCDRegList, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES );
-
-	for (i=0; i<= 0x4A; i+=2)
-	{
-		lvItem.mask = LVIF_TEXT;
-		lvItem.iSubItem = 0;
-		wsprintf(buf, "%0.2X", i);
-		lvItem.pszText = buf;
-		lvItem.iItem = i;
-		 ListView_InsertItem(hCDRegList, &lvItem);
-
-		lvItem.iSubItem = 1;
-		if (i > 0x2E)
-			wsprintf(buf, "");
-		else
-			wsprintf(buf, "0x%0.4X",  M68K_RW(0xA12000 | i));
-		lvItem.pszText = buf;
-		ListView_SetItem(hCDRegList, &lvItem);
-
-		lvItem.iSubItem = 2;
-		wsprintf(buf, "0x%0.4X", S68K_RW(0xFF8000 | i));
-		lvItem.pszText = buf;
-		ListView_SetItem(hCDRegList, &lvItem);
-	}
-}
-
-void UpdateCD_Reg_KMod( )
-{
-	int         i;
-	char		buf[64];
-	LVITEM		lvItem;
-
-	if ( OpenedWindow_KMod[ DMODE_CD_REG-1 ] == FALSE )	return;
-
-	for (i=0; i<= 0x4A; i+=2)
-	{
-		lvItem.mask = LVIF_TEXT;
-		lvItem.iItem = i/2;
-
-		lvItem.iSubItem = 1;
-		if (i > 0x2E)
-			wsprintf(buf, "");
-		else
-			wsprintf(buf, "0x%0.4X",  M68K_RW(0xA12000 | i));
-		lvItem.pszText = buf;
-		ListView_SetItem(hCDRegList, &lvItem);
-
-		lvItem.iSubItem = 2;
-		wsprintf(buf, "0x%0.4X", S68K_RW(0xFF8000 | i));
-		lvItem.pszText = buf;
-		ListView_SetItem(hCDRegList, &lvItem);
-	}
-}
-
-
-BOOL CALLBACK CD_RegDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
-{
-
-	switch(Message)
-    {
-		case WM_INITDIALOG:
-			CDRegInit_KMod( hwnd );
-			break;
-
-		case WM_CLOSE:
-			CloseWindow_KMod( DMODE_CD_REG );
-			break;
-
-		case WM_DESTROY:
-			DestroyWindow(hCD_Reg);
-			PostQuitMessage(0);
-			break;
-
-		default:
-            return FALSE;
-    }
-    return TRUE;
-}
 
 /************ 32X MSH2 **************/
 unsigned char MSH2_ViewMode;
@@ -3348,7 +3239,7 @@ void Init_KMod( )
 	s68kdebug_create(ghInstance, HWnd);
 	cdcdebug_create(ghInstance, HWnd);
 	cdgfx_create(ghInstance, HWnd);
-	hCD_Reg = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUGCD_REG), HWnd, CD_RegDlgProc);
+	cdreg_create(ghInstance, HWnd);
 
 	hMSH2 = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUG32X_MSH2), HWnd, MSH2DlgProc);
 	hSSH2 = CreateDialog(ghInstance, MAKEINTRESOURCE(IDD_DEBUG32X_SSH2), HWnd, SSH2DlgProc);
@@ -3377,7 +3268,7 @@ void Init_KMod( )
 	//HandleWindow_KMod[13] = hWatchers;
 	//HandleWindow_KMod[14] = hLayers;
 	//HandleWindow_KMod[15] = hDMsg;
-	HandleWindow_KMod[16] = hCD_Reg;
+	//HandleWindow_KMod[16] = hCD_Reg;
 	HandleWindow_KMod[17] = h32X_Reg;
     //HandleWindow_KMod[18] = hPlaneExplorer;
 }
@@ -3417,7 +3308,7 @@ void Update_KMod( )
 		s68kdebug_update();
 		cdcdebug_update();
 		cdgfx_update();
-		UpdateCD_Reg_KMod( );
+		cdreg_update();
 	}
 
 	if (_32X_Started)
@@ -3486,6 +3377,7 @@ void ResetDebug_KMod(  )
 	s68kdebug_reset();
 	cdcdebug_reset();
 	cdgfx_reset();
+	cdreg_reset();
 
 	if (KConf.pausedAtStart)
 	{

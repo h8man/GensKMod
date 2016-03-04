@@ -18,6 +18,7 @@
 #include "s68k.h"
 #include "cdc.h"
 #include "cdgfx.h"
+#include "cd_reg.h"
 
 ULONG	timer_KMod;
 
@@ -75,6 +76,9 @@ void CloseWindow_KMod(UCHAR mode)
 	case DMODE_CD_GFX:
 		cdgfx_show(FALSE);
 		break;
+	case DMODE_CD_REG:
+		cdreg_show(FALSE);
+		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_HIDE);
 	}
@@ -121,6 +125,9 @@ void OpenWindow_KMod(UCHAR mode)
 		break;
 	case DMODE_CD_GFX:
 		cdgfx_show(TRUE);
+		break;
+	case DMODE_CD_REG:
+		cdreg_show(TRUE);
 		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_SHOW);
