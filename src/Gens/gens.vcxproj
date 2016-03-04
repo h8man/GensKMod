@@ -143,6 +143,10 @@
     <ClCompile Include="gdb\gdb_thread.cpp" />
     <ClCompile Include="G_gdi.cpp" />
     <ClCompile Include="G_gfx.cpp" />
+    <ClCompile Include="kmod\cdc.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="kmod\common.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
@@ -395,6 +399,7 @@
     <ClInclude Include="gdb\gdb_thread.h" />
     <ClInclude Include="G_gdi.h" />
     <ClInclude Include="G_gfx.h" />
+    <ClInclude Include="kmod\cdc.h" />
     <ClInclude Include="kmod\common.h" />
     <ClInclude Include="kmod\gmv.h" />
     <ClInclude Include="kmod\layers.h" />
