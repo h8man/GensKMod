@@ -20,6 +20,9 @@
 #include "cdgfx.h"
 #include "cd_reg.h"
 
+#include "mSH2.h"
+
+
 ULONG	timer_KMod;
 
 // timer related : TO REVAMP
@@ -79,6 +82,9 @@ void CloseWindow_KMod(UCHAR mode)
 	case DMODE_CD_REG:
 		cdreg_show(FALSE);
 		break;
+	case DMODE_32_MSH2:
+		mSH2_show(FALSE);
+		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_HIDE);
 	}
@@ -128,6 +134,9 @@ void OpenWindow_KMod(UCHAR mode)
 		break;
 	case DMODE_CD_REG:
 		cdreg_show(TRUE);
+		break;
+	case DMODE_32_MSH2:
+		mSH2_show(TRUE);
 		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_SHOW);
