@@ -22,6 +22,7 @@
 
 #include "mSH2.h"
 #include "sSH2.h"
+#include "vdp_32x.h"
 
 
 ULONG	timer_KMod;
@@ -89,6 +90,9 @@ void CloseWindow_KMod(UCHAR mode)
 	case DMODE_32_SSH2:
 		sSH2_show(FALSE);
 		break;
+	case DMODE_32_VDP:
+		vdp32x_show(FALSE);
+		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_HIDE);
 	}
@@ -144,6 +148,9 @@ void OpenWindow_KMod(UCHAR mode)
 		break;
 	case DMODE_32_SSH2:
 		sSH2_show(TRUE);
+		break;
+	case DMODE_32_VDP:
+		vdp32x_show(TRUE);
 		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_SHOW);
