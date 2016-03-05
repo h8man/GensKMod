@@ -21,6 +21,7 @@
 #include "cd_reg.h"
 
 #include "mSH2.h"
+#include "sSH2.h"
 
 
 ULONG	timer_KMod;
@@ -85,6 +86,9 @@ void CloseWindow_KMod(UCHAR mode)
 	case DMODE_32_MSH2:
 		mSH2_show(FALSE);
 		break;
+	case DMODE_32_SSH2:
+		sSH2_show(FALSE);
+		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_HIDE);
 	}
@@ -137,6 +141,9 @@ void OpenWindow_KMod(UCHAR mode)
 		break;
 	case DMODE_32_MSH2:
 		mSH2_show(TRUE);
+		break;
+	case DMODE_32_SSH2:
+		sSH2_show(TRUE);
 		break;
 	default:
 		ShowWindow(HandleWindow_KMod[mode - 1], SW_SHOW);
