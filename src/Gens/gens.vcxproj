@@ -203,6 +203,10 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="kmod\vdp_32x.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="kmod\vdp_reg.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
@@ -430,6 +434,7 @@
     <ClInclude Include="kmod\sSH2.h" />
     <ClInclude Include="kmod\utils.h" />
     <ClInclude Include="kmod\vdp.h" />
+    <ClInclude Include="kmod\vdp_32x.h" />
     <ClInclude Include="kmod\vdp_reg.h" />
     <ClInclude Include="kmod\watchers.h" />
     <ClInclude Include="kmod\z80.h" />
