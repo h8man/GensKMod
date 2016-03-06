@@ -16,6 +16,7 @@
 #include "vdp_reg.h"
 #include "sprites.h"
 #include "ym2612.h"
+#include "psg.h"
 
 #include "s68k.h"
 #include "cdc.h"
@@ -81,6 +82,9 @@ void CloseWindow_KMod(UCHAR mode)
 	case DMODE_YM2612:
 		ym2612_show(FALSE);
 		break;
+	case DMODE_PSG:
+		psg_show(FALSE);
+		break;
 	case DMODE_CD_68K:
 		s68kdebug_show(FALSE);
 		break;
@@ -145,6 +149,9 @@ void OpenWindow_KMod(UCHAR mode)
 		break;
 	case DMODE_YM2612:
 		ym2612_show(TRUE);
+		break;
+	case DMODE_PSG:
+		psg_show(TRUE);
 		break;
 	case DMODE_CD_68K:
 		s68kdebug_show(TRUE);
