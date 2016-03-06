@@ -8,6 +8,7 @@
 #include "../Star_68k.h"
 
 #include "common.h"
+#include "config.h"
 #include "spy.h"
 #include "message.h"
 

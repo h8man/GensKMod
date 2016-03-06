@@ -15,6 +15,7 @@
 #include "../kmod.h"
 
 #include "common.h"
+#include "config.h"
 #include "watchers.h"
 #include "m68k.h"
 
