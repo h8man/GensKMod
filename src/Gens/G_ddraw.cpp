@@ -18,6 +18,8 @@
 
 #include "cdda_mp3.h"
 
+#include "kmod/config.h"
+
 LPDIRECTDRAW lpDD_Init;
 LPDIRECTDRAW4 lpDD;
 LPDIRECTDRAWSURFACE4 lpDDS_Primary;

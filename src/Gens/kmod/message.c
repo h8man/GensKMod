@@ -9,6 +9,7 @@
 
 #include "common.h"
 #include "message.h"
+#include "config.h"
 
 static HWND hDMsg;
 
