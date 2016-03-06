@@ -23,6 +23,7 @@
 #include "mSH2.h"
 #include "sSH2.h"
 #include "vdp_32x.h"
+#include "s32x_reg.h"
 
 
 ULONG	timer_KMod;
