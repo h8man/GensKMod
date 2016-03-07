@@ -1,0 +1,39 @@
+
+/*********************************************
+ **
+ ** Mod to do (more on Trello board : https://trello.com/b/paLV6jWH/genskmod)
+ **
+ ** - update VDP Register (see CMD genvdp.txt)
+ ** - bug : Timer not working
+ ** - jump to rom/ram address on Genesis - 68k view
+ ** - debug Genesis - Scroll (editable on pause)
+ ** - 32x VDP modes handle
+ ** - add "jump to"/PC in mem/disasm views
+ ** - optimize CD GFX and VDP (a memory DC bitblt to screen when curTile = 0)
+ ** - config GYM dumping (only dac, only PSG,...)
+ ** - memory viewer/editor (haroldoop)
+ ** - GENS source code comments (!!)
+ ** - spy DMA (68k->VRAm) while Z80 running
+ ** - bugs fonzie
+ ** - show FM-status in DebugYM2612
+ ** - support VGM dump (see Maxim of SMS Power)
+ ** - keyon/off per channel
+ ** - show/hide (active/desactive) MCD 256K GFX Ram
+ ** - optimize CD Debug (not only original Gens debug on windows)
+ ** - spy bad read (S68K Byte, S68K Word, SH2)
+ ** - spy bad write (S68K Byte, S68K Word, SH2)
+ ** - spy odd/even RW error
+ ** - Flux (MD+MCD)
+ ** - true disasm
+ ** - add line sprites limit spy
+ **
+ *********************************************/
+
+/*********************************************
+ **
+ ** Mod I'm unable to do
+ **
+ ** - spy DMA odd address error while RAM transfert
+ **    -> it's the half of the adress which is written on Reg21->23, it's dever responsability to not make the mistake
+ **
+ *********************************************/

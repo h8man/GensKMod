@@ -15,6 +15,7 @@
 #include <memory.h>
 #include "ym2612.h"
 #include "gens.h"
+#include "kmod/config.h"
 
 /********************************************
  *            Partie définition             *

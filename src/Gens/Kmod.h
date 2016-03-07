@@ -26,14 +26,7 @@ void ToggleAutoShot_KMod( );
 
 void SpecialReg( unsigned char a, unsigned char b);
 
-
-
 void SpyYM2612DAC( );
-
-
-
-extern int AutoShot_KMod;
-extern BOOL	EnabledChannels[6];
 
 #endif //GENS_KMOD
 
