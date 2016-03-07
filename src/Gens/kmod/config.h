@@ -31,6 +31,9 @@ extern "C" {
 #endif
 
 extern struct ConfigKMod_struct KConf;
+extern int AutoShot_KMod;
+extern int AutoPause_KMod;
+extern BOOL	EnabledChannels[6];
 
 void Config_KMod( );
 void LoadConfig_KMod();

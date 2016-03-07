@@ -1,0 +1,27 @@
+Bug found by bensimauru (SEF)
+When sound is enabled, the frame rate looks a little choppy, even though my CPU
+isn't maxed and the FPS indicator is hovering around 60.  If I disable sound, it looks much smoother.
+It's pretty visible with Sonic.  Anyone else notice this?
+
+It seems to have to do with the audio buffering - if I change
+ spec.samples = 1024;
+to
+ spec.samples = 256;
+in src/gens/sdllayer/g_sdlsound.c, it looks pretty much as smooth as without sound.  I also changed
+ while (audio_len > 1024 * 2 * 2 * 4)
+to
+ while (audio_len > 256 * 2 * 2 * 4)
+in Write_Sound_Buffer to prevent crashing on exit.
+
+So I think an audio buffer of 1024 samples blocks for too long and throws off frame timing.
+
+
+reply from Rock2000 (SEF):
+I'm not familiar with the SDL version of Gens, but I assume its the same issue I found.
+The problem is that the sound rate is faster then the video rate (or slower, I forget the details).
+So Gens skips a frame to get the two back into sink when they diverge too much.
+With no auto frame skip (DirectX version) the sound will periodically wrap around the circular buffer and
+you'll get lots of static and scratches for awhile. Auto frame skip fixes that, but you're stuck with
+a frame skip every so often instead. I just added some brute force code for myself that determines how
+close the sound buffer is to wrapping around on itself, and toggle the playback frequency between
+44100 and 43900 to ensure it doesn't wrap. Works for me with no scratchy sound and no frame skip.

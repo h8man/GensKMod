@@ -7,6 +7,11 @@
 #include "../resource.h"
 #include "config.h"
 
+//TODO could be handle by typedef struct channel__ .enabled ?
+BOOL	EnabledChannels[6];
+int AutoPause_KMod;
+int AutoShot_KMod;
+
 struct ConfigKMod_struct KConf;
 static CHAR debug_string[1024];
 

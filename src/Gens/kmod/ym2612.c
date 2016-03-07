@@ -16,6 +16,7 @@
 
 #include "common.h"
 #include "utils.h"
+#include "config.h"
 #include "ym2612.h"
 
 
@@ -600,6 +601,7 @@ void ym2612_reset()
 	char i,j;
 	for (i = 0; i<6; i++)
 	{
+		EnabledChannels[i] = TRUE;
 		for (j = 0; j<4; j++)
 		{
 			notes[i][j] = BST_UNCHECKED;

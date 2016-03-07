@@ -5,9 +5,7 @@
 #include "gens.h"
 #include "resource.h"
 #include "G_main.h"
-//#include "keycode.h"
 #include "G_gfx.h" // for Put_Info
-//#include "Misc.h" // for byte swap
 #include "vdp_io.h" // to know which system is active
 #include "Star_68k.h"
 
@@ -39,286 +37,9 @@
 #include "kmod\vdp_32x.h"
 #include "kmod\s32x_reg.h"
 
-/*********************************************
-
-  This is a mod I, Kaneda, tried to apply
-  to Gens.
-  It's Genny Dev optimized so it could slow
-  down the game emulation (sound?)
-  If you're a player, don't apply it but use
-  my corrected version (look for KANEDA_BUG)
-
- *********************************************/
-
-/*********************************************
- **
- ** Mod done to original Gens
- ** bug-> bug correction
- ** fix-> optimization, adjust
- **
- ****** 0.0
- ** - replace Debug == X by Debug == DMODE_XXXXX for easier reading
- ** - call debug = screen minimize (if fullscreen)
- ** - some mod to Build_Main_Menu
- ** - debug M68K
- ** - debug z80
- ** - debug VDP (pal/tile)
- ** - debug VDP Registers
- ** - debug sprites
- ** - debug ym2612
- ** - debug PSG
- ** - watchers
- ****** 0.1
- ** - scroll tiles by line
- ** - pal indicator (red arrow)
- ** - select current pal in VDP debug by click
- ** - show/hide layers
- ** - save/load watcher (gamename.wch)
- ** - create watchers directory on init
- ****** 0.2
- ** - Debug Config window with "Spy strange registers val", autoload watch
- ** - spy strange register data
- ** - spy full sprite limit
- ** - log/watcher name ok when loading from history rom
- ** - spy bad read (68K Byte, 68K Word)
- ** - spy bad write (68K Byte, 68K Word)
- ****** 0.3
- ** - bug : on pause mode, if debug window called, no redraw (black screen)
- ** - bug : YM2612 now updated while game paused
- ** - bug : pal's red arrow now centered
- ** - bug : correct YM2612 TimerB value
- ** - fix : VDP redraw optimized (thx Fonzie)
- ** - fix : Sprite redraw optimized
- ** - 'blue pause' optionnel (Fonzie)
- ** - dump VDP tiles to bmp
- ** - dump sprite to bmp
- ** - dump ym2612 instr (y12 or ff)
- ** - supp key to delete a watcher (Varcies)
- ** - ins key to insert a watcher
- ** - active/desactive any pal (color or black)
- ** - sprite zoom
- ** - tile zoom
- ****** 0.4
- ** - bug : memory fault on sprite dump (RedAngel)
- ** - bug : bad tile selection
- ** - bug : no tiles refresh while paused (tomman)
- ** - Spy/Message on separate window
- ** - debug CD 68k
- ** - debug CD CDC
- ** - debug CD Reg
- ** - debug CD GFX
- ** - debug VDP Registers more readable
- ** - spy DMA to hack gfx
- ** - spy DMA limit error (CMD)
- ** - dump M68K rom (interesting when CD or 32X game)
- ** - dump S68K rom (interesting when CD or 32X game)
- ** - Register 31: Timer
- ** - Register 30: Message
- ** - Register 29: Pause Gens
- ** - special registers calls in zip file available in Debug...
- **
- ****** 0.5
- ** - bug : bad 68k memory dump (swap)
- ** - bug : bad MCD reg list
- ** - bug : rename s68k buttons
- ** - GMV record/play
- ** - Register 29: Interface with Gens
- **				0x00: pause
- **				0x01: show debug 68k window
- **				0x02: show debug z80 window
- **				0x03: show debug VDP window
- **				0x04: show debug sub68k window
- **				0x05: show debug CDC window
- **				0x06: show debug CD Gfx window
- **				0x07: show debug 32X main window
- **				0x08: show debug 32X sub window
- **				0x09: show debug 32X VDP window
- **				0x0A: show debug VDP register window
- **				0x0B: show debug Sprite window
- **				0x0C: show debug YM2612 window
- **				0x0D: show debug PSG window
- **				0x0E: show watchers window
- **				0x0F: show Layers window
- **				0x10: show message window
- **				0x11: show debug CD register window
- **				0x50: dump 68k ram
- **				0x51: dump z80 ram
- **				0x52: dump CD68k ram
- **				0x60: screenshot
- **				0x62: start record gmv
- **				0x63: stop record gmv
- **				0x64: start gmv
- **				0x65: stop gmv
- ** - spy unpaused Z80 access
- ** - debug.s updated
- ** - GMV Tools to compress GMV for use in demos replay
- ** - Pause on menu
- ** - Render frame per frame
- ** - Auto screenshot
- **
- ****** 0.6
- ** - bug : bad redraw when shadow/highlight and layer hide
- ** - bug : correct DAC value
- ** - bug : screenshot takes the message too
- ** - fix : change scroll button with true scrollbar on CD GFX
- ** - fix : change scroll button with scrollbar on VDP (and remove up/down bitmap resource)
- ** - show/hide 32X layer
- ** - Z80 memory viewer and linked disassembly (no more 'current' PC)
- ** - M68K ROM/RAM viewer and linked disassembly (no more 'current' PC)
- ** - S68K PRAM/WRAM viewer and linked disassembly (no more 'current' PC)
- ** - debug.s/.h updaded (warning! func name updated too...sorry for that, but it's now more 'pro')
- ** - dump CD Word RAM to BMP
- **
- ****** 0.7
- ** - bug : create file and directories at ROM place when 'opened from..' (Pascal/TmEE)
- ** - bug : bad redraw when shadow/highlight and layer hide (GrayLight)
- ** - bug : wrong redraw of S68K PRam adresses in RAM mode (Fonzie)
- ** - bug : screenshot 32X not working
- ** - bug : pause 32X unperfect (since KMod 0.3!)
- ** - fix : changed debug font for W98 user
- ** - better PSG debug window by Edge
- ** - DAC frequency info
- ** - MSH2 ROM/RAM/cache viewer and linked disassembly (thx Fonzie)
- ** - SSH2 ROM/RAM/cache viewer and linked disassembly (thx Fonzie)
- ** - 32x registers
- ** - 32x VDP(s)
- ** - CPUs debug windows are on the same template
- ** - Spy CD Bios call
- ** - Autolog message to file, so no more limited to memory
- ** - add tfi dump (Shiru)
- ** - 5th pal for debug (GrayLight)
- **
- ****** 0.7b
- ** - better watchers, to use nm.exe output
- **
- ****** 0.7c
- ** - resizable watchers window
- ** - structures handling (keywords supported : STRUCT, CHAR, SHORT, LONG, END
- **
- ****** 0.7.1
- ** - VS2012 compile
- ** - enable/disable YM2612 sound channel (TmEE)
- ** - better message view (hangs if too much messages!)
- ** - bug : SH2 disassembler in 0.7c has the registers "shifted" one step. So the value displayed for R0 is actually the value of R1, the value displayed for R1 is the value of R2, and so on. (ob1,_mic)
- ****** 0.7.2 - Graz release
- ** - GDB
- ** - remove 16bit flick
- ** - drag & drop support
- ** - always on top
- ** - optimize tile, sprite and register window
- ** - plane explorer
- ** - bug : z80 issue
- ****** 0.7.3
- ** - bug : crash on screenshot
- ** - bug : unreadable plane info
- ** - bug : crash on joypad key mapping
- ** - bug : Gens hangs when Message reach limit
- ** - bug : YM2612 wrong AM value (AlyJ)
- ** - bug : YM2612 wrong FMS value (AlyJ)
- ** - bug : PSG wrong noise type (AlyJ)
- ** - bug : YM2612 Chan6 enable status is wrong
- ** - bug : VDP tile ID wrong
- ** - bug : fake pal no longer works
- ** - bug : savestate pal wrong (Dr MefistO)
- ** - rewrite message logs
- ** - better 68k debug view, with current address and not relative
- ** - faster plane explorer (Dr MefistO)
- ** - VS2013 compile
- ** - WinXP support
- ** - rethink Sprites list
- ** - toggle GDB
- ** - single instance mode
- ** - pause at start
- ** - fast reload with ctrl+alt+l
- ****** 0.7.4
- ** - bug : fast reload need to be called twice on SRAM based game
- ** - bug : clear log doesn't really clear it on memory
- ** - keyboard now working on VDP Sprite
- *********************************************/
-
-/*********************************************
- **
- ** Mod to do
- **
- ** - bug : Timer not working
- ** - jump to rom/ram address on Genesis - 68k view
- ** - debug Genesis - Scroll (editable on pause)
- ** - 32x VDP modes handle
- ** - add "jump to"/PC in mem/disasm views
- ** - optimize CD GFX and VDP (a memory DC bitblt to screen when curTile = 0)
- ** - config GYM dumping (only dac, only PSG,...)
- ** - memory viewer/editor (haroldoop)
- ** - GENS source code comments (!!)
- ** - spy DMA (68k->VRAm) while Z80 running
- ** - bugs fonzie
- ** - show FM-status in DebugYM2612
- ** - support VGM dump (see Maxim of SMS Power)
- ** - keyon/off per channel
- ** - update VDP Register (see CMD genvdp.txt)
- ** - show/hide (active/desactive) MCD 256K GFX Ram
- ** - optimize CD Debug (not only original Gens debug on windows)
- ** - spy bad read (S68K Byte, S68K Word, SH2)
- ** - spy bad write (S68K Byte, S68K Word, SH2)
- ** - spy odd/even RW error
- ** - Flux (MD+MCD)
- ** - true disasm
- ** - add line sprites limit spy
- **
- *********************************************/
-
-/*********************************************
- **
- ** Mod I'm unable to do
- **
- ** - spy DMA odd address error while RAM transfert
- **    -> it's the half of the adress which is written on Reg21->23, it's dever responsability to not make the mistake
- **
- *********************************************/
-
-
-/*********************************************
-Bug found by bensimauru (SEF)
-When sound is enabled, the frame rate looks a little choppy, even though my CPU
-isn't maxed and the FPS indicator is hovering around 60.  If I disable sound, it looks much smoother.
-It's pretty visible with Sonic.  Anyone else notice this?
-
-It seems to have to do with the audio buffering - if I change
- spec.samples = 1024;
-to
- spec.samples = 256;
-in src/gens/sdllayer/g_sdlsound.c, it looks pretty much as smooth as without sound.  I also changed
- while (audio_len > 1024 * 2 * 2 * 4)
-to
- while (audio_len > 256 * 2 * 2 * 4)
-in Write_Sound_Buffer to prevent crashing on exit.
-
-So I think an audio buffer of 1024 samples blocks for too long and throws off frame timing.
-
-
-reply from Rock2000 (SEF):
-I'm not familiar with the SDL version of Gens, but I assume its the same issue I found.
-The problem is that the sound rate is faster then the video rate (or slower, I forget the details).
-So Gens skips a frame to get the two back into sink when they diverge too much.
-With no auto frame skip (DirectX version) the sound will periodically wrap around the circular buffer and
-you'll get lots of static and scratches for awhile. Auto frame skip fixes that, but you're stuck with
-a frame skip every so often instead. I just added some brute force code for myself that determines how
-close the sound buffer is to wrapping around on itself, and toggle the playback frequency between
-44100 and 43900 to ensure it doesn't wrap. Works for me with no scratchy sound and no frame skip.
- *********************************************/
-
 #define TIMER_CYCLES		66480	/* cycles used by timer call */
 
-
-
-
-
 CHAR debug_string[1024];
-
-int AutoPause_KMod;
-int AutoShot_KMod;
-
-//TODO could be handle by typedef struct channel__ .enabled ?
-BOOL	EnabledChannels[6];
 
 
 void SpecialReg( unsigned char a, unsigned char b)
@@ -545,7 +266,6 @@ void Update_KMod( )
 void kmod_close()
 {
 	UCHAR mode;
-	UCHAR i;
 
 	for (mode = 0; mode < WIN_NUMBER; mode++)
 	{
@@ -555,17 +275,11 @@ void kmod_close()
 		}
 	}
 
-
-	//reset ym2612 channel
-	for (i = 0; i<6; i++)
-	{
-		EnabledChannels[i] = TRUE;
-	}
-
 	//start_tiles = 0;
 
 	watchers_reset();
-	message_reset();
+	message_reset(); 
+	ym2612_reset();
 
 
 	GMVStop_KMod();
