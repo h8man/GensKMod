@@ -508,12 +508,12 @@ BEGIN
     PUSHBUTTON      "Copy", IDC_SPRITES_COPY, 240, 180, 50, 14
 END
 
-IDD_DEBUGYM2612 DIALOG DISCARDABLE  0, 0, 346, 321
+IDD_DEBUGYM2612 DIALOG DISCARDABLE  0, 0, 355, 321
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Yamaha 2612"
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Channel",IDC_STATIC,7,22,332,202,WS_GROUP
+    GROUPBOX        "Channel",IDC_STATIC,7,22,342,202,WS_GROUP
     LTEXT           "Detune\nMultiple\nTotal Level\nRate Scaling\nAttack Rate\nAmp Mode\nFirst Decay\nSecond Decay\nSub Level\nRelease Rate\nSSG-EG",
                     IDC_STATIC,10,42,64,97,NOT WS_GROUP
     GROUPBOX        "Operator 1",IDC_STATIC,85,29,61,113
@@ -541,7 +541,7 @@ BEGIN
     LTEXT           "Feedback",IDC_STATIC,170,155,33,8
     LTEXT           "Feedback",IDC_YM2612_FBACK,210,155,33,8
     CONTROL         103,IDC_YM2612_ALGO,"Static",SS_BITMAP,254,146,79,73
-    GROUPBOX        "Global",IDC_STATIC,7,230,332,84
+    GROUPBOX        "Global",IDC_STATIC,7,230,342,84
     CONTROL         "LFO",IDC_YM2612_LFO,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,10,240,80,10
     LTEXT           "TimerA\nTimerB",IDC_STATIC,113,239,28,18
@@ -610,7 +610,7 @@ BEGIN
     CONTROL         "",IDC_YM2612_KEY_6_4,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,185,299,9,8
     PUSHBUTTON      "Dump Channel",IDC_YM2612_DUMP,174,195,64,24
-    CONTROL         "",IDC_YM2612_TAB,"SysTabControl32",TCS_BUTTONS,7,7,332,
+    CONTROL         "",IDC_YM2612_TAB,"SysTabControl32",TCS_BUTTONS,7,7,350,
                     16
     LTEXT           "TimerA\nTimerB",IDC_YM2612_TIMER,143,239,34,18
     CTEXT           "Channel 3 Mode",IDC_YM2612_C3MODE,263,248,53,8,
