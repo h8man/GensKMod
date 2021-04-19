@@ -1827,7 +1827,11 @@ int PASCAL WinMain(HINSTANCE hInst,	HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 			{
 #ifdef GENS_KMOD
 				Do_VDP_Only();
-				if (Paused)	Pause_Screen( );
+				if (Paused)
+				{
+					Pause_Screen();
+					Clear_Sound_Buffer();
+				}
 #endif
 				Flip_GFX(HWnd);
 				Sleep(100);
@@ -2779,7 +2783,7 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 #ifdef GENS_KMOD
 				case ID_EMULATION_FRAME:
-					FrameStep_KMod( );
+					FrameStep_KMod();
 					return 0;
 
 				case ID_GMV_PLAY:
