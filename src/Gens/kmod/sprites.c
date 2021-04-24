@@ -420,6 +420,123 @@ void DumpSprite_KMod(HWND hwnd)
 
 }
 
+void CopySprite_KMod(HWND hwnd)
+{
+	BITMAPINFOHEADER	bmiHeader;
+	RGBQUAD				bmiColors[16];
+	LPBYTE				pBits, pBmp;
+
+	DWORD				dwBytesToWrite, dwBytesWritten;
+
+	COLORREF			tmpColor;
+	unsigned short int	numTile;
+	int					selIdx, tmp;
+	unsigned char		TileData, sizeH, sizeV, posX, posY, j, pal;
+	unsigned short int* sprData;
+	size_t				bmpSize;
+
+	selIdx = SendMessage(hSpriteList, LVM_GETNEXTITEM, -1, LVNI_FOCUSED); // return item selected
+	if (selIdx == -1)
+		return;
+
+	sprData = (unsigned short*)(VRam + (VDP_Reg.Spr_Att_Adr << 9));
+	sprData += selIdx * 4; /* each sprite is 4 short int data */
+
+	numTile = sprData[2] & 0x07FF;
+	sizeH = TrueSize_KMod(((sprData[1] & 0x0C00) >> 10));
+	sizeV = TrueSize_KMod(((sprData[1] & 0x0300) >> 8));
+	pal = (sprData[2] & 0x6000) >> 13;
+
+	bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmiHeader.biWidth = sizeH;
+	bmiHeader.biHeight = sizeV;
+	bmiHeader.biPlanes = 0;
+	bmiHeader.biBitCount = 4;
+	bmiHeader.biClrUsed = 16;
+	bmiHeader.biCompression = BI_RGB;
+	bmiHeader.biSizeImage = sizeH * sizeV / 2;
+	bmiHeader.biClrImportant = 0;
+
+	for (j = 0; j < 16; j++)
+	{
+		tmpColor = vdpdebug_getColor(pal, j);;
+		bmiColors[j].rgbRed = (BYTE)tmpColor & 0xFF;
+		tmpColor >>= 8;
+		bmiColors[j].rgbGreen = (BYTE)tmpColor & 0xFF;
+		tmpColor >>= 8;
+		bmiColors[j].rgbBlue = (BYTE)tmpColor & 0xFF;
+	}
+
+	if (IsDlgButtonChecked(hSprites, IDC_CHECK_MAGENTAKEY))
+	{
+		bmiColors[0].rgbBlue = 0xff;
+		bmiColors[0].rgbGreen = 0x00;
+		bmiColors[0].rgbRed = 0xff;
+	}
+
+	pBits = (LPBYTE)LocalAlloc(LPTR, bmiHeader.biSizeImage);
+	if (pBits == NULL)
+	{
+		return;
+	}
+
+	for (posX = 0; posX < sizeH; posX += 8)
+	{
+		for (posY = 0; posY < sizeV; posY += 8)
+		{
+			for (j = 0; j < 8; j++)
+			{
+				TileData = VRam[numTile * 32 + j * 4 + 1];
+				tmp = posX / 2 + ((sizeV - 1) - (posY + j)) * sizeH / 2;
+				pBits[tmp] = TileData;
+
+				TileData = VRam[numTile * 32 + j * 4];
+				tmp = posX / 2 + ((sizeV - 1) - (posY + j)) * sizeH / 2 + 1;
+				pBits[tmp] = TileData;
+
+				TileData = VRam[numTile * 32 + j * 4 + 3];
+				tmp = posX / 2 + ((sizeV - 1) - (posY + j)) * sizeH / 2 + 2;
+				pBits[tmp] = TileData;
+
+				TileData = VRam[numTile * 32 + j * 4 + 2];
+				tmp = posX / 2 + ((sizeV - 1) - (posY + j)) * sizeH / 2 + 3;
+				pBits[tmp] = TileData;
+			}
+			numTile++;
+		}
+	}
+
+	bmpSize = sizeof(BITMAPINFOHEADER) + 16 * sizeof(RGBQUAD) + bmiHeader.biSizeImage;
+	pBmp = (LPBYTE)LocalAlloc(LPTR, bmpSize);
+	if (pBmp == NULL)
+	{
+		LocalFree((HLOCAL)pBits);
+		return;
+	}
+
+
+	dwBytesWritten = 0;
+	dwBytesToWrite = sizeof(BITMAPINFOHEADER);
+	memcpy(pBmp + dwBytesWritten, &bmiHeader, dwBytesToWrite);
+
+	dwBytesWritten += dwBytesToWrite;
+	dwBytesToWrite = 16 * sizeof(RGBQUAD);
+	memcpy(pBmp + dwBytesWritten, bmiColors, dwBytesToWrite);
+
+	dwBytesWritten += dwBytesToWrite;
+	dwBytesToWrite = bmiHeader.biSizeImage;
+	memcpy(pBmp + dwBytesWritten, pBits, dwBytesToWrite);
+
+	CopyToClipboard(CF_DIB, pBmp, bmpSize, 1);
+
+	LocalFree((HLOCAL)pBits);
+	LocalFree((HLOCAL)pBmp);
+
+	Put_Info("Sprite copied", 1500);
+
+}
+
+
 BOOL CALLBACK SpritesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	switch (Message)
@@ -440,6 +557,9 @@ BOOL CALLBACK SpritesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 		{
 		case IDC_SPRITES_DUMP:
 			DumpSprite_KMod(hSprites);
+			break;
+		case IDC_SPRITES_COPY:
+			CopySprite_KMod(hSprites);
 			break;
 		}
 		break;

@@ -22,3 +22,30 @@ void Ansiview( unsigned char *addr, unsigned char *dest)
 			wsprintf(dest+i, "%c", addr[i]);
 	}
 }
+
+int CopyToClipboard(int Type, unsigned char* Buffer, size_t buflen, BOOL clear) // feos added this
+{
+	HGLOBAL hResult;
+	if (!OpenClipboard(NULL)) return 0;
+	if (clear)
+	{
+		if (!EmptyClipboard()) return 0;
+	}
+
+	hResult = GlobalAlloc(GMEM_MOVEABLE, buflen);
+	if (hResult == NULL) return 0;
+
+	memcpy(GlobalLock(hResult), Buffer, buflen);
+	GlobalUnlock(hResult);
+
+	if (SetClipboardData(Type, hResult) == NULL)
+	{
+		CloseClipboard();
+		GlobalFree(hResult);
+		return 0;
+	}
+
+	CloseClipboard();
+	GlobalFree(hResult);
+	return 1;
+}
