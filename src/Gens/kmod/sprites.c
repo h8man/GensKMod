@@ -609,7 +609,7 @@ void sprites_show(BOOL visibility)
 
 void sprites_update()
 {
-	if (OpenedWindow_KMod[DMODE_VDP-1] == FALSE)	return;
+	if (OpenedWindow_KMod[DMODE_SPRITES-1] == FALSE)	return;
 
 	UpdateSprites_KMod();
 }
