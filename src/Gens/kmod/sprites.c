@@ -292,8 +292,8 @@ void DumpSprite_KMod(HWND hwnd)
 
 	COLORREF			tmpColor;
 	unsigned short int	numTile;
-	int selIdx;
-	unsigned char		TileData, sizeH, sizeV, posX, posY, j, pal, tmp;
+	int					selIdx, tmp;
+	unsigned char		TileData, sizeH, sizeV, posX, posY, j, pal;
 	unsigned short int	*sprData;
 
 	selIdx = SendMessage(hSpriteList, LVM_GETNEXTITEM, -1, LVNI_FOCUSED); // return item selected
