@@ -561,10 +561,11 @@ BOOL CALLBACK SpritesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 		case IDC_SPRITES_COPY:
 			CopySprite_KMod(hSprites);
 			break;
-		}
 		case IDC_SPRITES_FRAMESTEP:
 			FrameStep_KMod();
 			break;
+		}
+
 		break;
 
 	case WM_NOTIFY:
