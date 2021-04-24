@@ -354,6 +354,13 @@ void DumpSprite_KMod(HWND hwnd)
 		bmiColors[j].rgbBlue = (BYTE)tmpColor & 0xFF;
 	}
 
+	if (IsDlgButtonChecked(hSprites, IDC_CHECK_MAGENTAKEY))
+	{
+		bmiColors[0].rgbBlue = 0xff;
+		bmiColors[0].rgbGreen = 0x00;
+		bmiColors[0].rgbRed = 0xff;
+	}
+
 	pBits = (LPBYTE)LocalAlloc(LPTR, bmiHeader.biSizeImage);
 	if (pBits == NULL)
 	{
