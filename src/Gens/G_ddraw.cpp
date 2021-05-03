@@ -930,6 +930,12 @@ int Show_Genesis_Screen(HWND hWnd)
 	return 1;
 }
 
+#ifdef GENS_KMOD
+int Take_Raw_Shot()
+{
+	return Save_Shot((unsigned char*)MD_Screen, Mode_555 & 1, VDP_Reg.Set4 & 0x01 ? 320 : 256, VDP_Reg.Set2 & 0x08 ? 240 : 224, 336 * 2);
+}
+#endif // GENS_KMOD
 
 int Take_Shot()
 {
@@ -943,6 +949,15 @@ int Take_Shot()
 	need to clear the screen before
 */
 	
+#ifdef GENS_KMOD
+	if (KConf.RawShots)
+	{
+		Take_Raw_Shot();
+		return 1;
+	}
+#endif // GENS_KMOD
+
+
 	Put_Info(" ", 10);
 	//Do_VDP_Only();
     Flip_GFX(HWnd);

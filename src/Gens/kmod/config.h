@@ -16,6 +16,7 @@ struct ConfigKMod_struct {
 	BOOL	pausedAtStart;
 	BOOL	singleInstance;
 	BOOL	Special;
+	BOOL	RawShots;
 	BOOL	useGDB;
 	unsigned int gdb_m68kport;
 	unsigned int gdb_s68kport;

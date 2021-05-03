@@ -60,6 +60,8 @@ void SaveConfig_KMod()
 	wsprintf(debug_string, "%d", KConf.Special);
 	WritePrivateProfileString("Debug", "Special", debug_string, Conf_File);
 
+	wsprintf(debug_string, "%d", KConf.RawShots);
+	WritePrivateProfileString("Debug", "RawShots", debug_string, Conf_File);
 
 	wsprintf(debug_string, "%d", KConf.useGDB);
 	WritePrivateProfileString("Debug", "gdb", debug_string, Conf_File);
@@ -219,6 +221,9 @@ BOOL CALLBACK ConfigKDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 		if (KConf.Special)
 			CheckDlgButton(hwnd, IDC_DCONFIG_SPECIAL, BST_CHECKED);
 
+		if (KConf.RawShots)
+			CheckDlgButton(hwnd, IDC_DCONFIG_RAWSHOTS, BST_CHECKED);
+
 		if (KConf.useGDB)
 			CheckDlgButton(hwnd, IDC_DCONFIG_GDB, BST_CHECKED);
 
@@ -261,6 +266,7 @@ BOOL CALLBACK ConfigKDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			KConf.pausedAtStart = IsDlgButtonChecked(hwnd, IDC_DCONFIG_PAUSE_START);
 			KConf.singleInstance = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SINGLE);
 			KConf.Special = IsDlgButtonChecked(hwnd, IDC_DCONFIG_SPECIAL);
+			KConf.RawShots = IsDlgButtonChecked(hwnd, IDC_DCONFIG_RAWSHOTS);
 
 			KConf.useGDB = IsDlgButtonChecked(hwnd, IDC_DCONFIG_GDB);
 			KConf.gdb_m68kport = GetUIntFromEdit(hwnd, IDC_DCONFIG_GDBPORTM68K);
@@ -313,6 +319,7 @@ void LoadConfig_KMod()
 	KConf.pausedAtStart = (BOOL)GetPrivateProfileInt("Debug", "pausedAtStart", FALSE, Conf_File);
 	KConf.singleInstance = (BOOL)GetPrivateProfileInt("Debug", "singleInstance", FALSE, Conf_File);
 	KConf.Special = (BOOL)GetPrivateProfileInt("Debug", "Special", FALSE, Conf_File);
+	KConf.RawShots = (BOOL)GetPrivateProfileInt("Debug", "RawSHots", FALSE, Conf_File);
 	KConf.useGDB = (BOOL)GetPrivateProfileInt("Debug", "gdb", FALSE, Conf_File);
 	KConf.gdb_m68kport = GetPrivateProfileInt("Debug", "gdbm68k", 6868, Conf_File);
 	KConf.gdb_s68kport = GetPrivateProfileInt("Debug", "gdbs68k", 6869, Conf_File);
