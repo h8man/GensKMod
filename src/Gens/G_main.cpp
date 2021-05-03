@@ -2229,6 +2229,10 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				case ID_GRAPHICS_AUTOSHOT:
 					ToggleAutoShot_KMod( );
 					return 0;
+				case ID_GRAPHICS_COPYSHOT:
+					Clear_Sound_Buffer();
+					Copy_Shot_ToClipboard();
+					return 0;
 #endif
 
 
@@ -3277,6 +3281,7 @@ HMENU Build_Main_Menu(void)
 	MENU_L(Graphics, i++, Flags, ID_GRAPHICS_SHOT, "Screen Shot", "\tShift+Backspc", "&Screen Shot");
 
 #ifdef GENS_KMOD	
+	MENU_L(Graphics, i++, Flags, ID_GRAPHICS_COPYSHOT, "Shot To Clipboard", "\tCtrl+S", "Shot To &Clipboard");
 	if (AutoShot_KMod)
 	{
 		MENU_L(Graphics, i++, Flags | MF_CHECKED, ID_GRAPHICS_AUTOSHOT, "Screen Shot each frame", "", "Screen Shot each frame");

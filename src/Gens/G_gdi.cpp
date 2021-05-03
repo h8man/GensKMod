@@ -246,3 +246,24 @@ void SaveGDI(RECT RD)
 
 
 }
+
+void CopyFromGDI(RECT RD)
+{
+	//Save_Shot((unsigned char *)ddsd.lpSurface + (RD.top * ddsd.lPitch) + (RD.left * 2), Mode_555 & 1, (RD.right - RD.left), (RD.bottom - RD.top), ddsd.lPitch);
+	int offset = 0;
+	RECT rc_vdp;
+
+	rc_vdp.left = 0;
+	rc_vdp.top = 0;
+	rc_vdp.right = (VDP_Reg.Set4 & 0x1) ? 320 : 256;
+	rc_vdp.bottom = VDP_Num_Vis_Lines;
+//	offset = (VDP_Reg.Set4 & 0x1) ? 32 : 160;
+
+	Copy_Shot((unsigned char *)gdi_instance.back_buffer,
+			Mode_555 & 1,
+			(RD.right - RD.left),
+			(RD.bottom - RD.top),
+		GFX_GDI_VIRTUAL_WIDTH * 2);
+
+
+}

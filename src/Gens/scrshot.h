@@ -4,5 +4,6 @@
 extern char ScrShot_Dir[1024];
 
 int Save_Shot(unsigned char *Screen, int mode, int X, int Y, int Pitch);
+int Copy_Shot(unsigned char *Screen, int mode, int X, int Y, int Pitch);
 
 #endif
