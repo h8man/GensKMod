@@ -931,38 +931,21 @@ int Show_Genesis_Screen(HWND hWnd)
 }
 
 #ifdef GENS_KMOD
+
 int Take_Raw_Shot()
 {
 	return Save_Shot((unsigned char*)MD_Screen, Mode_555 & 1, VDP_Reg.Set4 & 0x01 ? 320 : 256, VDP_Reg.Set2 & 0x08 ? 240 : 224, 336 * 2);
 }
-#endif // GENS_KMOD
 
-int Take_Shot()
+int Copy_Raw_Shot()
 {
-	HRESULT rval;
-	DDSURFACEDESC2 ddsd;
+	return Copy_Shot((unsigned char*)MD_Screen, Mode_555 & 1, VDP_Reg.Set4 & 0x01 ? 320 : 256, VDP_Reg.Set2 & 0x08 ? 240 : 224, 336 * 2);
+}
+
+RECT GetShotRect()
+{
 	RECT RD;
 	POINT p;
-	
-/* KANEDA_BUG
-	2 screenshots => the 2nd will have "Screen shot x saved" 
-	need to clear the screen before
-*/
-	
-#ifdef GENS_KMOD
-	if (KConf.RawShots)
-	{
-		Take_Raw_Shot();
-		return 1;
-	}
-#endif // GENS_KMOD
-
-
-	Put_Info(" ", 10);
-	//Do_VDP_Only();
-    Flip_GFX(HWnd);
-	
-/***********************/
 
 	if (Full_Screen)
 	{
@@ -1075,6 +1058,85 @@ int Take_Shot()
 			}
 		}
 	}
+
+	return RD;
+}
+
+int Copy_Shot_ToClipboard()
+{
+	HRESULT rval;
+	DDSURFACEDESC2 ddsd;
+	RECT RD;
+
+	/* KANEDA_BUG
+		2 screenshots => the 2nd will have "Screen shot x saved"
+		need to clear the screen before
+	*/
+
+	if (KConf.RawShots)
+	{
+		Copy_Raw_Shot();
+		return 1;
+	}
+
+	Put_Info(" ", 10);
+	//Do_VDP_Only();
+	Flip_GFX(HWnd);
+
+	/***********************/
+
+	RD = GetShotRect();
+
+	if (Use_GDI)
+	{
+		CopyFromGDI(RD);
+		return 1;
+	}
+	else
+	{
+		memset(&ddsd, 0, sizeof(ddsd));
+		ddsd.dwSize = sizeof(ddsd);
+		rval = lpDDS_Primary->Lock(NULL, &ddsd, DDLOCK_WAIT, NULL);
+
+		if (rval == DD_OK)
+		{
+			Copy_Shot((unsigned char*)ddsd.lpSurface + (RD.top * ddsd.lPitch) + (RD.left * 2), Mode_555 & 1, (RD.right - RD.left), (RD.bottom - RD.top), ddsd.lPitch);
+			lpDDS_Primary->Unlock(NULL);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+#endif // GENS_KMOD
+
+int Take_Shot()
+{
+	HRESULT rval;
+	DDSURFACEDESC2 ddsd;
+	RECT RD;
+	
+/* KANEDA_BUG
+	2 screenshots => the 2nd will have "Screen shot x saved" 
+	need to clear the screen before
+*/
+	
+#ifdef GENS_KMOD
+	if (KConf.RawShots)
+	{
+		Take_Raw_Shot();
+		return 1;
+	}
+#endif // GENS_KMOD
+
+
+	Put_Info(" ", 10);
+	//Do_VDP_Only();
+    Flip_GFX(HWnd);
+	
+/***********************/
+
+	RD = GetShotRect();
 
 	if (Use_GDI)
 	{

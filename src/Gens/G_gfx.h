@@ -53,6 +53,7 @@ int Update_Gens_Logo(HWND hWnd);
 int Update_Crazy_Effect(HWND hWnd);
 int Clear_Back_Screen(HWND hWnd);
 void Restore_Primary(void);
+int Copy_Shot_ToClipboard();
 
 #ifdef __cplusplus
 enum GFX_BLIT_MODE

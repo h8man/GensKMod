@@ -15,6 +15,8 @@ void End_GDI();
 int Clear_Back_Screen_GDI(HWND hWnd);
 int Clear_Primary_Screen_GDI(HWND hWnd);
 void SaveGDI(RECT RD);
+void CopyFromGDI(RECT RD);
+
 #ifdef __cplusplus
 }
 #endif
