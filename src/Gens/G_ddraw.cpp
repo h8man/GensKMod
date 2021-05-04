@@ -934,12 +934,22 @@ int Show_Genesis_Screen(HWND hWnd)
 
 int Take_Raw_Shot()
 {
-	return Save_Shot((unsigned char*)MD_Screen, Mode_555 & 1, VDP_Reg.Set4 & 0x01 ? 320 : 256, VDP_Reg.Set2 & 0x08 ? 240 : 224, 336 * 2);
+	int width, height, stride, sidebar;
+	width = VDP_Reg.Set4 & 0x01 ? 320 : 256;
+	height = VDP_Reg.Set2 & 0x08 ? 240 : 224;
+	stride = 336 * 2;
+	sidebar = 336 - width;
+	return Save_Shot((unsigned char*)MD_Screen+sidebar, Mode_555 & 1, width, height, stride);
 }
 
 int Copy_Raw_Shot()
 {
-	return Copy_Shot((unsigned char*)MD_Screen, Mode_555 & 1, VDP_Reg.Set4 & 0x01 ? 320 : 256, VDP_Reg.Set2 & 0x08 ? 240 : 224, 336 * 2);
+	int width, height, stride, sidebar;
+	width = VDP_Reg.Set4 & 0x01 ? 320 : 256;
+	height = VDP_Reg.Set2 & 0x08 ? 240 : 224;
+	stride = 336 * 2;
+	sidebar = 336 - width;
+	return Copy_Shot((unsigned char*)MD_Screen + sidebar, Mode_555 & 1, width, height, stride);
 }
 
 RECT GetShotRect()
