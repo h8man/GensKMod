@@ -1085,6 +1085,7 @@ int Copy_Shot_ToClipboard()
 
 	if (KConf.RawShots)
 	{
+		Do_VDP_Only();
 		Copy_Raw_Shot();
 		return 1;
 	}
@@ -1134,6 +1135,7 @@ int Take_Shot()
 #ifdef GENS_KMOD
 	if (KConf.RawShots)
 	{
+		Do_VDP_Only();
 		Take_Raw_Shot();
 		return 1;
 	}
