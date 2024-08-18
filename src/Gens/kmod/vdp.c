@@ -27,6 +27,7 @@ static CHAR debug_string[1024];
 static HWND hWndRedArrow;
 static HWND hWndPal;
 static RECT rcArrow, rcPal, rcTiles;
+
 static const COLORREF cgaPal[16] = {
 	RGB(0, 0, 0), RGB(0, 0, 0xAA), RGB(0, 0xAA, 0), RGB(0, 0xAA, 0xAA),
 	RGB(0xAA, 0, 0), RGB(0xAA, 0, 0xAA), RGB(0xAA, 0x55, 0), RGB(0xAA, 0xAA, 0xAA),
@@ -34,9 +35,16 @@ static const COLORREF cgaPal[16] = {
 	RGB(0xFF, 0x55, 0x55), RGB(0xFF, 0x55, 0xFF), RGB(0xFF, 0xFF, 0x55), RGB(0xFF, 0xFF, 0xFF),
 };
 
+static const COLORREF monoPal[16] = {
+	RGB(0, 0, 0), RGB(0x11, 0x11, 0x11), RGB(0x22, 0x22, 0x22), RGB(0x33, 0x33, 0x33),
+	RGB(0x44, 0x44, 0x44), RGB(0x55, 0x55, 0x55), RGB(0x66, 0x66, 0x66), RGB(0x77, 0x77, 0x77),
+	RGB(0x88, 0x88, 0x88), RGB(0x99, 0x99, 0x99), RGB(0xAA, 0xAA, 0xAA), RGB(0xBB, 0xBB, 0xBB),
+	RGB(0xCC, 0xCC, 0xCC), RGB(0xDD, 0xDD, 0xDD), RGB(0xEE, 0xEE, 0xEE), RGB(0xFF, 0xFF, 0xFF),
+};
 
-
-
+#define VDP_PALETTES 6
+#define VDP_PALETTE_CGA 4
+#define VDP_PALETTE_MONO 5
 
 void UpdateVDP_KMod()
 {
@@ -54,7 +62,7 @@ void DrawVDP_Pal_KMod(LPDRAWITEMSTRUCT hlDIS)
 	HBRUSH newBrush = NULL;
 	RECT rc;
 
-	for (j = 0; j < 5; j++)
+	for (j = 0; j < VDP_PALETTES; j++)
 	{
 		rc.top = j* palV;
 		rc.bottom = rc.top + palV;
@@ -399,7 +407,7 @@ void VDPInit_KMod(HWND hwnd)
 
 	hWndPal = GetDlgItem(hwnd, IDC_VDP_PAL);
 	GetClientRect(hWndPal, &rcPal);
-	palV = (rcPal.bottom - rcPal.top) / 5;//4;
+	palV = (rcPal.bottom - rcPal.top) / VDP_PALETTES;//4;
 	palH = (rcPal.right - rcPal.left) / 16;
 
 	hWndRedArrow = GetDlgItem(hwnd, IDC_VDP_PAL_ARROW);
@@ -688,7 +696,8 @@ COLORREF vdpdebug_getColor(unsigned int numPal, unsigned int numColor)
 	COLORREF newColor;
 
 	// handle our false CGA pal
-	if (numPal == 4)	return (cgaPal[numColor]);
+	if (numPal == VDP_PALETTE_CGA)	return (cgaPal[numColor]);
+	if (numPal == VDP_PALETTE_MONO)	return (monoPal[numColor]);
 
 	/* B */
 	newColor = (COLORREF)CRam[2 * 16 * numPal + 2 * numColor + 1];
