@@ -183,7 +183,7 @@ int Detect_Format(const char *Name)
 		{
 			unzGetCurrentFileInfo(zf, &zinf, zname, 128, NULL, 0, NULL, 0);
 
-			if ((!strnicmp("SMD", &zname[strlen(zname) - 3], 3)) || (!strnicmp("BIN", &zname[strlen(zname) - 3], 3))  || (!strnicmp("GEN", &zname[strlen(zname) - 3], 3)) || (!strnicmp("32X", &zname[strlen(zname) - 3], 3)) || (!strnicmp("ISO", &zname[strlen(zname) - 3], 3)))
+			if ((!strnicmp("SMD", &zname[strlen(zname) - 3], 3)) || (!strnicmp("BIN", &zname[strlen(zname) - 3], 3))  || (!strnicmp("GEN", &zname[strlen(zname) - 3], 3)) || (!strnicmp("32X", &zname[strlen(zname) - 3], 3)) || (!strnicmp("ISO", &zname[strlen(zname) - 3], 3)) || (!strnicmp("MD", &zname[strlen(zname) - 2], 2)))
 			{
 				i = 0;
 				break;
@@ -671,7 +671,7 @@ Rom *Load_Rom_Zipped(HWND hWnd, const char *Name, int inter)
 	{
 		unzGetCurrentFileInfo(Rom_File, &Infos, File_Name, 128, NULL, 0, NULL, 0);
 
-		if ((!strnicmp(".SMD", File_Name + strlen(File_Name) - 4, 4)) || (!strnicmp(".BIN", File_Name + strlen(File_Name) - 4, 4))  || (!strnicmp(".GEN", File_Name + strlen(File_Name) - 4, 4)) || (!strnicmp(".32X", File_Name + strlen(File_Name) - 4, 4)))
+		if ((!strnicmp(".SMD", File_Name + strlen(File_Name) - 4, 4)) || (!strnicmp(".BIN", File_Name + strlen(File_Name) - 4, 4))  || (!strnicmp(".GEN", File_Name + strlen(File_Name) - 4, 4)) || (!strnicmp(".32X", File_Name + strlen(File_Name) - 4, 4)) || (!strnicmp(".MD", File_Name + strlen(File_Name) - 3, 3)))
 		{
 			Size = Infos.uncompressed_size;
 			break;
