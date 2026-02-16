@@ -40,10 +40,10 @@ jobs:
       run: |
         mkdir release
         xcopy src\Gens\bin\Release\*.exe release\
-        powershell Compress-Archive -Path release\* -DestinationPath build-release.zip
+        
     
     - name: Upload EXE artifact
       uses: actions/upload-artifact@v4
       with:
-        name: windows-release
-        path: build-release.zip
+        name: genskmod-windows-release
+        path: release\
