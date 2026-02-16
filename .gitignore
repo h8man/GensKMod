@@ -13,3 +13,7 @@ src/**.opt
 src/**.plg
 src/**.aps
 src/**.vcxproj.filters
+/src/Gens/bin
+/src/.vs
+/src/Starscream/Main68k/*.user
+/src/Starscream/Sub68k/*.user
