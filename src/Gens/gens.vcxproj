@@ -546,6 +546,7 @@
     <Image Include="resource\raw\algo7.bmp" />
     <Image Include="resource\bmp17258.bmp" />
     <Image Include="resource\down.bmp" />
+    <Image Include="resource\tab_image.bmp" />
     <Image Include="resource\up.bmp" />
   </ItemGroup>
   <ItemGroup>
