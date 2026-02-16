@@ -39,7 +39,7 @@ jobs:
     - name: Create ZIP with EXE + DLLs
       run: |
         mkdir release
-        xcopy bin\Release\*.exe release\
+        xcopy src\Gens\bin\Release\*.exe release\
         powershell Compress-Archive -Path release\* -DestinationPath build-release.zip
     
     - name: Upload EXE artifact
