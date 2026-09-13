@@ -2010,6 +2010,7 @@ section .text align=64
 		pop ebx
 %endif
 		xor eax, eax
+		pop ecx
 		pop ebx
 		ret
 
