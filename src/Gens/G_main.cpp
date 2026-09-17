@@ -3482,18 +3482,18 @@ HMENU Build_Main_Menu(void)
 
 #ifdef GENS_KMOD
 	Flags = MF_BYPOSITION | MF_STRING;
-	MENU_L(CPUDebug, 0, Flags, ID_CPU_DEBUG_MSG, "Messages", "", "Messages");
+	MENU_L(CPUDebug, 0, Flags, ID_CPU_DEBUG_MSG, "Messages", "\tShift+M", "Messages");
 	MENU_L(CPUDebug, 1, Flags, ID_CPU_DEBUG_WATCHERS, "Watchers", "", "Watchers");
 	MENU_L(CPUDebug, 2, Flags, ID_CPU_DEBUG_LAYERS, "Layers", "", "Layers");
-    MENU_L(CPUDebug, 3, Flags, ID_CPU_DEBUG_PLANEEXPLORER, "Plane Explorer", "", "Plane Explorer");
+    MENU_L(CPUDebug, 3, Flags, ID_CPU_DEBUG_PLANEEXPLORER, "Plane Explorer", "\tShift+P", "Plane Explorer");
 	
 	MENU_L(CPUDebug, 4, Flags | MF_POPUP, (UINT)DebugMD, "Genesis", "", "Genesis");
 
-	MENU_L(DebugMD, 0, Flags, ID_CPU_DEBUG_GENESIS_68000, "Genesis - 68K", "", "Genesis - 68K");
+	MENU_L(DebugMD, 0, Flags, ID_CPU_DEBUG_GENESIS_68000, "Genesis - 68K", "\tShift+D", "Genesis - 68K");
 	MENU_L(DebugMD, 1, Flags, ID_CPU_DEBUG_GENESIS_Z80, "Z80", "", "Z80");
-	MENU_L(DebugMD, 2, Flags, ID_CPU_DEBUG_GENESIS_VDP, "VDP", "", "VDP");
+	MENU_L(DebugMD, 2, Flags, ID_CPU_DEBUG_GENESIS_VDP, "VDP", "\tShift+V", "VDP");
 	MENU_L(DebugMD, 3, Flags, ID_CPU_DEBUG_GENESIS_VDPREG, "VDP - Registers", "", "VDP - Registers");
-	MENU_L(DebugMD, 4, Flags, ID_CPU_DEBUG_GENESIS_SPRITES, "VDP - Sprites", "", "VDP - Sprites");
+	MENU_L(DebugMD, 4, Flags, ID_CPU_DEBUG_GENESIS_SPRITES, "VDP - Sprites", "\tShift+S", "VDP - Sprites");
 	MENU_L(DebugMD, 5, Flags, ID_CPU_DEBUG_GENESIS_YM2612, "Sound - YM2612", "", "Sound - YM2612");
 	MENU_L(DebugMD, 6, Flags, ID_CPU_DEBUG_GENESIS_PSG, "Sound - PSG", "", "Sound - PSG");
 	i = 7;
