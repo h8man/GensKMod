@@ -50,6 +50,11 @@ section .data align=64
 	DECL ActiveLayer
 	db 0xFF
 
+%ifdef GENS_KMOD
+	DECL PriorityMask
+	db 0x11
+%endif
+
 	DECL ActivePal
 	db 0xFF
 ;;
@@ -691,6 +696,11 @@ ALIGN4
 
 %macro PUTLINE_P0 2
 
+%ifdef GENS_KMOD
+	test byte [PriorityMask], 0x01
+	jz near %%Full_Trans
+%endif
+
 %if %1 < 1
 	%if %2 > 0
 		mov dword [MD_Screen + ebp * 2 +  0], SHAD_D
@@ -734,6 +744,11 @@ ALIGN4
 
 %macro PUTLINE_FLIP_P0 2
 
+%ifdef GENS_KMOD
+	test byte [PriorityMask], 0x01
+	jz near %%Full_Trans
+%endif
+
 %if %1 < 1
 	%if %2 > 0
 		mov dword [MD_Screen + ebp * 2 +  0], SHAD_D
@@ -775,6 +790,11 @@ ALIGN4
 ; - ebp pointe sur dest
 
 %macro PUTLINE_P1 2
+
+%ifdef GENS_KMOD
+	test byte [PriorityMask], 0x10
+	jz near %%Full_Trans
+%endif
 
 %if %1 < 1
 	mov dword [MD_Screen + ebp * 2 +  0], 0x00000000
@@ -835,6 +855,11 @@ ALIGN4
 ; - ebp pointe sur dest
 
 %macro PUTLINE_FLIP_P1 2
+
+%ifdef GENS_KMOD
+	test byte [PriorityMask], 0x10
+	jz near %%Full_Trans
+%endif
 
 %if %1 < 1
 	mov dword [MD_Screen + ebp * 2 +  0], 0x00000000
@@ -897,6 +922,15 @@ ALIGN4
 
 %macro PUTLINE_SPRITE 2
 
+%ifdef GENS_KMOD
+%if %1 > 0
+	test byte [PriorityMask], 0x10
+%else
+	test byte [PriorityMask], 0x01
+%endif
+	jz near %%End
+%endif
+
 	xor ecx, ecx
 	add ebp, [esp]
 
@@ -913,6 +947,8 @@ ALIGN4
 	sub ebp, [esp]
 	or byte [VDP_Status], ch
 
+%%End
+
 %endmacro
 
 
@@ -927,6 +963,15 @@ ALIGN4
 ; - ebp pointe sur dest
 
 %macro PUTLINE_SPRITE_FLIP 2
+
+%ifdef GENS_KMOD
+%if %1 > 0
+	test byte [PriorityMask], 0x10
+%else
+	test byte [PriorityMask], 0x01
+%endif
+	jz near %%End
+%endif
 
 	xor ecx, ecx
 	add ebp, [esp]
@@ -943,6 +988,8 @@ ALIGN4
 	and ch, 0x20
 	sub ebp, [esp]
 	or byte [VDP_Status], ch
+
+%%End
 
 %endmacro
 

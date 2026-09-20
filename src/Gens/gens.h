@@ -37,8 +37,9 @@ extern "C" {
 #define DMODE_CD_REG	17
 #define DMODE_32_REG	18
 #define DMODE_PLANEEXPLORER 19
+#define DMODE_PLANECOMPOSITE 20
 
-#define WIN_NUMBER	DMODE_PLANEEXPLORER
+#define WIN_NUMBER	DMODE_PLANECOMPOSITE
 
 extern int Debug;
 extern int Frame_Skip;

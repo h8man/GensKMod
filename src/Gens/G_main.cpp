@@ -2299,6 +2299,11 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     Change_Debug(hWnd, DMODE_PLANEEXPLORER);
                     return 0;
 
+                case ID_CPU_DEBUG_PLANECOMPOSITE:
+                    MINIMIZE
+                    Change_Debug(hWnd, DMODE_PLANECOMPOSITE);
+                    return 0;
+
 				case ID_CPU_DEBUG_SEGACD_REG:
 					MINIMIZE
 					Change_Debug(hWnd, DMODE_CD_REG);
@@ -3486,8 +3491,9 @@ HMENU Build_Main_Menu(void)
 	MENU_L(CPUDebug, 1, Flags, ID_CPU_DEBUG_WATCHERS, "Watchers", "", "Watchers");
 	MENU_L(CPUDebug, 2, Flags, ID_CPU_DEBUG_LAYERS, "Layers", "", "Layers");
     MENU_L(CPUDebug, 3, Flags, ID_CPU_DEBUG_PLANEEXPLORER, "Plane Explorer", "\tShift+P", "Plane Explorer");
+    MENU_L(CPUDebug, 4, Flags, ID_CPU_DEBUG_PLANECOMPOSITE, "Planes Composite", "", "Planes Composite");
 	
-	MENU_L(CPUDebug, 4, Flags | MF_POPUP, (UINT)DebugMD, "Genesis", "", "Genesis");
+	MENU_L(CPUDebug, 5, Flags | MF_POPUP, (UINT)DebugMD, "Genesis", "", "Genesis");
 
 	MENU_L(DebugMD, 0, Flags, ID_CPU_DEBUG_GENESIS_68000, "Genesis - 68K", "\tShift+D", "Genesis - 68K");
 	MENU_L(DebugMD, 1, Flags, ID_CPU_DEBUG_GENESIS_Z80, "Z80", "", "Z80");

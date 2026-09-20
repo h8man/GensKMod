@@ -9,6 +9,7 @@
 #include "watchers.h"
 #include "layers.h"
 #include "planes.h"
+#include "vdp_composite.h"
 
 #include "m68k.h"
 #include "z80.h"
@@ -63,6 +64,9 @@ void CloseWindow_KMod(UCHAR mode)
 		break;
 	case DMODE_PLANEEXPLORER:
 		planes_show(FALSE);
+		break; 
+	case DMODE_PLANECOMPOSITE:
+		planes_composite_show(FALSE);
 		break; 
 	case DMODE_68K:
 		m68kdebug_show(FALSE);
@@ -131,6 +135,9 @@ void OpenWindow_KMod(UCHAR mode)
 		break;
 	case DMODE_PLANEEXPLORER:
 		planes_show(TRUE);
+		break;
+	case DMODE_PLANECOMPOSITE:
+		planes_composite_show(TRUE);
 		break;
 	case DMODE_68K:
 		m68kdebug_show(TRUE);

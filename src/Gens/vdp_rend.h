@@ -11,6 +11,7 @@ extern unsigned short Palette[0x1000];
 extern unsigned long TAB336[336];
 
 extern UCHAR ActiveLayer;   /* 0003 ABSW */
+extern UCHAR PriorityMask;  /* 0001 low, 0010 high */
 extern UCHAR ActivePal; /* 0000 3210 */
 
 

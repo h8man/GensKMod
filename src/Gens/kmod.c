@@ -194,6 +194,7 @@ void Init_KMod( )
 	watchers_create(ghInstance, HWnd);
 	message_create(ghInstance, HWnd);
 	planes_create(ghInstance, HWnd);
+	planes_composite_create(ghInstance, HWnd);
 
    
 	//HandleWindow_KMod[0] = hM68K;
@@ -223,6 +224,7 @@ void Update_KMod( )
 	message_update();
 //	layers_update(); //no update needed
 	planes_update();
+	planes_composite_update();
 
 
 	m68kdebug_update();
@@ -295,6 +297,7 @@ void ResetDebug_KMod(  )
 	watchers_reset();
 	layers_reset();
 	planes_reset();
+	planes_composite_reset();
 
 	m68kdebug_reset();
 	z80debug_reset();

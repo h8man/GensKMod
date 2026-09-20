@@ -35,6 +35,7 @@
 #define IDB_LOGO_SM                     142
 #define IDB_LOGO_BIG                    143
 #define IDD_COLOR                       144
+#define IDB_AROW                        145
 
 #define IDC_JOYINFO1                    1001
 #define IDC_JOYINFO2                    1002
@@ -347,6 +348,7 @@
 #define IDD_DEBUGCD_REG                 164
 #define IDD_DEBUG32X_REG                165
 #define IDD_DEBUGPLANEEXPLORER          166
+#define IDD_DEBUGPLANECOMPOSITE         167
 #define IDD_GMVTOOLS					170
 
 #define ID_CPU_DEBUG_GENESIS_VDPREG		40900
@@ -359,6 +361,7 @@
 #define ID_CPU_DEBUG_SEGACD_REG			40913
 #define ID_CPU_DEBUG_32X_REG			40914
 #define ID_CPU_DEBUG_PLANEEXPLORER      40915
+#define ID_CPU_DEBUG_PLANECOMPOSITE     40916
 #define ID_OPTIONS_DEBUG				40189
 #define ID_EMULATION_FRAME	            40301
 #define ID_GMV_PLAY						40400
@@ -618,6 +621,9 @@
 #define IDC_PLANEEXPLORER_PROPS 54003
 #define IDC_PLANEEXPLORER_TILEINFO  54004
 #define IDC_PLANEEXPLORER_TRANS  54005
+
+#define IDC_PLANECOMPOSITE_MAIN  55001
+#define IDC_PLANECOMPOSITE_TRANS  55002
 
 /*********/
 

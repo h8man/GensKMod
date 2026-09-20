@@ -224,6 +224,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="kmod\vdp_composite.c" />
     <ClCompile Include="kmod\vdp_reg.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
@@ -460,6 +461,7 @@
     <ClInclude Include="kmod\utils.h" />
     <ClInclude Include="kmod\vdp.h" />
     <ClInclude Include="kmod\vdp_32x.h" />
+    <ClInclude Include="kmod\vdp_composite.h" />
     <ClInclude Include="kmod\vdp_reg.h" />
     <ClInclude Include="kmod\watchers.h" />
     <ClInclude Include="kmod\ym2612.h" />
