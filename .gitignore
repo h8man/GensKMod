@@ -18,3 +18,4 @@ src/**.vcxproj.filters
 /src/Starscream/Main68k/*.user
 /src/Starscream/Sub68k/*.user
 /.vs
+/src/Gens/*.user
