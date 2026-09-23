@@ -250,6 +250,10 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		SendDlgItemMessage(hwnd, IDC_SSH2_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_SSH2_STATUS_ADR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_SSH2_STATUS_DATA, WM_SETFONT, (WPARAM)hFont, TRUE);
+		SendDlgItemMessage(hwnd, IDC_SSH2_JUMP_TO_INPUT, WM_SETTEXT, (WPARAM)0, (LPARAM)"0x00000000");
+
+		SubclassEditMaxText(hwnd, IDC_SSH2_JUMP_TO_INPUT);
+
 		sSH2_reset();
 		
 		break;
@@ -297,6 +301,39 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			UpdateSSH2_KMod();
 			break;
 
+		case IDC_SSH2_JUMP_TO_INPUT:
+			if (HIWORD(wParam) == EN_MAXTEXT)
+			{
+				SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_SSH2_JUMP_TO, 0), (LPARAM)GetDlgItem(hwnd, IDC_SSH2_JUMP_TO_INPUT));
+			}
+			break;
+
+		case IDC_SSH2_JUMP_TO:
+		{
+			char jump_input[32];
+			unsigned int jump_address;
+			GetDlgItemText(hwnd, IDC_SSH2_JUMP_TO_INPUT, jump_input, sizeof(jump_input));
+			if (sscanf(jump_input, "%x", &jump_address) == 1)
+			{
+				if (jump_address >= 0x02000000 && jump_address < 0x02400000)
+				{
+					SSH2_ViewMode &= 0x15;
+					SSH2_ViewMode |= 0x2;
+					SSH2_StartLineROM = (jump_address - 0x02000000) / 8;
+					SSH2_StartLineROMDisasm = (jump_address - 0x02000000) / 2;
+					SwitchSSH2ViewMode_KMod();
+				}
+				else if (jump_address >= 0x06000000 && jump_address < 0x06400000)
+				{
+					SSH2_ViewMode &= 0x15;
+					SSH2_ViewMode |= 0x8;
+					SSH2_StartLineRAM = (jump_address - 0x06000000) / 8;
+					SSH2_StartLineRAMDisasm = (jump_address - 0x06000000) / 2;
+					SwitchSSH2ViewMode_KMod();
+				}
+			}
+			break;
+		}
 		case IDC_SSH2_PC:
 			curPC = SH2_Get_PC(&S_SH2); //(S_SH2.PC - S_SH2.Base_PC) - 4;
 			if (curPC < 0x2400000)

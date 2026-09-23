@@ -329,6 +329,9 @@ BOOL CALLBACK MSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		SendDlgItemMessage(hwnd, IDC_MSH2_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_MSH2_STATUS_ADR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_MSH2_STATUS_DATA, WM_SETFONT, (WPARAM)hFont, TRUE);
+		SendDlgItemMessage(hwnd, IDC_MSH2_JUMP_TO_INPUT, WM_SETTEXT, (WPARAM)0, (LPARAM)"0x00000000");
+
+		SubclassEditMaxText(hwnd, IDC_MSH2_JUMP_TO_INPUT);
 
 		mSH2_reset();
 		break;
@@ -375,6 +378,41 @@ BOOL CALLBACK MSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			UpdateWindow(hwnd);
 			UpdateMSH2_KMod();
 			break;
+
+		case IDC_MSH2_JUMP_TO_INPUT:
+			if (HIWORD(wParam) == EN_MAXTEXT)
+			{
+				SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_MSH2_JUMP_TO, 0), (LPARAM)GetDlgItem(hwnd, IDC_MSH2_JUMP_TO_INPUT));
+			}
+			break;
+		case IDC_MSH2_JUMP_TO:
+		{
+			char tmp_string[256];
+			GetDlgItemText(hwnd, IDC_MSH2_JUMP_TO_INPUT, tmp_string, 256);
+			if (tmp_string[0] == '0' && tmp_string[1] == 'x')
+			{
+				curPC = strtoul(tmp_string + 2, NULL, 16);
+				if (curPC < 0x2400000)
+				{
+					MSH2_ViewMode &= 0x15;
+					MSH2_ViewMode |= 0x2;
+					MSH2_StartLineROM = (curPC - 0x02000000) / 8;
+					MSH2_StartLineROMDisasm = (curPC - 0x02000000) / 2;
+					SwitchMSH2ViewMode_KMod();
+				}
+				else if (curPC < 0x6040000)
+				{
+					MSH2_ViewMode &= 0x15;
+					MSH2_ViewMode |= 0x8;
+					MSH2_StartLineRAM = (curPC - 0x06000000) / 8;
+					MSH2_StartLineRAMDisasm = (curPC - 0x06000000) / 2;
+					SwitchMSH2ViewMode_KMod();
+				}
+				UpdateWindow(hwnd);
+				UpdateMSH2_KMod();
+			}
+		}
+		break;
 
 		case IDC_MSH2_PC:
 			curPC = SH2_Get_PC(&M_SH2); //(M_SH2.PC - M_SH2.Base_PC) - 4;

@@ -267,6 +267,10 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 		SendDlgItemMessage(hwnd, IDC_S68K_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_S68K_STATUS_ADR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_S68K_STATUS_DATA, WM_SETFONT, (WPARAM)hFont, TRUE);
+		SendDlgItemMessage(hwnd, IDC_S68K_JUMP_TO_INPUT, WM_SETTEXT, (WPARAM)0, (LPARAM)"0x00000000");
+
+		SubclassEditMaxText(hwnd, IDC_S68K_JUMP_TO_INPUT);
+
 		s68kdebug_reset();
 		break;
 
@@ -303,6 +307,37 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			UpdateWindow(hwnd);
 			UpdateCD_68K_KMod();
 			break;
+		
+		case IDC_S68K_JUMP_TO_INPUT:
+			if (HIWORD(wParam) == EN_MAXTEXT)
+			{
+				// User pressed Enter in the edit control
+				SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_S68K_JUMP_TO, 0), (LPARAM)GetDlgItem(hwnd, IDC_S68K_JUMP_TO_INPUT));
+			}
+			break;
+		case IDC_S68K_JUMP_TO:
+		{
+			DWORD adr;
+			char tmp_string[32];
+			GetDlgItemText(hwnd, IDC_S68K_JUMP_TO_INPUT, tmp_string, 32);
+			adr = strtoul(tmp_string, NULL, 16);
+			if (S68k_ViewMode & 2)
+			{
+				S68k_StartLineDisasm = adr;
+				S68k_StartLinePRAM = S68k_StartLineDisasm / 8;
+				SwitchS68kViewMode_KMod();
+				UpdateWindow(hwnd);
+				UpdateCD_68K_KMod();
+			}
+			else if (S68k_ViewMode & 8)
+			{
+				S68k_StartLineWRAM = adr / 8;
+				SwitchS68kViewMode_KMod();
+				UpdateWindow(hwnd);
+				UpdateCD_68K_KMod();
+			}
+			break;
+		}
 
 		case IDC_S68K_PC:
 			if (S68k_ViewMode & 2)

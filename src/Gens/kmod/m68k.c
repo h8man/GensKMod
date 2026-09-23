@@ -275,6 +275,10 @@ BOOL CALLBACK M68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		SendDlgItemMessage(hwnd, IDC_68K_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_68K_STATUS_ADR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_68K_STATUS_DATA, WM_SETFONT, (WPARAM)hFont, TRUE);
+		SendDlgItemMessage(hwnd, IDC_68K_JUMP_TO_INPUT, WM_SETTEXT, (WPARAM)0, (LPARAM)"0x00000000");
+
+		HWND hEdit = GetDlgItem(hwnd, IDC_68K_JUMP_TO_INPUT);
+		SubclassEditMaxText(hwnd, IDC_68K_JUMP_TO_INPUT);
 
 		m68kdebug_reset();
 		break;
@@ -324,9 +328,44 @@ BOOL CALLBACK M68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				UpdateM68k_KMod();
 			}
 			break;
-
+		case IDC_68K_JUMP_TO_INPUT:
+			if (HIWORD(wParam) == EN_MAXTEXT)
+			{
+				// Run your Jump handling logic here!
+				SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_68K_JUMP_TO, 0), (LPARAM)GetDlgItem(hwnd, IDC_68K_JUMP_TO_INPUT));
+			}
+			break;
+		case IDC_68K_JUMP_TO:
+		{
+			DWORD adr;
+			char tmp_string[32];
+			GetDlgItemText(hwnd, IDC_68K_JUMP_TO_INPUT, tmp_string, 32);
+			adr = strtoul(tmp_string, NULL, 16);
+			if (M68_ViewMode == 0)
+			{
+				M68k_StartLineDisasm = adr;
+				SwitchM68kViewMode_KMod();
+				UpdateWindow(hwnd);
+				UpdateM68k_KMod();
+			}
+			else if (M68_ViewMode == 1)
+			{
+				M68k_StartLineROM = adr / 8;
+				SwitchM68kViewMode_KMod();
+				UpdateWindow(hwnd);
+				UpdateM68k_KMod();
+			}
+			else if (M68_ViewMode == 2)
+			{
+				M68k_StartLineRAM = adr / 8;
+				SwitchM68kViewMode_KMod();
+				UpdateWindow(hwnd);
+				UpdateM68k_KMod();
+			}
+			break;
 		}
-		break;
+
+		}	
 
 	case WM_VSCROLL:
 		ZeroMemory(&si, sizeof(SCROLLINFO));

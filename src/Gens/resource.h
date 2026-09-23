@@ -393,6 +393,8 @@
 #define IDC_68K_VIEW_ROM		50008
 #define IDC_68K_SCROLL          50009
 #define IDC_68K_PC              50010
+#define IDC_68K_JUMP_TO         50032
+#define IDC_68K_JUMP_TO_INPUT   50033
 
 #define IDC_Z80_DISAM           50011
 #define IDC_Z80_STATUS_RS1      50012
@@ -405,6 +407,8 @@
 #define IDC_Z80_VIEW_MEM        50019
 #define IDC_Z80_SCROLL			50020
 #define IDC_Z80_PC              51011
+#define IDC_Z80_JUMP_TO         51012
+#define IDC_Z80_JUMP_TO_INPUT   51013
 
 #define IDC_VDP_PAL             50021
 #define IDC_VDP_TILES_ADR       50022
@@ -535,8 +539,10 @@
 #define IDC_S68K_SCROLL			50258
 #define IDC_S68K_PC				50259
 #define IDC_S68K_VIEW_PRAM		50260
+#define IDC_S68K_JUMP_TO        50261
+#define IDC_S68K_JUMP_TO_INPUT  50262
 
-#define IDC_CD_REG_LIST			50261
+#define IDC_CD_REG_LIST			50263
 
 #define IDC_CDC_LIST			50271
 
@@ -591,6 +597,8 @@
 #define IDC_MSH2_STATUS_DATA    52010
 #define IDC_MSH2_VIEW_CACHE     52011
 #define IDC_MSH2_DUMP_CACHE     52012
+#define IDC_MSH2_JUMP_TO        52013
+#define IDC_MSH2_JUMP_TO_INPUT  52014
 
 #define IDC_SSH2_DISAM          53001
 #define IDC_SSH2_SCROLL         53002
@@ -604,6 +612,8 @@
 #define IDC_SSH2_STATUS_SR      53010
 #define IDC_SSH2_STATUS_ADR     53011
 #define IDC_SSH2_STATUS_DATA    53012
+#define IDC_SSH2_JUMP_TO        53013
+#define IDC_SSH2_JUMP_TO_INPUT  53014
 
 #define IDC_32XVDP_FB0         	53021
 #define IDC_32XVDP_FB1          53022

@@ -167,6 +167,10 @@ BOOL CALLBACK Z80DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_MISC, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_FLAG, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_BANK, WM_SETFONT, (WPARAM)hFont, TRUE);
+		SendDlgItemMessage(hwnd, IDC_Z80_JUMP_TO_INPUT, WM_SETTEXT, (WPARAM)0, (LPARAM)"0x0000");
+
+		SubclassEditMaxText(hwnd, IDC_Z80_JUMP_TO_INPUT);
+
 		z80debug_reset();
 		break;
 
@@ -195,7 +199,37 @@ BOOL CALLBACK Z80DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			UpdateWindow(hwnd);
 			UpdateZ80_KMod();
 			break;
+		case IDC_Z80_JUMP_TO_INPUT:
 
+			if (HIWORD(wParam) == EN_MAXTEXT)
+			{
+				// Run your Jump handling logic here!
+				SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_Z80_JUMP_TO, 0), (LPARAM)GetDlgItem(hwnd, IDC_Z80_JUMP_TO_INPUT));
+			}
+			break;
+
+		case IDC_Z80_JUMP_TO:
+		{
+			DWORD adr;
+			char tmp_string[32];
+			GetDlgItemText(hwnd, IDC_Z80_JUMP_TO_INPUT, tmp_string, 32);
+			adr = strtoul(tmp_string, NULL, 16);
+			if (Z80_ViewMode == 0)
+			{
+				Z80_StartLineDisasm = adr;
+				SwitchZ80ViewMode_KMod();
+				UpdateWindow(hwnd);
+				UpdateZ80_KMod();
+			}
+			else if (Z80_ViewMode == 1)
+			{
+				Z80_StartLineMem = adr / 8;
+				SwitchZ80ViewMode_KMod();
+				UpdateWindow(hwnd);
+				UpdateZ80_KMod();
+			}
+			break;
+		}
 		case IDC_Z80_PC:
 			if (Z80_ViewMode == 0)
 			{

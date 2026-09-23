@@ -5,10 +5,10 @@
  **
  ** - update VDP Register (see CMD genvdp.txt)
  ** - bug : Timer not working
- ** - jump to rom/ram address on Genesis - 68k view
+ ** - jump to rom/ram address on Genesis - 68k view (done)
  ** - debug Genesis - Scroll (editable on pause)
  ** - 32x VDP modes handle
- ** - add "jump to"/PC in mem/disasm views
+ ** - add "jump to"/PC in mem/disasm views (done)
  ** - optimize CD GFX and VDP (a memory DC bitblt to screen when curTile = 0)
  ** - config GYM dumping (only dac, only PSG,...)
  ** - memory viewer/editor (haroldoop)
