@@ -126,11 +126,15 @@ static void UpdateM68k_KMod()
 			}
 			else
 			{
-				wsprintf(tmp_string, "%.6X ", M68k_StartLineROM * 8 + i * 8);
+				wsprintf(tmp_string, "%.6X", M68k_StartLineROM * 8 + i * 8);
 				tmp_string[6] = 0x20;
-				Hexview((unsigned char *)(Rom_Data + M68k_StartLineROM * 8 + i * 8), tmp_string + 7);
-				tmp_string[24] = 0x20;
-				Ansiview((unsigned char *)(Rom_Data + M68k_StartLineROM * 8 + i * 8), tmp_string + 25);
+				tmp_string[7] = 0x20;
+				tmp_string[8] = 0x20;
+				Hexview((unsigned char *)(Rom_Data + M68k_StartLineROM * 8 + i * 8), tmp_string + 9);
+				tmp_string[26] = 0x20;
+				tmp_string[27] = 0x20;
+				tmp_string[28] = 0x20;
+				Ansiview((unsigned char *)(Rom_Data + M68k_StartLineROM * 8 + i * 8), tmp_string + 29);
 				wsprintf(debug_string, "%s", tmp_string);
 			}
 			SendDlgItemMessage(hM68K, IDC_68K_DISAM, LB_INSERTSTRING, i, (LPARAM)debug_string);
@@ -145,9 +149,13 @@ static void UpdateM68k_KMod()
 		{
 			wsprintf(tmp_string, "FF%.4X ", M68k_StartLineRAM * 8 + i * 8);
 			tmp_string[6] = 0x20;
-			Hexview((unsigned char *)(Ram_68k + M68k_StartLineRAM * 8 + i * 8), tmp_string + 7);
-			tmp_string[24] = 0x20;
-			Ansiview((unsigned char *)(Ram_68k + M68k_StartLineRAM * 8 + i * 8), tmp_string + 25);
+			tmp_string[7] = 0x20;
+			tmp_string[8] = 0x20;
+			Hexview((unsigned char *)(Ram_68k + M68k_StartLineRAM * 8 + i * 8), tmp_string + 9);
+			tmp_string[26] = 0x20;
+			tmp_string[27] = 0x20;
+			tmp_string[28] = 0x20;
+			Ansiview((unsigned char *)(Ram_68k + M68k_StartLineRAM * 8 + i * 8), tmp_string + 29);
 			wsprintf(debug_string, "%s", tmp_string);
 			SendDlgItemMessage(hM68K, IDC_68K_DISAM, LB_INSERTSTRING, i, (LPARAM)debug_string);
 		}
@@ -263,10 +271,10 @@ BOOL CALLBACK M68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_INITDIALOG:
 		hFont = (HFONT)GetStockObject(OEM_FIXED_FONT);
-		SendDlgItemMessage(hM68K, IDC_68K_DISAM, WM_SETFONT, (WPARAM)hFont, TRUE);
-		SendDlgItemMessage(hM68K, IDC_68K_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
-		SendDlgItemMessage(hM68K, IDC_68K_STATUS_ADR, WM_SETFONT, (WPARAM)hFont, TRUE);
-		SendDlgItemMessage(hM68K, IDC_68K_STATUS_DATA, WM_SETFONT, (WPARAM)hFont, TRUE);
+		SendDlgItemMessage(hwnd, IDC_68K_DISAM, WM_SETFONT, (WPARAM)hFont, TRUE);
+		SendDlgItemMessage(hwnd, IDC_68K_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
+		SendDlgItemMessage(hwnd, IDC_68K_STATUS_ADR, WM_SETFONT, (WPARAM)hFont, TRUE);
+		SendDlgItemMessage(hwnd, IDC_68K_STATUS_DATA, WM_SETFONT, (WPARAM)hFont, TRUE);
 
 		m68kdebug_reset();
 		break;

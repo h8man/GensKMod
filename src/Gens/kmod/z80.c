@@ -74,9 +74,13 @@ void UpdateZ80_KMod()
 		{
 			wsprintf(tmp_string, "%.4X ", Z80_StartLineMem * 8 + i * 8);
 			tmp_string[4] = 0x20;
-			Hexview((unsigned char *)(Ram_Z80 + Z80_StartLineMem * 8 + i * 8), tmp_string + 5);
-			tmp_string[22] = 0x20;
-			Ansiview((unsigned char *)(Ram_Z80 + Z80_StartLineMem * 8 + i * 8), tmp_string + 23);
+			tmp_string[5] = 0x20;
+			tmp_string[6] = 0x20;
+			Hexview((unsigned char *)(Ram_Z80 + Z80_StartLineMem * 8 + i * 8), tmp_string + 7);
+			tmp_string[24] = 0x20;
+			tmp_string[25] = 0x20;
+			tmp_string[26] = 0x20;
+			Ansiview((unsigned char *)(Ram_Z80 + Z80_StartLineMem * 8 + i * 8), tmp_string + 27);
 			wsprintf(debug_string, "%s", tmp_string);
 			SendDlgItemMessage(hZ80, IDC_Z80_DISAM, LB_INSERTSTRING, i, (LPARAM)debug_string);
 		}

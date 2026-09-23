@@ -118,9 +118,13 @@ void UpdateCD_68K_KMod()
 			{
 				wsprintf(tmp_string, "%.5X ", S68k_StartLinePRAM * 8 + i * 8);
 				tmp_string[5] = 0x20;
-				Hexview((unsigned char *)(Ram_Prg + S68k_StartLinePRAM * 8 + i * 8), tmp_string + 6);
+				tmp_string[6] = 0x20;
+				tmp_string[7] = 0x20;
+				Hexview((unsigned char *)(Ram_Prg + S68k_StartLinePRAM * 8 + i * 8), tmp_string + 8);
 				tmp_string[23] = 0x20;
-				Ansiview((unsigned char *)(Ram_Prg + S68k_StartLinePRAM * 8 + i * 8), tmp_string + 24);
+				tmp_string[24] = 0x20;
+				tmp_string[25] = 0x20;
+				Ansiview((unsigned char *)(Ram_Prg + S68k_StartLinePRAM * 8 + i * 8), tmp_string + 26);
 				wsprintf(debug_string, "%s", tmp_string);
 				SendDlgItemMessage(hCD_68K, IDC_S68K_DISAM, LB_INSERTSTRING, i, (LPARAM)debug_string);
 			}
@@ -135,9 +139,13 @@ void UpdateCD_68K_KMod()
 		{
 			wsprintf(tmp_string, "%.5X ", S68k_StartLineWRAM * 8 + i * 8);
 			tmp_string[5] = 0x20;
-			Hexview((unsigned char *)(Ram_Word_1M + S68k_StartLineWRAM * 8 + i * 8), tmp_string + 6);
+			tmp_string[6] = 0x20;
+			tmp_string[7] = 0x20;
+			Hexview((unsigned char *)(Ram_Word_1M + S68k_StartLineWRAM * 8 + i * 8), tmp_string + 8);
 			tmp_string[23] = 0x20;
-			Ansiview((unsigned char *)(Ram_Word_1M + S68k_StartLineWRAM * 8 + i * 8), tmp_string + 24);
+			tmp_string[24] = 0x20;
+			tmp_string[25] = 0x20;
+			Ansiview((unsigned char *)(Ram_Word_1M + S68k_StartLineWRAM * 8 + i * 8), tmp_string + 26);
 			wsprintf(debug_string, "%s", tmp_string);
 			SendDlgItemMessage(hCD_68K, IDC_S68K_DISAM, LB_INSERTSTRING, i, (LPARAM)debug_string);
 		}
