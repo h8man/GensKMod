@@ -16,6 +16,7 @@
 #include "common.h"
 #include "utils.h"
 #include "m68k.h"
+#include "hexbox.h"
 
 static HWND hM68K;
 static int Current_PC_M68K;
@@ -91,8 +92,9 @@ static void UpdateM68k_KMod()
 	unsigned int i, PC;
 	unsigned char tmp_string[256];
 
-	
-
+	SendDlgItemMessage(hM68K, IDC_68K_HEXBOX, HEXBOX_SET_DATA,
+		(WPARAM)(M68_ViewMode == 2 ? sizeof(Ram_68k) : Rom_Size),
+		(LPARAM)(M68_ViewMode == 2 ? Ram_68k : Rom_Data));
 
 	SendDlgItemMessage(hM68K, IDC_68K_DISAM, LB_RESETCONTENT, (WPARAM)0, (LPARAM)0);
 	if (M68_ViewMode == 0)
@@ -270,7 +272,7 @@ BOOL CALLBACK M68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	switch (Message)
 	{
 	case WM_INITDIALOG:
-		hFont = (HFONT)GetStockObject(OEM_FIXED_FONT);
+		hFont = (HFONT)GetStockObject(ANSI_FIXED_FONT);
 		SendDlgItemMessage(hwnd, IDC_68K_DISAM, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_68K_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_68K_STATUS_ADR, WM_SETFONT, (WPARAM)hFont, TRUE);
