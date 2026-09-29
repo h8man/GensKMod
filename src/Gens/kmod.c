@@ -37,6 +37,9 @@
 #include "kmod\vdp_32x.h"
 #include "kmod\s32x_reg.h"
 
+#include "kmod\dasmbox.h"
+#include "kmod\hexbox.h"
+
 #define TIMER_CYCLES		66480	/* cycles used by timer call */
 
 CHAR debug_string[1024];
@@ -171,6 +174,9 @@ void SpecialReg( unsigned char a, unsigned char b)
 void Init_KMod( )
 {
 	LoadConfig_KMod( );
+
+	DasmBox_RegisterClass(ghInstance);
+	HexBox_RegisterClass(ghInstance);
 
 	m68kdebug_create(ghInstance, HWnd);
 	z80debug_create(ghInstance, HWnd);

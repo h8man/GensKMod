@@ -17,6 +17,7 @@
 #include "utils.h"
 #include "m68k.h"
 #include "hexbox.h"
+#include "dasmbox.h"
 
 static HWND hM68K;
 static int Current_PC_M68K;
@@ -51,6 +52,20 @@ static unsigned int Next_Long_M68K(void)
 
 static unsigned char M68_ViewMode;
 static unsigned int  M68k_StartLineDisasm, M68k_StartLineRAM, M68k_StartLineROM;
+
+static BOOL CALLBACK GetM68kDasmInstruction(void* context, DWORD address, DWORD* nextAddress, LPSTR text, UINT textCapacity)
+{
+	char* instruction;
+	(void)context;
+
+	Current_PC_M68K = (int)address;
+	instruction = M68KDisasm(Next_Word_M68K, Next_Long_M68K);
+
+	*nextAddress = Current_PC_M68K;
+	lstrcpynA(text, instruction ? instruction : "", textCapacity);
+	return TRUE;
+
+}
 
 
 
@@ -91,10 +106,28 @@ static void UpdateM68k_KMod()
 {
 	unsigned int i, PC;
 	unsigned char tmp_string[256];
+	DASMBOX_SOURCE dasmSource;
 
 	SendDlgItemMessage(hM68K, IDC_68K_HEXBOX, HEXBOX_SET_DATA,
 		(WPARAM)(M68_ViewMode == 2 ? sizeof(Ram_68k) : Rom_Size),
 		(LPARAM)(M68_ViewMode == 2 ? Ram_68k : Rom_Data));
+	SendDlgItemMessage(hM68K, IDC_68K_HEXBOX, HEXBOX_SET_LAYOUT,
+		HEXBOX_LAYOUT_WPARAM(6, 4, HEXBOX_MODE_WORD | HEXBOX_ENDIAN_LITTLE), (LPARAM)0);
+	if (M68_ViewMode == 0)
+	{
+		if (M68_ViewMode == 0)
+		{
+			dasmSource.lineCount = Rom_Size;
+			dasmSource.addressLength = 6;
+			dasmSource.context = NULL;
+			dasmSource.getInstruction = GetM68kDasmInstruction;
+		}
+		else
+		{
+			ZeroMemory(&dasmSource, sizeof(dasmSource));
+		}
+		SendDlgItemMessage(hM68K, IDC_68K_DASMBOX, DASMBOX_SET_SOURCE, 0, (LPARAM)&dasmSource);
+	}
 
 	SendDlgItemMessage(hM68K, IDC_68K_DISAM, LB_RESETCONTENT, (WPARAM)0, (LPARAM)0);
 	if (M68_ViewMode == 0)

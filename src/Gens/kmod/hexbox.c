@@ -5,6 +5,11 @@ typedef struct
 	const BYTE* data;
 	SIZE_T size;
 	UINT topRow;
+	UINT addressLength;
+	DWORD addressOffset;
+	UINT itemsPerRow;
+	UINT dataMode;
+	UINT endianness;
 } HEXBOX_STATE;
 
 static void HexBox_UpdateScroll(HWND hwnd, HEXBOX_STATE* state)
@@ -19,7 +24,9 @@ static void HexBox_UpdateScroll(HWND hwnd, HEXBOX_STATE* state)
 	ReleaseDC(hwnd, dc);
 	GetClientRect(hwnd, &rect);
 
-	UINT rows = state && state->size ? (UINT)((state->size - 1) / 16 + 1) : 0;
+	UINT itemSize = state && state->dataMode == HEXBOX_MODE_WORD ? 2 : 1;
+	SIZE_T rowSize = state ? (SIZE_T)state->itemsPerRow * itemSize : 0;
+	UINT rows = state && state->size ? (UINT)((state->size - 1) / rowSize + 1) : 0;
 	UINT page = (UINT)((rect.bottom - rect.top) / metrics.tmHeight);
 	if (!page) page = 1;
 
@@ -51,17 +58,45 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 			HexBox_UpdateScroll(hwnd, NULL);
 			return 0;
 		}
+		state->addressLength = HEXBOX_DEFAULT_ADDRESS_LENGTH;
+		state->itemsPerRow = HEXBOX_DEFAULT_ITEMS_PER_ROW;
+		state->dataMode = HEXBOX_MODE_BYTE;
+		state->endianness = HEXBOX_ENDIAN_BIG;
 		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)state);
 		HexBox_UpdateScroll(hwnd, state);
 		return 0;
 	case HEXBOX_SET_DATA:
 		if (state)
 		{
-			state->data = (const BYTE*)lParam;
-			state->size = state->data ? (SIZE_T)wParam : 0;
-			state->topRow = 0;
+			const BYTE* data = (const BYTE*)lParam;
+			SIZE_T size = data ? (SIZE_T)wParam : 0;
+			if (state->data != data || state->size != size) state->topRow = 0;
+			state->data = data;
+			state->size = size;
 			HexBox_UpdateScroll(hwnd, state);
-			InvalidateRect(hwnd, NULL, TRUE);
+			InvalidateRect(hwnd, NULL, FALSE);
+		}
+		return 0;
+	case HEXBOX_SET_LAYOUT:
+		if (state)
+		{
+			UINT addressLength = LOWORD(wParam);
+			UINT layoutFlags = HIWORD(wParam);
+			UINT itemsPerRow = layoutFlags & HEXBOX_ITEMS_PER_ROW_MASK;
+			UINT dataMode = layoutFlags & HEXBOX_MODE_WORD;
+			UINT endianness = layoutFlags & HEXBOX_ENDIAN_LITTLE;
+			if (!addressLength) addressLength = 1;
+			if (addressLength > HEXBOX_MAX_ADDRESS_LENGTH) addressLength = HEXBOX_MAX_ADDRESS_LENGTH;
+			if (!itemsPerRow) itemsPerRow = 1;
+			if (itemsPerRow > HEXBOX_MAX_ITEMS_PER_ROW) itemsPerRow = HEXBOX_MAX_ITEMS_PER_ROW;
+			if (state->itemsPerRow != itemsPerRow || state->dataMode != dataMode) state->topRow = 0;
+			state->addressLength = addressLength;
+			state->addressOffset = (DWORD)lParam;
+			state->itemsPerRow = itemsPerRow;
+			state->dataMode = dataMode;
+			state->endianness = endianness;
+			HexBox_UpdateScroll(hwnd, state);
+			InvalidateRect(hwnd, NULL, FALSE);
 		}
 		return 0;
 	case WM_SIZE:
@@ -88,7 +123,7 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 			}
 			si.fMask = SIF_POS;
 			state->topRow = (UINT)SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
-			InvalidateRect(hwnd, NULL, TRUE);
+			InvalidateRect(hwnd, NULL, FALSE);
 		}
 		return 0;
 	case WM_ERASEBKGND:
@@ -98,49 +133,83 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 		PAINTSTRUCT ps;
 		RECT rect;
 		TEXTMETRICA metrics;
-		HDC dc = BeginPaint(hwnd, &ps);
+		HDC paintDc = BeginPaint(hwnd, &ps);
+		GetClientRect(hwnd, &rect);
+		HDC bufferDc = CreateCompatibleDC(paintDc);
+		HBITMAP bitmap = bufferDc ? CreateCompatibleBitmap(paintDc, rect.right, rect.bottom) : NULL;
+		HGDIOBJ oldBitmap = bitmap ? SelectObject(bufferDc, bitmap) : NULL;
+		HDC dc = oldBitmap ? bufferDc : paintDc;
 		HFONT font = (HFONT)GetStockObject(ANSI_FIXED_FONT);
 		HGDIOBJ oldFont = SelectObject(dc, font);
 		GetTextMetricsA(dc, &metrics);
-		GetClientRect(hwnd, &rect);
-		FillRect(dc, &ps.rcPaint, GetSysColorBrush(COLOR_WINDOW));
+		FillRect(dc, &rect, GetSysColorBrush(COLOR_WINDOW));
 		SetBkMode(dc, TRANSPARENT);
 		SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
 
 		if (state && state->data)
 		{
 			static const char digits[] = "0123456789ABCDEF";
+			UINT itemSize = state->dataMode == HEXBOX_MODE_WORD ? 2 : 1;
+			UINT hexDigitsPerItem = state->dataMode == HEXBOX_MODE_WORD ? 4 : 2;
+			UINT hexStride = hexDigitsPerItem + 1;
+			SIZE_T rowSize = (SIZE_T)state->itemsPerRow * itemSize;
+			int hexLength = (int)(state->itemsPerRow * hexStride - 1);
 			for (UINT row = 0, y = 0; y < (UINT)rect.bottom; ++row, y += metrics.tmHeight)
 			{
-				SIZE_T offset = ((SIZE_T)state->topRow + row) * 16;
+				SIZE_T offset = ((SIZE_T)state->topRow + row) * rowSize;
 				if (offset >= state->size) break;
-				char address[8], hex[47], text[16];
+				char address[HEXBOX_MAX_ADDRESS_LENGTH], hex[HEXBOX_MAX_ITEMS_PER_ROW * 5], text[HEXBOX_MAX_ITEMS_PER_ROW * 2];
 				SIZE_T count = state->size - offset;
-				if (count > 16) count = 16;
-				for (int i = 0; i < 8; ++i) address[i] = digits[(offset >> ((7 - i) * 4)) & 15];
-				for (int i = 0; i < 16; ++i)
+				DWORD addressValue = state->addressOffset + (DWORD)offset;
+				if (count > rowSize) count = rowSize;
+				for (UINT i = 0; i < state->addressLength; ++i)
+					address[i] = digits[(addressValue >> ((state->addressLength - i - 1) * 4)) & 15];
+				for (SIZE_T i = 0; i < count; ++i)
 				{
-					if ((SIZE_T)i < count)
+					BYTE value = state->data[offset + i];
+					text[i] = value >= 32 && value < 127 ? value : '.';
+				}
+				for (UINT i = 0; i < state->itemsPerRow; ++i)
+				{
+					UINT available = (UINT)(count > (SIZE_T)i * itemSize ? count - (SIZE_T)i * itemSize : 0);
+					UINT hexPos = i * hexStride;
+					for (UINT j = 0; j < hexDigitsPerItem; ++j) hex[hexPos + j] = ' ';
+					if (state->dataMode == HEXBOX_MODE_BYTE && available)
 					{
 						BYTE value = state->data[offset + i];
-						hex[i * 3] = digits[value >> 4];
-						hex[i * 3 + 1] = digits[value & 15];
-						text[i] = value >= 32 && value < 127 ? value : '.';
+						hex[hexPos] = digits[value >> 4];
+						hex[hexPos + 1] = digits[value & 15];
 					}
-					else
+					else if (available >= 2)
 					{
-						hex[i * 3] = hex[i * 3 + 1] = ' ';
-						text[i] = ' ';
+						BYTE first = state->data[offset + (SIZE_T)i * 2];
+						BYTE second = state->data[offset + (SIZE_T)i * 2 + 1];
+						WORD value = state->endianness == HEXBOX_ENDIAN_LITTLE ? (WORD)(first | (second << 8)) : (WORD)((first << 8) | second);
+						for (UINT j = 0; j < 4; ++j) hex[hexPos + j] = digits[(value >> ((3 - j) * 4)) & 15];
 					}
-					if (i < 15) hex[i * 3 + 2] = ' ';
+					else if (available == 1)
+					{
+						BYTE value = state->data[offset + (SIZE_T)i * itemSize];
+						hex[hexPos] = digits[value >> 4];
+						hex[hexPos + 1] = digits[value & 15];
+					}
+					if (i + 1 < state->itemsPerRow) hex[hexPos + hexDigitsPerItem] = ' ';
 				}
-				TextOutA(dc, 4, y, address, 8);
-				TextOutA(dc, 4 + metrics.tmAveCharWidth * 10, y, hex, 47);
-				TextOutA(dc, 4 + metrics.tmAveCharWidth * 60, y, text, (int)count);
+				TextOutA(dc, 4, y, address, state->addressLength);
+				int hexX = 4 + metrics.tmAveCharWidth * (state->addressLength + 2);
+				TextOutA(dc, hexX, y, hex, hexLength);
+				TextOutA(dc, hexX + metrics.tmAveCharWidth * (hexLength + 3), y, text, (int)count);
 			}
 		}
 
 		SelectObject(dc, oldFont);
+		if (oldBitmap)
+		{
+			BitBlt(paintDc, 0, 0, rect.right, rect.bottom, dc, 0, 0, SRCCOPY);
+			SelectObject(bufferDc, oldBitmap);
+		}
+		if (bitmap) DeleteObject(bitmap);
+		if (bufferDc) DeleteDC(bufferDc);
 		EndPaint(hwnd, &ps);
 		return 0;
 	}

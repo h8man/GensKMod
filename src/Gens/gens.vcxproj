@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -168,6 +168,8 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="kmod\dasmbox.c" />
+    <ClCompile Include="kmod\hexbox.c" />
     <ClCompile Include="kmod\layers.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
@@ -446,7 +448,13 @@
     <ClInclude Include="kmod\cd_reg.h" />
     <ClInclude Include="kmod\common.h" />
     <ClInclude Include="kmod\config.h" />
+    <ClInclude Include="kmod\dasmbox.h">
+      <FileType>CppHeader</FileType>
+    </ClInclude>
     <ClInclude Include="kmod\gmv.h" />
+    <ClInclude Include="kmod\hexbox.h">
+      <FileType>CppHeader</FileType>
+    </ClInclude>
     <ClInclude Include="kmod\layers.h" />
     <ClInclude Include="kmod\m68k.h" />
     <ClInclude Include="kmod\message.h" />

@@ -395,6 +395,8 @@
 #define IDC_68K_PC              50010
 #define IDC_68K_JUMP_TO         50032
 #define IDC_68K_JUMP_TO_INPUT   50033
+#define IDC_68K_HEXBOX          50034
+#define IDC_68K_DASMBOX         50035
 
 #define IDC_Z80_DISAM           50011
 #define IDC_Z80_STATUS_RS1      50012
