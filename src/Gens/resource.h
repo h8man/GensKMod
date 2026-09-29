@@ -383,20 +383,18 @@
 #define IDB_DOWN                        410
 #define IDB_YM2612_IMAGELIST            411
 
-#define IDC_68K_DISAM           50001
+#define IDC_68K_HEXBOX          50001
 #define IDC_68K_STATUS_SR       50002
 #define IDC_68K_STATUS_ADR      50003
 #define IDC_68K_STATUS_DATA     50004
-#define IDC_68K_DUMP_RAM		50005
-#define IDC_68K_VIEW_RAM		50006
+#define IDC_68K_DUMP_RAM        50005
+#define IDC_68K_VIEW_RAM        50006
 #define IDC_68K_DUMP_ROM        50007
-#define IDC_68K_VIEW_ROM		50008
-#define IDC_68K_SCROLL          50009
+#define IDC_68K_VIEW_ROM        50008
+#define IDC_68K_DASMBOX         50009
 #define IDC_68K_PC              50010
 #define IDC_68K_JUMP_TO         50032
 #define IDC_68K_JUMP_TO_INPUT   50033
-#define IDC_68K_HEXBOX          50034
-#define IDC_68K_DASMBOX         50035
 
 #define IDC_Z80_DISAM           50011
 #define IDC_Z80_STATUS_RS1      50012

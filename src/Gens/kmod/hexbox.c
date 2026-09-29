@@ -99,6 +99,18 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 			InvalidateRect(hwnd, NULL, FALSE);
 		}
 		return 0;
+	case HEXBOX_GOTO_ADDRESS:
+		if (state)
+		{
+			UINT itemSize = state->dataMode == HEXBOX_MODE_WORD ? 2 : 1;
+			SIZE_T rowSize = (SIZE_T)state->itemsPerRow * itemSize;
+			DWORD address = (DWORD)wParam;
+			SIZE_T offset = address > state->addressOffset ? address - state->addressOffset : address;
+			state->topRow = (UINT)(offset / rowSize);
+			HexBox_UpdateScroll(hwnd, state);
+			InvalidateRect(hwnd, NULL, FALSE);
+		}
+		return 0;
 	case WM_SIZE:
 		HexBox_UpdateScroll(hwnd, state);	
 		return 0;
@@ -124,6 +136,7 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 			si.fMask = SIF_POS;
 			state->topRow = (UINT)SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
 			InvalidateRect(hwnd, NULL, FALSE);
+			SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(GetDlgCtrlID(hwnd), HEXBOXN_SCROLL), (LPARAM)state->topRow);
 		}
 		return 0;
 	case WM_ERASEBKGND:
@@ -166,7 +179,10 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 					address[i] = digits[(addressValue >> ((state->addressLength - i - 1) * 4)) & 15];
 				for (SIZE_T i = 0; i < count; ++i)
 				{
-					BYTE value = state->data[offset + i];
+					SIZE_T textOffset = i;
+					BOOL flip = state->dataMode == HEXBOX_MODE_WORD && state->endianness == HEXBOX_ENDIAN_LITTLE && (i ^ 1) < count;
+					if (flip) textOffset = i ^ 1;
+					BYTE value = state->data[offset + textOffset];
 					text[i] = value >= 32 && value < 127 ? value : '.';
 				}
 				for (UINT i = 0; i < state->itemsPerRow; ++i)

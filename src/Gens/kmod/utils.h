@@ -13,6 +13,8 @@ void drawTile(HDC hDCMain, unsigned short int numTile, WORD x, WORD y, UCHAR pal
 
 int CopyToClipboard(int Type, unsigned char* Buffer, size_t buflen, BOOL clear); // feos added this
 
+void SubclassEditMaxText(HWND hDlg, int controlID);
+
 #ifdef __cplusplus
 };
 #endif

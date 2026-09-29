@@ -69,6 +69,14 @@ static LRESULT CALLBACK DasmBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, 
 			InvalidateRect(hwnd, NULL, FALSE);
 		}
 		return 0;
+	case DASMBOX_GOTO_ADDRESS:
+		if (state)
+		{
+			state->topLine = (UINT)wParam;
+			DasmBox_UpdateScroll(hwnd, state);
+			InvalidateRect(hwnd, NULL, FALSE);
+		}
+		return 0;
 	case WM_SIZE:
 		DasmBox_UpdateScroll(hwnd, state);
 		return 0;
@@ -94,6 +102,7 @@ static LRESULT CALLBACK DasmBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, 
 			si.fMask = SIF_POS;
 			state->topLine = (UINT)SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
 			InvalidateRect(hwnd, NULL, FALSE);
+			SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(GetDlgCtrlID(hwnd), DASMBOXN_SCROLL), (LPARAM)state->topLine);
 		}
 		return 0;
 	case WM_ERASEBKGND:
