@@ -396,7 +396,7 @@
 #define IDC_68K_JUMP_TO         50032
 #define IDC_68K_JUMP_TO_INPUT   50033
 
-#define IDC_Z80_DISAM           50011
+#define IDC_Z80_HEXBOX           50011
 #define IDC_Z80_STATUS_RS1      50012
 #define IDC_Z80_STATUS_RS2      50013
 #define IDC_Z80_STATUS_RS3      50014
@@ -405,7 +405,7 @@
 #define IDC_Z80_STATUS_BANK		50017
 #define IDC_Z80_DUMP_MEM        50018
 #define IDC_Z80_VIEW_MEM        50019
-#define IDC_Z80_SCROLL			50020
+#define IDC_Z80_DASMBOX			50020
 #define IDC_Z80_PC              51011
 #define IDC_Z80_JUMP_TO         51012
 #define IDC_Z80_JUMP_TO_INPUT   51013
@@ -529,14 +529,14 @@
 #define IDC_MSG_OPEN            50244
 #define IDC_MSG_FILE            50245
 
-#define IDC_S68K_DISAM          50251
+#define IDC_S68K_HEXBOX         50251
 #define IDC_S68K_VIEW_WRAM      50252
 #define IDC_S68K_DUMP_WRAM      50253
 #define IDC_S68K_STATUS_SR     	50254
 #define IDC_S68K_STATUS_ADR     50255
 #define IDC_S68K_STATUS_DATA    50256
 #define IDC_S68K_DUMP_PRAM      50257
-#define IDC_S68K_SCROLL			50258
+#define IDC_S68K_DASMBOX        50258
 #define IDC_S68K_PC				50259
 #define IDC_S68K_VIEW_PRAM		50260
 #define IDC_S68K_JUMP_TO        50261
@@ -585,8 +585,8 @@
 #define IDC_GMVT_6BUTTONS		51028
 
 
-#define IDC_MSH2_DISAM          52001
-#define IDC_MSH2_SCROLL         52002
+#define IDC_MSH2_HEXBOX         52001
+#define IDC_MSH2_DASMBOX        52002
 #define IDC_MSH2_DUMP_ROM       52003
 #define IDC_MSH2_VIEW_ROM       52004
 #define IDC_MSH2_VIEW_RAM       52005
@@ -600,8 +600,8 @@
 #define IDC_MSH2_JUMP_TO        52013
 #define IDC_MSH2_JUMP_TO_INPUT  52014
 
-#define IDC_SSH2_DISAM          53001
-#define IDC_SSH2_SCROLL         53002
+#define IDC_SSH2_HEXBOX         53001
+#define IDC_SSH2_DASMBOX        53002
 #define IDC_SSH2_VIEW_ROM       53003
 #define IDC_SSH2_DUMP_ROM       53004
 #define IDC_SSH2_VIEW_RAM       53005
