@@ -73,10 +73,18 @@ static void SwitchM68kViewMode_KMod()
 {
 	ShowWindow(GetDlgItem(hM68K, IDC_68K_DASMBOX), M68_ViewMode == 0 ? SW_SHOW : SW_HIDE);
 	ShowWindow(GetDlgItem(hM68K, IDC_68K_HEXBOX), M68_ViewMode == 0 ? SW_HIDE : SW_SHOW);
+	if (M68_ViewMode == 0)
+	{
+		SendDlgItemMessage(hM68K, IDC_68K_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View ROM");
+	}
+	else
+	{
+		SendDlgItemMessage(hM68K, IDC_68K_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
+	}
 }
 
 
-static void JumpM68kCustomView(DWORD address)
+static void JumpM68kTo(DWORD address)
 {
 	if (M68_ViewMode == 0)
 		SendDlgItemMessage(hM68K, IDC_68K_DASMBOX, DASMBOX_GOTO_ADDRESS, (WPARAM)address, 0);
@@ -85,14 +93,14 @@ static void JumpM68kCustomView(DWORD address)
 }
 
 
-static void JumpM68kCustomViewToSavedPosition(void)
+static void RestoreM68kAddressLine(void)
 {
 	if (M68_ViewMode == 0)
-		JumpM68kCustomView(M68k_StartLineDisasm);
+		JumpM68kTo(M68k_StartLineDisasm);
 	else if (M68_ViewMode == 1)
-		JumpM68kCustomView(M68k_StartLineROM * 8);
+		JumpM68kTo(M68k_StartLineROM * 8);
 	else
-		JumpM68kCustomView(M68k_StartLineRAM * 8);
+		JumpM68kTo(M68k_StartLineRAM * 8);
 }
 
 
@@ -268,31 +276,22 @@ BOOL CALLBACK M68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			break;
 		case IDC_68K_VIEW_ROM:
 			M68_ViewMode = !M68_ViewMode;
-			if (M68_ViewMode == 0)
-			{
-				SendDlgItemMessage(hwnd, IDC_68K_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View ROM");
-			}
-			else
-			{
-				SendDlgItemMessage(hwnd, IDC_68K_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
-			}
 			SwitchM68kViewMode_KMod();
 			UpdateM68k_KMod();
-			JumpM68kCustomViewToSavedPosition();
+			RestoreM68kAddressLine();
 			break;
 		case IDC_68K_VIEW_RAM:
 			M68_ViewMode = 2; //RAM
-			SendDlgItemMessage(hwnd, IDC_68K_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
 			SwitchM68kViewMode_KMod();
 			UpdateM68k_KMod();
-			JumpM68kCustomViewToSavedPosition();
+			RestoreM68kAddressLine();
 			break;
 
 		case IDC_68K_PC:
 			if (M68_ViewMode == 0)
 			{
 				M68k_StartLineDisasm = main68k_context.pc;
-				JumpM68kCustomView(main68k_context.pc);
+				JumpM68kTo(main68k_context.pc);
 			}
 			break;
 		case IDC_68K_JUMP_TO_INPUT:
@@ -314,7 +313,7 @@ BOOL CALLBACK M68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				M68k_StartLineROM = adr / 8;
 			else if (M68_ViewMode == 2)
 				M68k_StartLineRAM = adr / 8;
-			JumpM68kCustomView(adr);
+			JumpM68kTo(adr);
 			break;
 		}
 
@@ -370,12 +369,4 @@ void m68kdebug_destroy()
 void m68kdebug_dump()
 {
 	Dump68K_KMod(hM68K);
-}
-void m68kdebug_jumpRAM(DWORD adr)
-{
-	M68_ViewMode = 2; //RAM
-	M68k_StartLineRAM = adr / 8;
-	SwitchM68kViewMode_KMod();
-	UpdateM68k_KMod();
-	JumpM68kCustomView(adr);
 }

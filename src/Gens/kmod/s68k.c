@@ -17,6 +17,8 @@
 #include "common.h"
 #include "utils.h"
 #include "s68k.h"
+#include "hexbox.h"
+#include "dasmbox.h"
 
 static HWND hCD_68K;
 static int Current_PC_S68K;
@@ -51,105 +53,54 @@ unsigned int Next_Long_S68K(void)
 unsigned char S68k_ViewMode;
 unsigned int  S68k_StartLineDisasm, S68k_StartLineWRAM, S68k_StartLinePRAM;
 
+static BOOL CALLBACK GetS68kDasmInstruction(void* context, DWORD address, DWORD* nextAddress, LPSTR text, UINT textCapacity)
+{
+	char* instruction;
+	(void)context;
+
+	Current_PC_S68K = (int)address;
+	instruction = M68KDisasm(Next_Word_S68K, Next_Long_S68K);
+	*nextAddress = Current_PC_S68K;
+	lstrcpynA(text, instruction ? instruction : "", textCapacity);
+	return TRUE;
+}
+
 
 
 void SwitchS68kViewMode_KMod()
 {
-	SCROLLINFO si;
-
-	ZeroMemory(&si, sizeof(SCROLLINFO));
-	si.cbSize = sizeof(si);
-	si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
-	si.nMin = 0;
-	si.nPage = 10;
-
-
-	if (S68k_ViewMode & 2)
-	{
-		if (S68k_ViewMode & 1)
-		{
-			// DISASM VIEW
-			si.nPos = S68k_StartLineDisasm;
-			si.nMax = Rom_Size - 1;
-			SendDlgItemMessage(hCD_68K, IDC_S68K_VIEW_PRAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View PRAM");
-		}
-		else
-		{
-			// Program RAM VIEW
-			si.nPos = S68k_StartLinePRAM;
-			si.nMax = ((512 * 1024) / 8) - 1;
-			SendDlgItemMessage(hCD_68K, IDC_S68K_VIEW_PRAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
-		}
-	}
-	else if (S68k_ViewMode & 8)
-	{
-		// Word RAM VIEW
-		si.nPos = S68k_StartLineWRAM;
-		si.nMax = ((256 * 1024) / 8) - 1;
-	}
-	SetScrollInfo(GetDlgItem(hCD_68K, IDC_S68K_SCROLL), SB_CTL, &si, TRUE);
+	BOOL disasmView = (S68k_ViewMode & 2) && (S68k_ViewMode & 1);
+	ShowWindow(GetDlgItem(hCD_68K, IDC_S68K_DASMBOX), disasmView ? SW_SHOW : SW_HIDE);
+	ShowWindow(GetDlgItem(hCD_68K, IDC_S68K_HEXBOX), disasmView ? SW_HIDE : SW_SHOW);
+	SendDlgItemMessage(hCD_68K, IDC_S68K_VIEW_PRAM, WM_SETTEXT, 0,
+		(LPARAM)(disasmView ? "View PRAM" : "View Disasm"));
 }
 
 
 void UpdateCD_68K_KMod()
 {
-	unsigned int i, PC;
-	unsigned char tmp_string[256];
-	
-	SendDlgItemMessage(hCD_68K, IDC_S68K_DISAM, LB_RESETCONTENT, (WPARAM)0, (LPARAM)0);
-	if (S68k_ViewMode & 2)
+	DASMBOX_SOURCE dasmSource;
+
+	if ((S68k_ViewMode & 2) && (S68k_ViewMode & 1))
 	{
-		if (S68k_ViewMode & 1)
-		{
-			S68k_StartLineDisasm = GetScrollPos(GetDlgItem(hCD_68K, IDC_S68K_SCROLL), SB_CTL);
-			Current_PC_S68K = S68k_StartLineDisasm; //sub68k_context.pc;
-			for (i = 0; i < 13; i++)
-			{
-				PC = Current_PC_S68K;
-				wsprintf(debug_string, "%.5X    %-33s", PC, M68KDisasm(Next_Word_S68K, Next_Long_S68K));
-				SendDlgItemMessage(hCD_68K, IDC_S68K_DISAM, LB_INSERTSTRING, i, (LPARAM)debug_string);
-			}
-		}
-		else
-		{
-			Byte_Swap(Ram_Prg, 512 * 1024);
-			S68k_StartLinePRAM = GetScrollPos(GetDlgItem(hCD_68K, IDC_S68K_SCROLL), SB_CTL);
-			for (i = 0; i < 13; i++)
-			{
-				wsprintf(tmp_string, "%.5X ", S68k_StartLinePRAM * 8 + i * 8);
-				tmp_string[5] = 0x20;
-				tmp_string[6] = 0x20;
-				tmp_string[7] = 0x20;
-				Hexview((unsigned char *)(Ram_Prg + S68k_StartLinePRAM * 8 + i * 8), tmp_string + 8);
-				tmp_string[23] = 0x20;
-				tmp_string[24] = 0x20;
-				tmp_string[25] = 0x20;
-				Ansiview((unsigned char *)(Ram_Prg + S68k_StartLinePRAM * 8 + i * 8), tmp_string + 26);
-				wsprintf(debug_string, "%s", tmp_string);
-				SendDlgItemMessage(hCD_68K, IDC_S68K_DISAM, LB_INSERTSTRING, i, (LPARAM)debug_string);
-			}
-			Byte_Swap(Ram_Prg, 512 * 1024);
-		}
+		dasmSource.lineCount = Rom_Size;
+		dasmSource.addressLength = 5;
+		dasmSource.startAddress = 0;
+		dasmSource.context = NULL;
+		dasmSource.getInstruction = GetS68kDasmInstruction;
+		SendDlgItemMessage(hCD_68K, IDC_S68K_DASMBOX, DASMBOX_SET_SOURCE, 0, (LPARAM)&dasmSource);
+	}
+	else if (S68k_ViewMode & 2)
+	{
+		SendDlgItemMessage(hCD_68K, IDC_S68K_HEXBOX, HEXBOX_SET_DATA, sizeof(Ram_Prg), (LPARAM)Ram_Prg);
+		SendDlgItemMessage(hCD_68K, IDC_S68K_HEXBOX, HEXBOX_SET_LAYOUT,
+			HEXBOX_LAYOUT_WPARAM(5, 4, HEXBOX_MODE_WORD | HEXBOX_ENDIAN_LITTLE), 0);
 	}
 	else if (S68k_ViewMode & 8)
 	{
-		Byte_Swap(Ram_Word_1M, 256 * 1024);
-		S68k_StartLineWRAM = GetScrollPos(GetDlgItem(hCD_68K, IDC_S68K_SCROLL), SB_CTL);
-		for (i = 0; i < 13; i++)
-		{
-			wsprintf(tmp_string, "%.5X ", S68k_StartLineWRAM * 8 + i * 8);
-			tmp_string[5] = 0x20;
-			tmp_string[6] = 0x20;
-			tmp_string[7] = 0x20;
-			Hexview((unsigned char *)(Ram_Word_1M + S68k_StartLineWRAM * 8 + i * 8), tmp_string + 8);
-			tmp_string[23] = 0x20;
-			tmp_string[24] = 0x20;
-			tmp_string[25] = 0x20;
-			Ansiview((unsigned char *)(Ram_Word_1M + S68k_StartLineWRAM * 8 + i * 8), tmp_string + 26);
-			wsprintf(debug_string, "%s", tmp_string);
-			SendDlgItemMessage(hCD_68K, IDC_S68K_DISAM, LB_INSERTSTRING, i, (LPARAM)debug_string);
-		}
-		Byte_Swap(Ram_Word_1M, 256 * 1024);
+		SendDlgItemMessage(hCD_68K, IDC_S68K_HEXBOX, HEXBOX_SET_DATA, sizeof(Ram_Word_1M), (LPARAM)Ram_Word_1M);
+		SendDlgItemMessage(hCD_68K, IDC_S68K_HEXBOX, HEXBOX_SET_LAYOUT,
+			HEXBOX_LAYOUT_WPARAM(5, 4, HEXBOX_MODE_WORD | HEXBOX_ENDIAN_LITTLE), 0);
 	}
 
 
@@ -165,6 +116,24 @@ void UpdateCD_68K_KMod()
 	wsprintf(debug_string, "PC=%.8X", sub68k_context.pc);
 	SendDlgItemMessage(hCD_68K, IDC_S68K_PC, WM_SETTEXT, (WPARAM)0, (LPARAM)debug_string);
 
+}
+
+static void JumpS68kTo(DWORD address)
+{
+	if ((S68k_ViewMode & 2) && (S68k_ViewMode & 1))
+		SendDlgItemMessage(hCD_68K, IDC_S68K_DASMBOX, DASMBOX_GOTO_ADDRESS, (WPARAM)address, 0);
+	else
+		SendDlgItemMessage(hCD_68K, IDC_S68K_HEXBOX, HEXBOX_GOTO_ADDRESS, (WPARAM)address, 0);
+}
+
+static void RestoreS68kAddressLine(void)
+{
+	if ((S68k_ViewMode & 2) && (S68k_ViewMode & 1))
+		JumpS68kTo(S68k_StartLineDisasm);
+	else if (S68k_ViewMode & 2)
+		JumpS68kTo(S68k_StartLinePRAM * 8);
+	else if (S68k_ViewMode & 8)
+		JumpS68kTo(S68k_StartLineWRAM * 8);
 }
 
 
@@ -257,13 +226,11 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 {
 
 	HFONT hFont = NULL;
-	SCROLLINFO si;
 
 	switch (Message)
 	{
 	case WM_INITDIALOG:
 		hFont = (HFONT)GetStockObject(OEM_FIXED_FONT);
-		SendDlgItemMessage(hwnd, IDC_S68K_DISAM, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_S68K_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_S68K_STATUS_ADR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_S68K_STATUS_DATA, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -282,6 +249,19 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
+		case IDC_S68K_DASMBOX:
+			if (HIWORD(wParam) == DASMBOXN_SCROLL)
+				S68k_StartLineDisasm = (unsigned int)lParam;
+			break;
+		case IDC_S68K_HEXBOX:
+			if (HIWORD(wParam) == HEXBOXN_SCROLL)
+			{
+				if (S68k_ViewMode & 2)
+					S68k_StartLinePRAM = (unsigned int)lParam;
+				else if (S68k_ViewMode & 8)
+					S68k_StartLineWRAM = (unsigned int)lParam;
+			}
+			break;
 		case IDC_S68K_DUMP_PRAM:
 			DumpS68KPRam_KMod(hwnd);
 			break;
@@ -295,8 +275,8 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			S68k_ViewMode ^= 0x1;
 			S68k_ViewMode |= 0x2;
 			SwitchS68kViewMode_KMod();
-			UpdateWindow(hwnd);
 			UpdateCD_68K_KMod();
+			RestoreS68kAddressLine();
 			break;
 
 		case IDC_S68K_VIEW_WRAM:
@@ -304,8 +284,8 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			S68k_ViewMode ^= 0x4;
 			S68k_ViewMode |= 0x8;
 			SwitchS68kViewMode_KMod();
-			UpdateWindow(hwnd);
 			UpdateCD_68K_KMod();
+			RestoreS68kAddressLine();
 			break;
 		
 		case IDC_S68K_JUMP_TO_INPUT:
@@ -325,16 +305,14 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			{
 				S68k_StartLineDisasm = adr;
 				S68k_StartLinePRAM = S68k_StartLineDisasm / 8;
-				SwitchS68kViewMode_KMod();
-				UpdateWindow(hwnd);
 				UpdateCD_68K_KMod();
+				JumpS68kTo(adr);
 			}
 			else if (S68k_ViewMode & 8)
 			{
 				S68k_StartLineWRAM = adr / 8;
-				SwitchS68kViewMode_KMod();
-				UpdateWindow(hwnd);
 				UpdateCD_68K_KMod();
+				JumpS68kTo(adr);
 			}
 			break;
 		}
@@ -348,45 +326,13 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				S68k_StartLineDisasm = sub68k_context.pc;
 				S68k_StartLinePRAM = S68k_StartLineDisasm / 8;
 				SwitchS68kViewMode_KMod();
-				UpdateWindow(hwnd);
 				UpdateCD_68K_KMod();
+				JumpS68kCustomView(sub68k_context.pc);
 			}
 			break;
 
 		}
 		break;
-
-	case WM_VSCROLL:
-		ZeroMemory(&si, sizeof(SCROLLINFO));
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_ALL;
-		GetScrollInfo((HWND)lParam, SB_CTL, &si);
-		switch (LOWORD(wParam))
-		{
-		case SB_PAGEUP:
-			si.nPos -= si.nPage;
-			break;
-		case SB_PAGEDOWN:
-			si.nPos += si.nPage;
-			break;
-		case SB_LINEUP:
-			si.nPos--;
-			break;
-		case SB_LINEDOWN:
-			si.nPos++;
-			break;
-		case SB_THUMBTRACK:
-			//					 si.nPos = HIWORD(wParam);
-			si.nPos = si.nTrackPos;
-			break;
-		}
-
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_POS;
-		SetScrollInfo((HWND)lParam, SB_CTL, &si, TRUE);
-		UpdateWindow(hwnd);
-		UpdateCD_68K_KMod();
-		return 0;
 
 	case WM_CLOSE:
 		CloseWindow_KMod(DMODE_CD_68K);
