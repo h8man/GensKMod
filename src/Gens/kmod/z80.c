@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <commctrl.h>
 #include <stdio.h>
 
 #include "../gens.h"
@@ -17,6 +16,8 @@
 #include "common.h"
 #include "utils.h"
 #include "z80.h"
+#include "hexbox.h"
+#include "dasmbox.h"
 
 static HWND hZ80;
 static BOOL Z80_ViewMode;
@@ -24,66 +25,52 @@ static unsigned int  Z80_StartLineDisasm, Z80_StartLineMem;
 static CHAR debug_string[1024];
 HFONT hFont;
 
+static BOOL CALLBACK GetZ80DasmInstruction(void* context, DWORD address, DWORD* nextAddress, LPSTR text, UINT textCapacity)
+{
+	char instruction[128];
+	int pc;
+	int textLength;
+	(void)context;
+
+	if (address >= sizeof(Ram_Z80))
+		return FALSE;
+
+	pc = (int)address;
+	z80dis(Ram_Z80, &pc, instruction);
+
+	*nextAddress = (DWORD)pc;
+	textLength = lstrlenA(instruction);
+	if (textLength && instruction[textLength - 1] == '\n')
+		instruction[textLength - 1] = 0;
+	lstrcpynA(text, instruction + 6, textCapacity);
+	return TRUE;
+}
+
 void SwitchZ80ViewMode_KMod()
 {
-	SCROLLINFO si;
-
-	ZeroMemory(&si, sizeof(SCROLLINFO));
-	si.cbSize = sizeof(si);
-	si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
-	si.nMin = 0;
-	si.nPage = 13;
-
-	if (Z80_ViewMode)
-	{
-		// MEM VIEW
-		si.nPos = Z80_StartLineMem;
-		si.nMax = (1024) - 1;
-	}
-	else
-	{
-		// DISASM VIEW
-		si.nPos = Z80_StartLineDisasm;
-		si.nMax = (1024 * 8) - 1;
-	}
-	SetScrollInfo(GetDlgItem(hZ80, IDC_Z80_SCROLL), SB_CTL, &si, TRUE);
+	ShowWindow(GetDlgItem(hZ80, IDC_Z80_DASMBOX), Z80_ViewMode ? SW_HIDE : SW_SHOW);
+	ShowWindow(GetDlgItem(hZ80, IDC_Z80_HEXBOX), Z80_ViewMode ? SW_SHOW : SW_HIDE);
+	SendDlgItemMessage(hZ80, IDC_Z80_VIEW_MEM, WM_SETTEXT, 0,
+		(LPARAM)(Z80_ViewMode ? "View Disasm" : "View Memory"));
 }
 
 void UpdateZ80_KMod()
 {
-	unsigned int i, PC;
-	unsigned char tmp_string[256];
-	
-	SendDlgItemMessage(hZ80, IDC_Z80_DISAM, LB_RESETCONTENT, (WPARAM)0, (LPARAM)0);
 	if (Z80_ViewMode == 0)
 	{
-		Z80_StartLineDisasm = GetScrollPos(GetDlgItem(hZ80, IDC_Z80_SCROLL), SB_CTL);
-		PC = Z80_StartLineDisasm; //z80_Get_PC(&M_Z80);
-		for (i = 0; i < 13; i++)
-		{
-			z80dis((unsigned char *)Ram_Z80, (int *)&PC, tmp_string);
-			// to skip the \n z80dis add
-			lstrcpyn(debug_string, tmp_string, lstrlen(tmp_string));
-			SendDlgItemMessage(hZ80, IDC_Z80_DISAM, LB_INSERTSTRING, i, (LPARAM)debug_string);
-		}
+		DASMBOX_SOURCE dasmSource;
+		dasmSource.lineCount = sizeof(Ram_Z80);
+		dasmSource.addressLength = 4;
+		dasmSource.startAddress = 0;
+		dasmSource.context = NULL;
+		dasmSource.getInstruction = GetZ80DasmInstruction;
+		SendDlgItemMessage(hZ80, IDC_Z80_DASMBOX, DASMBOX_SET_SOURCE, 0, (LPARAM)&dasmSource);
 	}
 	else
 	{
-		Z80_StartLineMem = GetScrollPos(GetDlgItem(hZ80, IDC_Z80_SCROLL), SB_CTL);
-		for (i = 0; i < 13; i++)
-		{
-			wsprintf(tmp_string, "%.4X ", Z80_StartLineMem * 8 + i * 8);
-			tmp_string[4] = 0x20;
-			tmp_string[5] = 0x20;
-			tmp_string[6] = 0x20;
-			Hexview((unsigned char *)(Ram_Z80 + Z80_StartLineMem * 8 + i * 8), tmp_string + 7);
-			tmp_string[24] = 0x20;
-			tmp_string[25] = 0x20;
-			tmp_string[26] = 0x20;
-			Ansiview((unsigned char *)(Ram_Z80 + Z80_StartLineMem * 8 + i * 8), tmp_string + 27);
-			wsprintf(debug_string, "%s", tmp_string);
-			SendDlgItemMessage(hZ80, IDC_Z80_DISAM, LB_INSERTSTRING, i, (LPARAM)debug_string);
-		}
+		SendDlgItemMessage(hZ80, IDC_Z80_HEXBOX, HEXBOX_SET_DATA, sizeof(Ram_Z80), (LPARAM)Ram_Z80);
+		SendDlgItemMessage(hZ80, IDC_Z80_HEXBOX, HEXBOX_SET_LAYOUT,
+			HEXBOX_LAYOUT_WPARAM(4, 8, HEXBOX_MODE_BYTE), 0);
 	}
 
 
@@ -110,6 +97,19 @@ void UpdateZ80_KMod()
 	sprintf(GString, "Bank68K=%.8X State=%.2X\n", M_Z80.Status & 0xFF, Bank_M68K, Z80_State);
 	*/
 
+}
+
+static void JumpZ80To(DWORD address)
+{
+	if (Z80_ViewMode == 0)
+		SendDlgItemMessage(hZ80, IDC_Z80_DASMBOX, DASMBOX_GOTO_ADDRESS, (WPARAM)address, 0);
+	else
+		SendDlgItemMessage(hZ80, IDC_Z80_HEXBOX, HEXBOX_GOTO_ADDRESS, (WPARAM)address, 0);
+}
+
+static void RestoreZ80Position(void)
+{
+	JumpZ80To(Z80_ViewMode ? Z80_StartLineMem * 8 : Z80_StartLineDisasm);
 }
 
 void DumpZ80_KMod(HWND hwnd)
@@ -153,14 +153,10 @@ void DumpZ80_KMod(HWND hwnd)
 
 BOOL CALLBACK Z80DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	
-	SCROLLINFO si;
-
 	switch (Message)
 	{
 	case WM_INITDIALOG:
 		hFont = (HFONT)GetStockObject(OEM_FIXED_FONT);
-		SendDlgItemMessage(hwnd, IDC_Z80_DISAM, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_RS1, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_RS2, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_RS3, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -175,29 +171,34 @@ BOOL CALLBACK Z80DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_SHOWWINDOW:
-		SwitchZ80ViewMode_KMod();
+		if (wParam)
+		{
+			SwitchZ80ViewMode_KMod();
+			UpdateZ80_KMod();
+			RestoreZ80Position();
+		}
 		break;
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
+		case IDC_Z80_DASMBOX:
+			if (HIWORD(wParam) == DASMBOXN_SCROLL)
+				Z80_StartLineDisasm = (unsigned int)lParam;
+			break;
+		case IDC_Z80_HEXBOX:
+			if (HIWORD(wParam) == HEXBOXN_SCROLL)
+				Z80_StartLineMem = (unsigned int)lParam;
+			break;
 		case IDC_Z80_DUMP_MEM:
 			DumpZ80_KMod(hwnd);
 			break;
 
 		case IDC_Z80_VIEW_MEM:
 			Z80_ViewMode = !Z80_ViewMode;
-			if (Z80_ViewMode == 0)
-			{
-				SendDlgItemMessage(hwnd, IDC_Z80_VIEW_MEM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Memory");
-			}
-			else
-			{
-				SendDlgItemMessage(hwnd, IDC_Z80_VIEW_MEM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
-			}
 			SwitchZ80ViewMode_KMod();
-			UpdateWindow(hwnd);
 			UpdateZ80_KMod();
+			RestoreZ80Position();
 			break;
 		case IDC_Z80_JUMP_TO_INPUT:
 
@@ -217,16 +218,14 @@ BOOL CALLBACK Z80DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			if (Z80_ViewMode == 0)
 			{
 				Z80_StartLineDisasm = adr;
-				SwitchZ80ViewMode_KMod();
-				UpdateWindow(hwnd);
 				UpdateZ80_KMod();
+				JumpZ80To(adr);
 			}
 			else if (Z80_ViewMode == 1)
 			{
 				Z80_StartLineMem = adr / 8;
-				SwitchZ80ViewMode_KMod();
-				UpdateWindow(hwnd);
 				UpdateZ80_KMod();
+				JumpZ80To(adr);
 			}
 			break;
 		}
@@ -234,47 +233,13 @@ BOOL CALLBACK Z80DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			if (Z80_ViewMode == 0)
 			{
 				Z80_StartLineDisasm = z80_Get_PC(&M_Z80);
-				SwitchZ80ViewMode_KMod();
-				UpdateWindow(hwnd);
 				UpdateZ80_KMod();
+				JumpZ80To(Z80_StartLineDisasm);
 			}
 			break;
 		}
 
 		break;
-
-	case WM_VSCROLL:
-		ZeroMemory(&si, sizeof(SCROLLINFO));
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_ALL;
-		GetScrollInfo((HWND)lParam, SB_CTL, &si);
-		switch (LOWORD(wParam))
-		{
-		case SB_PAGEUP:
-			si.nPos -= si.nPage;
-			break;
-		case SB_PAGEDOWN:
-			si.nPos += si.nPage;
-			break;
-		case SB_LINEUP:
-			si.nPos--;
-			break;
-		case SB_LINEDOWN:
-			si.nPos++;
-			break;
-		case SB_THUMBTRACK:
-			//si.nPos = HIWORD(wParam);
-			si.nPos = si.nTrackPos;
-			break;
-		}
-
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_POS;
-		SetScrollInfo((HWND)lParam, SB_CTL, &si, TRUE);
-		UpdateWindow(hwnd);
-		UpdateZ80_KMod();
-		return 0;
-
 
 	case WM_CLOSE:
 		CloseWindow_KMod(DMODE_Z80);
