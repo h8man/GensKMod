@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <commctrl.h>
 #include <stdio.h>
 
 #include "../gens.h"
@@ -15,108 +14,107 @@
 #include "common.h"
 #include "utils.h"
 #include "sSH2.h"
+#include "hexbox.h"
+#include "dasmbox.h"
 
 static HWND hSSH2;
 static unsigned char SSH2_ViewMode;
 static unsigned int  SSH2_StartLineROMDisasm, SSH2_StartLineRAMDisasm, SSH2_StartLineRAM, SSH2_StartLineROM, SSH2_StartLineCache;
 static CHAR debug_string[1024];
 
-void UpdateSSH2_KMod()
+static BOOL SSH2_IsDisasmView(void)
 {
-	unsigned int i, PC;
-	unsigned char tmp_string[256];
+	return ((SSH2_ViewMode & 2) && (SSH2_ViewMode & 1)) ||
+		((SSH2_ViewMode & 8) && (SSH2_ViewMode & 4));
+}
 
-	SendDlgItemMessage(hSSH2, IDC_SSH2_DISAM, LB_RESETCONTENT, (WPARAM)0, (LPARAM)0);
+static BOOL CALLBACK GetSSH2DasmInstruction(void* context, DWORD address, DWORD* nextAddress, LPSTR text, UINT textCapacity)
+{
+	char instruction[DASMBOX_TEXT_CAPACITY];
+	DWORD startAddress, endAddress;
+	(void)context;
 
 	if (SSH2_ViewMode & 2)
 	{
-		if (SSH2_ViewMode & 1)
-		{
-			// ROM disasm
-			//PC = (sh->PC - sh->Base_PC) - 4;
-			SSH2_StartLineROMDisasm = GetScrollPos(GetDlgItem(hSSH2, IDC_SSH2_SCROLL), SB_CTL);
-			PC = 0x02000000 + SSH2_StartLineROMDisasm * 2;
-			for (i = 0; i < 13; PC += 2, i++)
-			{
-				SH2Disasm(tmp_string, PC, SH2_Read_Word(&S_SH2, PC), 0);
-				SendDlgItemMessage(hSSH2, IDC_SSH2_DISAM, LB_INSERTSTRING, i, (LPARAM)tmp_string);
-			}
-		}
-		else
-		{
-			// ROM view
-			SSH2_StartLineROM = GetScrollPos(GetDlgItem(hSSH2, IDC_SSH2_SCROLL), SB_CTL);
-			for (i = 0; i < 13; i++)
-			{
-				wsprintf(tmp_string, "%.8X ", 0x02000000 + SSH2_StartLineROM * 8 + i * 8);
-				tmp_string[8] = 0x20;
-				Hexview((unsigned char *)(_32X_Rom + SSH2_StartLineROM * 8 + i * 8), tmp_string + 9);
-				tmp_string[26] = 0x20;
-				Ansiview((unsigned char *)(_32X_Rom + SSH2_StartLineROM * 8 + i * 8), tmp_string + 27);
-				wsprintf(debug_string, "%s", tmp_string);
-				SendDlgItemMessage(hSSH2, IDC_SSH2_DISAM, LB_INSERTSTRING, i, (LPARAM)debug_string);
-			}
-		}
+		startAddress = 0x02000000;
+		endAddress = startAddress + 1024;
+	}
+	else
+	{
+		startAddress = 0x06000000;
+		endAddress = startAddress + sizeof(_32X_Ram);
+	}
+	if (address < startAddress || address > endAddress - 2)
+		return FALSE;
+
+	SH2Disasm(instruction, address, SH2_Read_Word(&S_SH2, address), 0);
+	instruction[DASMBOX_TEXT_CAPACITY - 1] = 0;
+	*nextAddress = address + 2;
+	lstrcpynA(text, instruction + 8, textCapacity);
+	return TRUE;
+}
+
+static void JumpSSH2To(DWORD address)
+{
+	if (SSH2_IsDisasmView())
+		SendDlgItemMessage(hSSH2, IDC_SSH2_DASMBOX, DASMBOX_GOTO_ADDRESS, (WPARAM)address, 0);
+	else
+		SendDlgItemMessage(hSSH2, IDC_SSH2_HEXBOX, HEXBOX_GOTO_ADDRESS, (WPARAM)address, 0);
+}
+
+static void RestoreSSH2Position(void)
+{
+	if ((SSH2_ViewMode & 2) && (SSH2_ViewMode & 1))
+		JumpSSH2To(SSH2_StartLineROMDisasm);
+	else if ((SSH2_ViewMode & 8) && (SSH2_ViewMode & 4))
+		JumpSSH2To(SSH2_StartLineRAMDisasm);
+	else if (SSH2_ViewMode & 2)
+		JumpSSH2To(0x02000000 + SSH2_StartLineROM * 8);
+	else if (SSH2_ViewMode & 8)
+		JumpSSH2To(0x06000000 + SSH2_StartLineRAM * 8);
+	else if (SSH2_ViewMode & 0x20)
+		JumpSSH2To(0xC0000000 + SSH2_StartLineCache * 8);
+}
+
+void UpdateSSH2_KMod()
+{
+	DASMBOX_SOURCE dasmSource;
+
+	if ((SSH2_ViewMode & 2) && (SSH2_ViewMode & 1))
+	{
+		dasmSource.lineCount = 0x02000400;
+		dasmSource.addressLength = 8;
+		dasmSource.startAddress = 0x02000000;
+		dasmSource.context = NULL;
+		dasmSource.getInstruction = GetSSH2DasmInstruction;
+		SendDlgItemMessage(hSSH2, IDC_SSH2_DASMBOX, DASMBOX_SET_SOURCE, 0, (LPARAM)&dasmSource);
+	}
+	else if ((SSH2_ViewMode & 8) && (SSH2_ViewMode & 4))
+	{
+		dasmSource.lineCount = 0x06040000;
+		dasmSource.addressLength = 8;
+		dasmSource.startAddress = 0x06000000;
+		dasmSource.context = NULL;
+		dasmSource.getInstruction = GetSSH2DasmInstruction;
+		SendDlgItemMessage(hSSH2, IDC_SSH2_DASMBOX, DASMBOX_SET_SOURCE, 0, (LPARAM)&dasmSource);
+	}
+	else if (SSH2_ViewMode & 2)
+	{
+		SendDlgItemMessage(hSSH2, IDC_SSH2_HEXBOX, HEXBOX_SET_DATA, 1024, (LPARAM)_32X_Rom);
+		SendDlgItemMessage(hSSH2, IDC_SSH2_HEXBOX, HEXBOX_SET_LAYOUT,
+			HEXBOX_LAYOUT_WPARAM(8, 8, HEXBOX_MODE_BYTE), (LPARAM)0x02000000);
 	}
 	else if (SSH2_ViewMode & 8)
 	{
-		if (SSH2_ViewMode & 4)
-		{
-			// RAM disasm
-			//PC = (sh->PC - sh->Base_PC) - 4;
-			SSH2_StartLineRAMDisasm = GetScrollPos(GetDlgItem(hSSH2, IDC_SSH2_SCROLL), SB_CTL);
-			PC = 0x06000000 + SSH2_StartLineRAMDisasm * 2;
-			for (i = 0; i < 13; PC += 2, i++)
-			{
-				SH2Disasm(tmp_string, PC, SH2_Read_Word(&S_SH2, PC), 0);
-				SendDlgItemMessage(hSSH2, IDC_SSH2_DISAM, LB_INSERTSTRING, i, (LPARAM)tmp_string);
-			}
-		}
-		else
-		{
-			// RAM view
-			SSH2_StartLineRAM = GetScrollPos(GetDlgItem(hSSH2, IDC_SSH2_SCROLL), SB_CTL);
-			for (i = 0; i < 13; i++)
-			{
-				wsprintf(tmp_string, "%.8X ", 0x06000000 + SSH2_StartLineRAM * 8 + i * 8);
-				tmp_string[8] = 0x20;
-				Hexview((unsigned char *)(_32X_Ram + SSH2_StartLineRAM * 8 + i * 8), tmp_string + 9);
-				tmp_string[26] = 0x20;
-				Ansiview((unsigned char *)(_32X_Ram + SSH2_StartLineRAM * 8 + i * 8), tmp_string + 27);
-				wsprintf(debug_string, "%s", tmp_string);
-				SendDlgItemMessage(hSSH2, IDC_SSH2_DISAM, LB_INSERTSTRING, i, (LPARAM)debug_string);
-			}
-		}
+		SendDlgItemMessage(hSSH2, IDC_SSH2_HEXBOX, HEXBOX_SET_DATA, sizeof(_32X_Ram), (LPARAM)_32X_Ram);
+		SendDlgItemMessage(hSSH2, IDC_SSH2_HEXBOX, HEXBOX_SET_LAYOUT,
+			HEXBOX_LAYOUT_WPARAM(8, 8, HEXBOX_MODE_BYTE), (LPARAM)0x06000000);
 	}
 	else if (SSH2_ViewMode & 0x20)
 	{
-		/*
-		if (SSH2_ViewMode&0x10)
-		{
-		// Cache disasm
-		SSH2_StartLineRAMDisasm =	GetScrollPos(GetDlgItem(hSSH2, IDC_SSH2_SCROLL) ,SB_CTL);
-		PC = 0x06000000 + SSH2_StartLineRAMDisasm*2;
-		for(i = 0; i < 13; PC+=2, i++)
-		{
-		SH2Disasm(tmp_string, PC, SH2_Read_Word(&S_SH2, PC), 0);
-		SendDlgItemMessage(hSSH2 , IDC_SSH2_DISAM, LB_INSERTSTRING, i , (LPARAM)tmp_string);
-		}
-		}
-		else
-		{*/
-		// Cache view
-		SSH2_StartLineCache = GetScrollPos(GetDlgItem(hSSH2, IDC_SSH2_SCROLL), SB_CTL);
-		for (i = 0; i < 13; i++)
-		{
-			wsprintf(tmp_string, "%.8X ", 0xC0000000 + SSH2_StartLineCache * 8 + i * 8);
-			tmp_string[8] = 0x20;
-			Hexview((unsigned char *)(S_SH2.Cache + SSH2_StartLineCache * 8 + i * 8), tmp_string + 9);
-			tmp_string[26] = 0x20;
-			Ansiview((unsigned char *)(S_SH2.Cache + SSH2_StartLineCache * 8 + i * 8), tmp_string + 27);
-			wsprintf(debug_string, "%s", tmp_string);
-			SendDlgItemMessage(hSSH2, IDC_SSH2_DISAM, LB_INSERTSTRING, i, (LPARAM)debug_string);
-		}
-		//	}
+		SendDlgItemMessage(hSSH2, IDC_SSH2_HEXBOX, HEXBOX_SET_DATA, sizeof(S_SH2.Cache), (LPARAM)S_SH2.Cache);
+		SendDlgItemMessage(hSSH2, IDC_SSH2_HEXBOX, HEXBOX_SET_LAYOUT,
+			HEXBOX_LAYOUT_WPARAM(8, 8, HEXBOX_MODE_BYTE), (LPARAM)0xC0000000);
 	}
 	wsprintf(debug_string, "T=%d S=%d Q=%d M=%d I=%.1X SR=%.4X Status=%.4X", SH2_Get_SR(&S_SH2) & 1, (SH2_Get_SR(&S_SH2) >> 1) & 1, (SH2_Get_SR(&S_SH2) >> 8) & 1, (SH2_Get_SR(&S_SH2) >> 9) & 1, (SH2_Get_SR(&S_SH2) >> 4) & 0xF, SH2_Get_SR(&S_SH2), S_SH2.Status & 0xFFFF);
 	SendDlgItemMessage(hSSH2, IDC_SSH2_STATUS_SR, WM_SETTEXT, 0, (LPARAM)debug_string);
@@ -173,80 +171,29 @@ void DumpSSH2Cache_KMod(HWND hwnd)
 
 void SwitchSSH2ViewMode_KMod()
 {
-	SCROLLINFO si;
-
-	ZeroMemory(&si, sizeof(SCROLLINFO));
-	si.cbSize = sizeof(si);
-	si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
-	si.nMin = 0;
-	si.nPage = 10;
+	ShowWindow(GetDlgItem(hSSH2, IDC_SSH2_DASMBOX), SSH2_IsDisasmView() ? SW_SHOW : SW_HIDE);
+	ShowWindow(GetDlgItem(hSSH2, IDC_SSH2_HEXBOX), SSH2_IsDisasmView() ? SW_HIDE : SW_SHOW);
 
 	if (SSH2_ViewMode & 2)
 	{
-		if (SSH2_ViewMode & 1)
-		{
-			// ROM DISASM VIEW
-			si.nPos = SSH2_StartLineROMDisasm;
-			si.nMax = ((1 * 1024) / 2) - 1;
-			SendDlgItemMessage(hSSH2, IDC_SSH2_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View ROM");
-		}
-		else
-		{
-			// ROM VIEW
-			si.nPos = SSH2_StartLineROM;
-			si.nMax = ((1 * 1024) / 8) - 1;
-			SendDlgItemMessage(hSSH2, IDC_SSH2_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
-		}
+		SendDlgItemMessage(hSSH2, IDC_SSH2_VIEW_ROM, WM_SETTEXT, 0,
+			(LPARAM)((SSH2_ViewMode & 1) ? "View ROM" : "View Disasm"));
 	}
 	else if (SSH2_ViewMode & 8)
 	{
-		if (SSH2_ViewMode & 4)
-		{
-			// RAM DISASM VIEW
-			si.nPos = SSH2_StartLineRAMDisasm;
-			si.nMax = ((256 * 1024) / 2) - 1;
-			SendDlgItemMessage(hSSH2, IDC_SSH2_VIEW_RAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View RAM");
-		}
-		else
-		{
-			// RAM VIEW
-			si.nPos = SSH2_StartLineRAM;
-			si.nMax = ((256 * 1024) / 8) - 1;
-			SendDlgItemMessage(hSSH2, IDC_SSH2_VIEW_RAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
-		}
+		SendDlgItemMessage(hSSH2, IDC_SSH2_VIEW_RAM, WM_SETTEXT, 0,
+			(LPARAM)((SSH2_ViewMode & 4) ? "View RAM" : "View Disasm"));
 	}
-	else if (SSH2_ViewMode & 0x20)
-	{
-		/*
-		if (SSH2_ViewMode&0x10)
-		{
-		// CACHE DISASM VIEW
-		si.nPos   = SSH2_StartLineRAMDisasm;
-		si.nMax   = ((256 * 1024)/2) -1;
-		SendDlgItemMessage(hSSH2, IDC_SSH2_VIEW_RAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View RAM");
-		}
-		else
-		{*/
-		// CACHE VIEW
-		si.nPos = SSH2_StartLineCache;
-		si.nMax = (0x1000 / 8) - 1;
-		/*
-		SendDlgItemMessage(hSSH2, IDC_SSH2_VIEW_RAM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View Disasm");
-		}*/
-	}
-	SetScrollInfo(GetDlgItem(hSSH2, IDC_SSH2_SCROLL), SB_CTL, &si, TRUE);
 }
 
 BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	HFONT hFont = NULL;
-	SCROLLINFO si;
 	unsigned int curPC;
 	switch (Message)
 	{
 	case WM_INITDIALOG:
 		hFont = (HFONT)GetStockObject(OEM_FIXED_FONT);
-		SendDlgItemMessage(hwnd, IDC_SSH2_DISAM, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_SSH2_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_SSH2_STATUS_ADR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_SSH2_STATUS_DATA, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -259,12 +206,37 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_SHOWWINDOW:
-		SwitchSSH2ViewMode_KMod();
+		if (wParam)
+		{
+			SwitchSSH2ViewMode_KMod();
+			UpdateSSH2_KMod();
+			RestoreSSH2Position();
+		}
 		break;
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
+		case IDC_SSH2_DASMBOX:
+			if (HIWORD(wParam) == DASMBOXN_SCROLL)
+			{
+				if ((SSH2_ViewMode & 2) && (SSH2_ViewMode & 1))
+					SSH2_StartLineROMDisasm = (unsigned int)lParam;
+				else if ((SSH2_ViewMode & 8) && (SSH2_ViewMode & 4))
+					SSH2_StartLineRAMDisasm = (unsigned int)lParam;
+			}
+			break;
+		case IDC_SSH2_HEXBOX:
+			if (HIWORD(wParam) == HEXBOXN_SCROLL)
+			{
+				if (SSH2_ViewMode & 2)
+					SSH2_StartLineROM = (unsigned int)lParam;
+				else if (SSH2_ViewMode & 8)
+					SSH2_StartLineRAM = (unsigned int)lParam;
+				else if (SSH2_ViewMode & 0x20)
+					SSH2_StartLineCache = (unsigned int)lParam;
+			}
+			break;
 		case IDC_SSH2_DUMP_ROM:
 			//Dump32XRom_KMod( hwnd );
 			break;
@@ -279,8 +251,8 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			SSH2_ViewMode ^= 0x1;
 			SSH2_ViewMode |= 0x2;
 			SwitchSSH2ViewMode_KMod();
-			UpdateWindow(hwnd);
 			UpdateSSH2_KMod();
+			RestoreSSH2Position();
 			break;
 		case IDC_SSH2_VIEW_RAM:
 			SSH2_ViewMode &= 0x15;
@@ -288,17 +260,16 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			SSH2_ViewMode |= 0x8;
 
 			SwitchSSH2ViewMode_KMod();
-			UpdateWindow(hwnd);
 			UpdateSSH2_KMod();
+			RestoreSSH2Position();
 			break;
 		case IDC_SSH2_VIEW_CACHE:
 			SSH2_ViewMode &= 0x15;
-			//					SSH2_ViewMode ^= 0x10;
 			SSH2_ViewMode |= 0x20;
 
 			SwitchSSH2ViewMode_KMod();
-			UpdateWindow(hwnd);
 			UpdateSSH2_KMod();
+			RestoreSSH2Position();
 			break;
 
 		case IDC_SSH2_JUMP_TO_INPUT:
@@ -315,84 +286,55 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			GetDlgItemText(hwnd, IDC_SSH2_JUMP_TO_INPUT, jump_input, sizeof(jump_input));
 			if (sscanf(jump_input, "%x", &jump_address) == 1)
 			{
-				if (jump_address >= 0x02000000 && jump_address < 0x02400000)
+				if (jump_address >= 0x02000000 && jump_address < 0x02000400)
 				{
 					SSH2_ViewMode &= 0x15;
 					SSH2_ViewMode |= 0x2;
 					SSH2_StartLineROM = (jump_address - 0x02000000) / 8;
-					SSH2_StartLineROMDisasm = (jump_address - 0x02000000) / 2;
+					SSH2_StartLineROMDisasm = jump_address;
 					SwitchSSH2ViewMode_KMod();
+					UpdateSSH2_KMod();
+					JumpSSH2To(jump_address);
 				}
-				else if (jump_address >= 0x06000000 && jump_address < 0x06400000)
+				else if (jump_address >= 0x06000000 && jump_address < 0x06040000)
 				{
 					SSH2_ViewMode &= 0x15;
 					SSH2_ViewMode |= 0x8;
 					SSH2_StartLineRAM = (jump_address - 0x06000000) / 8;
-					SSH2_StartLineRAMDisasm = (jump_address - 0x06000000) / 2;
+					SSH2_StartLineRAMDisasm = jump_address;
 					SwitchSSH2ViewMode_KMod();
+					UpdateSSH2_KMod();
+					JumpSSH2To(jump_address);
 				}
 			}
 			break;
 		}
 		case IDC_SSH2_PC:
 			curPC = SH2_Get_PC(&S_SH2); //(S_SH2.PC - S_SH2.Base_PC) - 4;
-			if (curPC < 0x2400000)
+			if (curPC >= 0x02000000 && curPC < 0x02000400)
 			{
 				SSH2_ViewMode &= 0x15;
 				SSH2_ViewMode |= 0x2;
 				SSH2_StartLineROM = (curPC - 0x02000000) / 8;
-				SSH2_StartLineROMDisasm = (curPC - 0x02000000) / 2;
+				SSH2_StartLineROMDisasm = curPC;
 				SwitchSSH2ViewMode_KMod();
+				UpdateSSH2_KMod();
+				JumpSSH2To(curPC);
 			}
-			else if (curPC < 0x6040000)
+			else if (curPC >= 0x06000000 && curPC < 0x06040000)
 			{
 				SSH2_ViewMode &= 0x15;
 				SSH2_ViewMode |= 0x8;
-				SSH2_StartLineRAM = (curPC - 0x6000000) / 8;
-				SSH2_StartLineRAMDisasm = (curPC - 0x6000000) / 2;
+				SSH2_StartLineRAM = (curPC - 0x06000000) / 8;
+				SSH2_StartLineRAMDisasm = curPC;
 				SwitchSSH2ViewMode_KMod();
+				UpdateSSH2_KMod();
+				JumpSSH2To(curPC);
 			}
-
-			UpdateWindow(hwnd);
-			UpdateSSH2_KMod();
 			break;
 
 		}
 		break;
-
-	case WM_VSCROLL:
-		ZeroMemory(&si, sizeof(SCROLLINFO));
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_ALL; //SIF_RANGE | SIF_PAGE | SIF_POS | SIF_TRACKPOS;
-		GetScrollInfo((HWND)lParam, SB_CTL, &si);
-		switch (LOWORD(wParam))
-		{
-		case SB_PAGEUP:
-			si.nPos -= si.nPage;
-			break;
-		case SB_PAGEDOWN:
-			si.nPos += si.nPage;
-			break;
-		case SB_LINEUP:
-			si.nPos--;
-			break;
-		case SB_LINEDOWN:
-			si.nPos++;
-			break;
-			//				case SB_THUMBPOSITION:
-		case SB_THUMBTRACK:
-			// don't change!! else you'll loose the 32bits value for a 16bits value
-			//					 si.nPos = HIWORD(wParam);
-			si.nPos = si.nTrackPos;
-			break;
-		}
-
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_POS;
-		SetScrollInfo((HWND)lParam, SB_CTL, &si, TRUE);
-		UpdateWindow(hwnd);
-		UpdateSSH2_KMod();
-		return 0;
 
 	case WM_CLOSE:
 		CloseWindow_KMod(DMODE_32_SSH2);
@@ -430,7 +372,9 @@ void sSH2_update()
 void sSH2_reset()
 {
 	SSH2_ViewMode = 0x7; //disasm ROM
-	SSH2_StartLineROMDisasm = SSH2_StartLineROM = SSH2_StartLineRAMDisasm = SSH2_StartLineRAM = SSH2_StartLineCache = 0;
+	SSH2_StartLineROMDisasm = 0x02000000;
+	SSH2_StartLineRAMDisasm = 0x06000000;
+	SSH2_StartLineROM = SSH2_StartLineRAM = SSH2_StartLineCache = 0;
 	SwitchSSH2ViewMode_KMod(); // init with wrong values (since no game loaded by default)
 }
 void sSH2_destroy()
