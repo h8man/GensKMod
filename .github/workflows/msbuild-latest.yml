@@ -1,0 +1,58 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Windows Latest Build
+
+on:
+ workflow_dispatch:
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: src/gensKMod.sln
+
+  # Configuration type to build.
+  # You can convert this to a build matrix if you need coverage of multiple configuration types.
+  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+  BUILD_CONFIGURATION: Release
+
+permissions:
+  contents: write   # REQUIRED for creating releases
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v3
+
+    - name: Build
+      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=Win32 ${{env.SOLUTION_FILE_PATH}}
+      
+    - name: Create ZIP with EXE + DLLs
+      run: |
+        mkdir release
+        xcopy src\Gens\bin\Release\*.exe release\
+        powershell Compress-Archive -Path release\* -DestinationPath genskmod-release-latest.zip
+        
+    - name: Upload EXE artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: genskmod-windows-release
+        path: release\
+        
+    - name: Release
+      uses: softprops/action-gh-release@v3
+      with:
+        tag_name: latest
+        name: "Latest Build"
+        prerelease: false
+        make_latest: "true"
+        overwrite_files: true         # This ensures the assets and release are overwritten
+        files: genskmod-release-*.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
