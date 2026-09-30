@@ -72,7 +72,9 @@ static LRESULT CALLBACK DasmBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, 
 	case DASMBOX_GOTO_ADDRESS:
 		if (state)
 		{
-			state->topLine = (UINT)wParam;
+			DWORD address = (DWORD)wParam;
+			DWORD startAddress = state->source.startAddress;
+			state->topLine = address >= startAddress ? address - startAddress : address;
 			DasmBox_UpdateScroll(hwnd, state);
 			InvalidateRect(hwnd, NULL, FALSE);
 		}
@@ -145,7 +147,7 @@ static LRESULT CALLBACK DasmBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, 
 				}
 				address = nextAddress;
 				for (UINT i = 0; i < state->source.addressLength; ++i)
-					addressText[i] = digits[(instructionAddress >> ((state->source.addressLength - i - 1) * 4)) & 15];
+					addressText[i] = digits[(instructionAddress + state->source.startAddress >> ((state->source.addressLength - i - 1) * 4)) & 15];
 				TextOutA(dc, 4, y, addressText, state->source.addressLength);
 				TextOutA(dc, 4 + metrics.tmAveCharWidth * (state->source.addressLength + 3), y, text, lstrlenA(text));
 			}

@@ -113,6 +113,7 @@ static void UpdateM68k_KMod()
 	{
 		dasmSource.lineCount = Rom_Size;
 		dasmSource.addressLength = 6;
+		dasmSource.startAddress = 0;
 		dasmSource.context = NULL;
 		dasmSource.getInstruction = GetM68kDasmInstruction;
 		SendDlgItemMessage(hM68K, IDC_68K_DASMBOX, DASMBOX_SET_SOURCE, 0, (LPARAM)&dasmSource);
@@ -369,4 +370,13 @@ void m68kdebug_destroy()
 void m68kdebug_dump()
 {
 	Dump68K_KMod(hM68K);
+}
+
+void m68kdebug_jumpRAM(DWORD adr)
+{
+	M68_ViewMode = 2; //RAM
+	M68k_StartLineRAM = adr / 8;
+	SwitchM68kViewMode_KMod();
+	UpdateM68k_KMod();
+	JumpM68kTo(adr);
 }

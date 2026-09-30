@@ -156,7 +156,7 @@ BOOL CALLBACK Z80DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	switch (Message)
 	{
 	case WM_INITDIALOG:
-		hFont = (HFONT)GetStockObject(OEM_FIXED_FONT);
+		hFont = (HFONT)GetStockObject(ANSI_FIXED_FONT);
 		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_RS1, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_RS2, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_RS3, WM_SETFONT, (WPARAM)hFont, TRUE);

@@ -1,5 +1,7 @@
 #include "hexbox.h"
 
+#define COLUMN_SPACING 2
+
 typedef struct
 {
 	const BYTE* data;
@@ -105,7 +107,7 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 			UINT itemSize = state->dataMode == HEXBOX_MODE_WORD ? 2 : 1;
 			SIZE_T rowSize = (SIZE_T)state->itemsPerRow * itemSize;
 			DWORD address = (DWORD)wParam;
-			SIZE_T offset = address > state->addressOffset ? address - state->addressOffset : address;
+			SIZE_T offset = address >= state->addressOffset ? address - state->addressOffset : address;
 			state->topRow = (UINT)(offset / rowSize);
 			HexBox_UpdateScroll(hwnd, state);
 			InvalidateRect(hwnd, NULL, FALSE);
@@ -183,7 +185,8 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 					BOOL flip = state->dataMode == HEXBOX_MODE_WORD && state->endianness == HEXBOX_ENDIAN_LITTLE && (i ^ 1) < count;
 					if (flip) textOffset = i ^ 1;
 					BYTE value = state->data[offset + textOffset];
-					text[i] = value >= 32 && value < 127 ? value : '.';
+					//text[i] = value >= 32 && value < 127 ? value : '.';
+					text[i] = value ? value : '.';
 				}
 				for (UINT i = 0; i < state->itemsPerRow; ++i)
 				{
@@ -211,10 +214,12 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 					}
 					if (i + 1 < state->itemsPerRow) hex[hexPos + hexDigitsPerItem] = ' ';
 				}
-				TextOutA(dc, 4, y, address, state->addressLength);
-				int hexX = 4 + metrics.tmAveCharWidth * (state->addressLength + 2);
-				TextOutA(dc, hexX, y, hex, hexLength);
-				TextOutA(dc, hexX + metrics.tmAveCharWidth * (hexLength + 3), y, text, (int)count);
+				int posX = 4;
+				TextOutA(dc, posX, y, address, state->addressLength);
+				posX += metrics.tmAveCharWidth * (state->addressLength + COLUMN_SPACING);
+				TextOutA(dc, posX, y, hex, hexLength);
+				posX += metrics.tmAveCharWidth * (hexLength + COLUMN_SPACING);
+				TextOutA(dc, posX, y, text, (int)count);
 			}
 		}
 

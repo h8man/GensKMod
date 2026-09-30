@@ -230,7 +230,7 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 	switch (Message)
 	{
 	case WM_INITDIALOG:
-		hFont = (HFONT)GetStockObject(OEM_FIXED_FONT);
+		hFont = (HFONT)GetStockObject(ANSI_FIXED_FONT);
 		SendDlgItemMessage(hwnd, IDC_S68K_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_S68K_STATUS_ADR, WM_SETFONT, (WPARAM)hFont, TRUE);
 		SendDlgItemMessage(hwnd, IDC_S68K_STATUS_DATA, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -327,7 +327,7 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				S68k_StartLinePRAM = S68k_StartLineDisasm / 8;
 				SwitchS68kViewMode_KMod();
 				UpdateCD_68K_KMod();
-				JumpS68kCustomView(sub68k_context.pc);
+				JumpS68kTo(sub68k_context.pc);
 			}
 			break;
 
