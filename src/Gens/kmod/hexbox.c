@@ -25,7 +25,7 @@ typedef struct
 	SIZE_T size;
 	UINT topRow;
 	UINT addressLength;
-	DWORD addressOffset;
+	DWORD startAddress;
 	UINT itemsPerRow;
 	UINT dataMode;
 	UINT endianness;
@@ -164,7 +164,7 @@ static void HexBox_ShowEditor(HWND hwnd, HEXBOX_STATE* state, int mouseX, int mo
 		value = (WORD)((state->data[offset] << 8) | state->data[offset + 1]);
 
 	state->edit.offset = offset;
-	state->edit.address = state->addressOffset + (DWORD)offset;
+	state->edit.address = state->startAddress + (DWORD)offset;
 	state->edit.itemSize = itemSize;
 	state->edit.editing = TRUE;
 	wsprintfA(text, itemSize == 1 ? "%02X" : "%04X", value);
@@ -207,6 +207,7 @@ static void HexBox_CommitEditor(HWND hwnd, HEXBOX_STATE* state)
 	notification.hdr.hwndFrom = hwnd;
 	notification.hdr.idFrom = (UINT_PTR)GetDlgCtrlID(hwnd);
 	notification.hdr.code = HEXBOXN_EDIT;
+	notification.offset = (DWORD)state->edit.offset;
 	notification.address = state->edit.address;
 	notification.itemSize = state->edit.itemSize;
 	notification.value = value;
@@ -269,16 +270,17 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 			UINT itemsPerRow = layoutFlags & HEXBOX_ITEMS_PER_ROW_MASK;
 			UINT dataMode = layoutFlags & HEXBOX_MODE_WORD;
 			UINT endianness = layoutFlags & HEXBOX_ENDIAN_LITTLE;
+			DWORD startAddress = (DWORD)lParam;
 			if (!addressLength) addressLength = 1;
 			if (addressLength > HEXBOX_MAX_ADDRESS_LENGTH) addressLength = HEXBOX_MAX_ADDRESS_LENGTH;
 			if (!itemsPerRow) itemsPerRow = 1;
 			if (itemsPerRow > HEXBOX_MAX_ITEMS_PER_ROW) itemsPerRow = HEXBOX_MAX_ITEMS_PER_ROW;
 			if (state->itemsPerRow != itemsPerRow || state->dataMode != dataMode) state->topRow = 0;
 			if (state->itemsPerRow != itemsPerRow || state->dataMode != dataMode ||
-				state->endianness != endianness || state->addressOffset != (DWORD)lParam)
+				state->endianness != endianness || state->startAddress != startAddress)
 				HexBox_HideEditor(state);
 			state->addressLength = addressLength;
-			state->addressOffset = (DWORD)lParam;
+			state->startAddress = startAddress;
 			state->itemsPerRow = itemsPerRow;
 			state->dataMode = dataMode;
 			state->endianness = endianness;
@@ -292,7 +294,8 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 			UINT itemSize = state->dataMode == HEXBOX_MODE_WORD ? 2 : 1;
 			SIZE_T rowSize = (SIZE_T)state->itemsPerRow * itemSize;
 			DWORD address = (DWORD)wParam;
-			SIZE_T offset = address >= state->addressOffset ? address - state->addressOffset : address;
+			SIZE_T offset = address >= state->startAddress ? address - state->startAddress : address;
+			if (offset > state->size) offset = state->size;
 			state->topRow = (UINT)(offset / rowSize);
 			HexBox_UpdateScroll(hwnd, state);
 			InvalidateRect(hwnd, NULL, FALSE);
@@ -377,12 +380,12 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 			{
 				SIZE_T offset = ((SIZE_T)state->topRow + row) * rowSize;
 				if (offset >= state->size) break;
-				char address[HEXBOX_MAX_ADDRESS_LENGTH], hex[HEXBOX_MAX_ITEMS_PER_ROW * 5], text[HEXBOX_MAX_ITEMS_PER_ROW * 2];
+				char addressText[HEXBOX_MAX_ADDRESS_LENGTH], hex[HEXBOX_MAX_ITEMS_PER_ROW * 5], text[HEXBOX_MAX_ITEMS_PER_ROW * 2];
 				SIZE_T count = state->size - offset;
-				DWORD addressValue = state->addressOffset + (DWORD)offset;
+				DWORD address = state->startAddress + (DWORD)offset;
 				if (count > rowSize) count = rowSize;
 				for (UINT i = 0; i < state->addressLength; ++i)
-					address[i] = digits[(addressValue >> ((state->addressLength - i - 1) * 4)) & 15];
+					addressText[i] = digits[(address >> ((state->addressLength - i - 1) * 4)) & 15];
 				for (SIZE_T i = 0; i < count; ++i)
 				{
 					SIZE_T textOffset = i;
@@ -419,7 +422,7 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 					if (i + 1 < state->itemsPerRow) hex[hexPos + hexDigitsPerItem] = ' ';
 				}
 				int posX = 4;
-				TextOutA(dc, posX, y, address, state->addressLength);
+				TextOutA(dc, posX, y, addressText, state->addressLength);
 				posX += metrics.tmAveCharWidth * (state->addressLength + COLUMN_SPACING);
 				TextOutA(dc, posX, y, hex, hexLength);
 				posX += metrics.tmAveCharWidth * (hexLength + COLUMN_SPACING);

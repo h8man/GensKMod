@@ -22,8 +22,8 @@ static void DasmBox_UpdateScroll(HWND hwnd, DASMBOX_STATE* state)
 
 	UINT page = (UINT)((rect.bottom - rect.top) / metrics.tmHeight);
 	if (!page) page = 1;
-	DWORD lineCount = state ? state->source.lineCount : 0;
-	SCROLLINFO si = { sizeof(si), SIF_RANGE | SIF_PAGE | SIF_POS, 0, lineCount ? (int)lineCount - 1 : 0, page, state ? (int)state->topLine : 0, 0 };
+	DWORD size = state ? state->source.size : 0;
+	SCROLLINFO si = { sizeof(si), SIF_RANGE | SIF_PAGE | SIF_POS, 0, size ? (int)size - 1 : 0, page, state ? (int)state->topLine : 0, 0 };
 	if (state) state->topLine = (UINT)SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
 	else SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
 }
@@ -62,8 +62,8 @@ static LRESULT CALLBACK DasmBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, 
 			else ZeroMemory(&state->source, sizeof(state->source));
 			if (!state->source.addressLength) state->source.addressLength = DASMBOX_DEFAULT_ADDRESS_LENGTH;
 			if (state->source.addressLength > DASMBOX_MAX_ADDRESS_LENGTH) state->source.addressLength = DASMBOX_MAX_ADDRESS_LENGTH;
-			if (!state->source.getInstruction) state->source.lineCount = 0;
-			if (state->source.lineCount > 0x7FFFFFFF) state->source.lineCount = 0x7FFFFFFF;
+			if (!state->source.getInstruction) state->source.size = 0;
+			if (state->source.size > 0x7FFFFFFF) state->source.size = 0x7FFFFFFF;
 
 			DasmBox_UpdateScroll(hwnd, state);
 			InvalidateRect(hwnd, NULL, FALSE);
@@ -74,7 +74,9 @@ static LRESULT CALLBACK DasmBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, 
 		{
 			DWORD address = (DWORD)wParam;
 			DWORD startAddress = state->source.startAddress;
-			state->topLine = address >= startAddress ? address - startAddress : address;
+			DWORD offset = address >= startAddress ? address - startAddress : address;
+			if (offset > state->source.size) offset = state->source.size;
+			state->topLine = offset;
 			DasmBox_UpdateScroll(hwnd, state);
 			InvalidateRect(hwnd, NULL, FALSE);
 		}
@@ -130,26 +132,29 @@ static LRESULT CALLBACK DasmBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, 
 
 		if (state && state->source.getInstruction)
 		{
-			DWORD address = state->topLine;
-			for (UINT row = 0, y = 0; y < (UINT)rect.bottom; ++row, y += metrics.tmHeight)
+			DWORD offset = state->topLine;
+			for (UINT y = 0; y < (UINT)rect.bottom; y += metrics.tmHeight)
 			{
-				DWORD line = state->topLine + row;
-				DWORD instructionAddress = address;
-				DWORD nextAddress;
+				DWORD instructionOffset = offset;
+				DWORD nextOffset;
+				DWORD address;
 				char text[DASMBOX_TEXT_CAPACITY];
 				text[0] = 0;
 				text[DASMBOX_TEXT_CAPACITY - 1] = 0;
 
 				char addressText[DASMBOX_MAX_ADDRESS_LENGTH];
-				if (!state->source.getInstruction(state->source.context, instructionAddress, &nextAddress, text, DASMBOX_TEXT_CAPACITY))
+				if (instructionOffset >= state->source.size ||
+					!state->source.getInstruction(state->source.context, instructionOffset, &nextOffset, text, DASMBOX_TEXT_CAPACITY))
 				{
 					break;
 				}
-				address = nextAddress;
+				address = state->source.startAddress + instructionOffset;
 				for (UINT i = 0; i < state->source.addressLength; ++i)
-					addressText[i] = digits[(instructionAddress + state->source.startAddress >> ((state->source.addressLength - i - 1) * 4)) & 15];
+					addressText[i] = digits[(address >> ((state->source.addressLength - i - 1) * 4)) & 15];
 				TextOutA(dc, 4, y, addressText, state->source.addressLength);
 				TextOutA(dc, 4 + metrics.tmAveCharWidth * (state->source.addressLength + 3), y, text, lstrlenA(text));
+				if (nextOffset <= instructionOffset) break;
+				offset = nextOffset;
 			}
 		}
 

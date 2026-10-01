@@ -11,16 +11,20 @@
 #define DASMBOX_MAX_ADDRESS_LENGTH 8
 #define DASMBOX_TEXT_CAPACITY 256
 
-typedef BOOL (CALLBACK *DASMBOX_GET_INSTRUCTION)(void* context, DWORD address, DWORD* nextAddress, LPSTR text, UINT textCapacity);
+/* The callback receives source-relative offsets and returns the next source-relative offset. */
+typedef BOOL (CALLBACK *DASMBOX_GET_INSTRUCTION)(void* context, DWORD offset, DWORD* nextOffset, LPSTR text, UINT textCapacity);
 
+/* size is the source extent/one-past-end offset; displayed addresses are startAddress + offset. */
 typedef struct
 {
-	DWORD lineCount;
+	DWORD size;
 	UINT addressLength;
 	DWORD startAddress;
 	void* context;
 	DASMBOX_GET_INSTRUCTION getInstruction;
 } DASMBOX_SOURCE;
+
+/* DASMBOXN_SCROLL reports the topLine scroll position. GOTO_ADDRESS takes an address of offset. */
 
 #ifdef __cplusplus
 extern "C" {

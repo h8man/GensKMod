@@ -53,14 +53,14 @@ unsigned int Next_Long_S68K(void)
 unsigned char S68k_ViewMode;
 unsigned int  S68k_StartLineDisasm, S68k_StartLineWRAM, S68k_StartLinePRAM;
 
-static BOOL CALLBACK GetS68kDasmInstruction(void* context, DWORD address, DWORD* nextAddress, LPSTR text, UINT textCapacity)
+static BOOL CALLBACK GetS68kDasmInstruction(void* context, DWORD offset, DWORD* nextOffset, LPSTR text, UINT textCapacity)
 {
 	char* instruction;
 	(void)context;
 
-	Current_PC_S68K = (int)address;
+	Current_PC_S68K = (int)offset;
 	instruction = M68KDisasm(Next_Word_S68K, Next_Long_S68K);
-	*nextAddress = Current_PC_S68K;
+	*nextOffset = Current_PC_S68K;
 	lstrcpynA(text, instruction ? instruction : "", textCapacity);
 	return TRUE;
 }
@@ -83,7 +83,7 @@ void UpdateCD_68K_KMod()
 
 	if ((S68k_ViewMode & 2) && (S68k_ViewMode & 1))
 	{
-		dasmSource.lineCount = Rom_Size;
+		dasmSource.size = Rom_Size;
 		dasmSource.addressLength = 5;
 		dasmSource.startAddress = 0;
 		dasmSource.context = NULL;

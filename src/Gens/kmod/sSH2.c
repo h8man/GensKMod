@@ -28,30 +28,29 @@ static BOOL SSH2_IsDisasmView(void)
 		((SSH2_ViewMode & 8) && (SSH2_ViewMode & 4));
 }
 
-static BOOL CALLBACK GetSSH2DasmInstruction(void* context, DWORD address, DWORD* nextAddress, LPSTR text, UINT textCapacity)
+static BOOL CALLBACK GetSSH2DasmInstruction(void* context, DWORD offset, DWORD* nextOffset, LPSTR text, UINT textCapacity)
 {
 	char instruction[DASMBOX_TEXT_CAPACITY];
-	DWORD startAddress, endAddress, offset;
+	DWORD startAddress, endAddress, instructionAddress;
 	(void)context;
 
 	if (SSH2_ViewMode & 2)
 	{
 		startAddress = 0x02000000;
-		offset = 0x02000000 + address;
 		endAddress = 0x02400000;
 	}
 	else
 	{
 		startAddress = 0x06000000;
-		offset = 0x06000000 + address;
 		endAddress = 0x06040000;
 	}
-	if (offset < startAddress || offset > endAddress - 2)
+	if (offset > endAddress - startAddress - 2)
 		return FALSE;
 
-	SH2Disasm(instruction, offset, SH2_Read_Word(&S_SH2, offset), 0);
+	instructionAddress = startAddress + offset;
+	SH2Disasm(instruction, instructionAddress, SH2_Read_Word(&S_SH2, instructionAddress), 0);
 	instruction[DASMBOX_TEXT_CAPACITY - 1] = 0;
-	*nextAddress = address + 2;
+	*nextOffset = offset + 2;
 	lstrcpynA(text, instruction + 8, textCapacity);
 	return TRUE;
 }
@@ -84,7 +83,7 @@ void UpdateSSH2_KMod()
 
 	if ((SSH2_ViewMode & 2) && (SSH2_ViewMode & 1))
 	{
-		dasmSource.lineCount = sizeof(_32X_Rom);
+		dasmSource.size = sizeof(_32X_Rom);
 		dasmSource.addressLength = 8;
 		dasmSource.startAddress = 0x02000000;
 		dasmSource.context = NULL;
@@ -93,7 +92,7 @@ void UpdateSSH2_KMod()
 	}
 	else if ((SSH2_ViewMode & 8) && (SSH2_ViewMode & 4))
 	{
-		dasmSource.lineCount = sizeof(_32X_Ram);
+		dasmSource.size = sizeof(_32X_Ram);
 		dasmSource.addressLength = 8;
 		dasmSource.startAddress = 0x06000000;
 		dasmSource.context = NULL;

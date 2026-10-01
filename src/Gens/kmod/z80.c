@@ -25,20 +25,20 @@ static unsigned int  Z80_StartLineDisasm, Z80_StartLineMem;
 static CHAR debug_string[1024];
 HFONT hFont;
 
-static BOOL CALLBACK GetZ80DasmInstruction(void* context, DWORD address, DWORD* nextAddress, LPSTR text, UINT textCapacity)
+static BOOL CALLBACK GetZ80DasmInstruction(void* context, DWORD offset, DWORD* nextOffset, LPSTR text, UINT textCapacity)
 {
 	char instruction[128];
 	int pc;
 	int textLength;
 	(void)context;
 
-	if (address >= sizeof(Ram_Z80))
+	if (offset >= sizeof(Ram_Z80))
 		return FALSE;
 
-	pc = (int)address;
+	pc = (int)offset;
 	z80dis(Ram_Z80, &pc, instruction);
 
-	*nextAddress = (DWORD)pc;
+	*nextOffset = (DWORD)pc;
 	textLength = lstrlenA(instruction);
 	if (textLength && instruction[textLength - 1] == '\n')
 		instruction[textLength - 1] = 0;
@@ -59,7 +59,7 @@ void UpdateZ80_KMod()
 	if (Z80_ViewMode == 0)
 	{
 		DASMBOX_SOURCE dasmSource;
-		dasmSource.lineCount = sizeof(Ram_Z80);
+		dasmSource.size = sizeof(Ram_Z80);
 		dasmSource.addressLength = 4;
 		dasmSource.startAddress = 0;
 		dasmSource.context = NULL;

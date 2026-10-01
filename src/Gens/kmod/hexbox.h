@@ -23,11 +23,17 @@
 #define HEXBOX_DEFAULT_ENDIANNESS HEXBOX_ENDIAN_BIG
 #define HEXBOX_MAX_ADDRESS_LENGTH 8
 #define HEXBOX_MAX_ITEMS_PER_ROW 64
-/* SET_DATA: wParam=byte count, lParam=BYTE*. SET_LAYOUT: wParam=HEXBOX_LAYOUT_WPARAM(...), lParam=base address. */
+/*
+ * Offset is source-relative and ranges from zero through the data size; size is the one-past-end boundary.
+ * The displayed address is startAddress + offset.
+ * SET_DATA: wParam=byte count, lParam=BYTE*. SET_LAYOUT: wParam=HEXBOX_LAYOUT_WPARAM(...), lParam=startAddress.
+ * GOTO_ADDRESS takes an address or offset; HEXBOXN_SCROLL reports the topRow scroll position.
+ */
 
 typedef struct
 {
 	NMHDR hdr;
+	DWORD offset;
 	DWORD address;
 	UINT itemSize;
 	WORD value;
