@@ -367,11 +367,26 @@ void ToggleAutoShot_KMod( )
 	}
 }
 
+static BOOL FocusedControlWantsMessage(LPMSG lpMsg)
+{
+	HWND focus;
+	if (lpMsg->message != WM_KEYDOWN && lpMsg->message != WM_SYSKEYDOWN) return FALSE;
+	focus = GetFocus();
+	return focus && focus == lpMsg->hwnd &&
+		(SendMessage(focus, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg) & DLGC_WANTMESSAGE) != 0;
+}
+
 BOOL IsDialogMsg_KMod( LPMSG lpMsg )
 {
 	UCHAR mode;
 
 	if (vdpdebug_isMessage(lpMsg))	return TRUE;
+	if (FocusedControlWantsMessage(lpMsg))
+	{
+		TranslateMessage(lpMsg);
+		DispatchMessage(lpMsg);
+		return TRUE;
+	}
 
 	for (mode = 0; mode < WIN_NUMBER; mode++)
 	{
