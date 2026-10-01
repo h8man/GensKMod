@@ -71,8 +71,16 @@ static BOOL CALLBACK GetM68kDasmInstruction(void* context, DWORD address, DWORD*
 
 static void SwitchM68kViewMode_KMod()
 {
+	HWND hexBox = GetDlgItem(hM68K, IDC_68K_HEXBOX);
+	LONG_PTR hexBoxStyle = GetWindowLongPtr(hexBox, GWL_STYLE);
+	if (M68_ViewMode == 2)
+		hexBoxStyle |= HEXBOX_STYLE_EDITABLE;
+	else
+		hexBoxStyle &= ~((LONG_PTR)HEXBOX_STYLE_EDITABLE);
+	SetWindowLongPtr(hexBox, GWL_STYLE, hexBoxStyle);
+
 	ShowWindow(GetDlgItem(hM68K, IDC_68K_DASMBOX), M68_ViewMode == 0 ? SW_SHOW : SW_HIDE);
-	ShowWindow(GetDlgItem(hM68K, IDC_68K_HEXBOX), M68_ViewMode == 0 ? SW_HIDE : SW_SHOW);
+	ShowWindow(hexBox, M68_ViewMode == 0 ? SW_HIDE : SW_SHOW);
 	if (M68_ViewMode == 0)
 	{
 		SendDlgItemMessage(hM68K, IDC_68K_VIEW_ROM, WM_SETTEXT, (WPARAM)0, (LPARAM)"View ROM");

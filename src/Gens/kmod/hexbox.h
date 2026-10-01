@@ -8,6 +8,8 @@
 #define HEXBOX_SET_LAYOUT (WM_APP + 2)
 #define HEXBOX_GOTO_ADDRESS (WM_APP + 3)
 #define HEXBOXN_SCROLL 1
+#define HEXBOX_STYLE_EDITABLE 0x00008000L
+#define HEXBOXN_EDIT (0U - 1000U)
 #define HEXBOX_LAYOUT_WPARAM(addressLength, itemsPerRow, flags) \
 	((WPARAM)MAKELONG((addressLength), (((itemsPerRow) & HEXBOX_ITEMS_PER_ROW_MASK) | (flags))))
 #define HEXBOX_ITEMS_PER_ROW_MASK 0x007F
@@ -22,6 +24,14 @@
 #define HEXBOX_MAX_ADDRESS_LENGTH 8
 #define HEXBOX_MAX_ITEMS_PER_ROW 64
 /* SET_DATA: wParam=byte count, lParam=BYTE*. SET_LAYOUT: wParam=HEXBOX_LAYOUT_WPARAM(...), lParam=base address. */
+
+typedef struct
+{
+	NMHDR hdr;
+	DWORD address;
+	UINT itemSize;
+	WORD value;
+} HEXBOX_EDIT_NOTIFICATION;
 
 #ifdef __cplusplus
 extern "C" {
