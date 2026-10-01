@@ -260,6 +260,23 @@ BOOL CALLBACK M68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		SwitchM68kViewMode_KMod();
 		break;
 
+	case WM_NOTIFY:
+		{
+			HEXBOX_EDIT_NOTIFICATION* notification = (HEXBOX_EDIT_NOTIFICATION*)lParam;
+			if (notification->hdr.idFrom == IDC_68K_HEXBOX &&
+				notification->hdr.code == HEXBOXN_EDIT && M68_ViewMode == 2 &&
+				notification->offset < sizeof(Ram_68k))
+			{
+				if (notification->itemSize == 1)
+					Ram_68k[notification->offset] = (unsigned char)notification->value;
+				else if (notification->itemSize == 2 && sizeof(Ram_68k) - notification->offset >= 2)
+				{
+					Ram_68k[notification->offset] = (unsigned char)notification->value;
+					Ram_68k[notification->offset + 1] = (unsigned char)(notification->value >> 8);
+				}
+			}
+		}
+		break;
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
