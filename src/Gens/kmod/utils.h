@@ -15,6 +15,8 @@ int CopyToClipboard(int Type, unsigned char* Buffer, size_t buflen, BOOL clear);
 
 void SubclassEditMaxText(HWND hDlg, int controlID);
 
+void SubclassRegisterText(HWND hDlg, int controlID);
+
 #ifdef __cplusplus
 };
 #endif

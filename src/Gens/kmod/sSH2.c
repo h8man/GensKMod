@@ -21,6 +21,7 @@ static HWND hSSH2;
 static unsigned char SSH2_ViewMode;
 static unsigned int  SSH2_StartLineROMDisasm, SSH2_StartLineRAMDisasm, SSH2_StartLineRAM, SSH2_StartLineROM, SSH2_StartLineCache;
 static CHAR debug_string[1024];
+static CHAR register_text[2048];
 
 static BOOL SSH2_IsDisasmView(void)
 {
@@ -118,16 +119,19 @@ void UpdateSSH2_KMod()
 			HEXBOX_LAYOUT_WPARAM(8, 4, HEXBOX_MODE_WORD), (LPARAM)0xC0000000);
 	}
 	wsprintf(debug_string, "T=%d S=%d Q=%d M=%d I=%.1X SR=%.4X Status=%.4X", SH2_Get_SR(&S_SH2) & 1, (SH2_Get_SR(&S_SH2) >> 1) & 1, (SH2_Get_SR(&S_SH2) >> 8) & 1, (SH2_Get_SR(&S_SH2) >> 9) & 1, (SH2_Get_SR(&S_SH2) >> 4) & 0xF, SH2_Get_SR(&S_SH2), S_SH2.Status & 0xFFFF);
-	SendDlgItemMessage(hSSH2, IDC_SSH2_STATUS_SR, WM_SETTEXT, 0, (LPARAM)debug_string);
+	lstrcpy(register_text, debug_string);
+		lstrcat(register_text, "\r\n");
 
-	wsprintf(debug_string, "R0=%.8X R1=%.8X R2=%.8X R3=%.8X\nR4=%.8X R5=%.8X R6=%.8X R7=%.8X\nR8=%.8X R9=%.8X RA=%.8X RB=%.8X\nRC=%.8X RD=%.8X RE=%.8X RF=%.8X", SH2_Get_R(&S_SH2, 0), SH2_Get_R(&S_SH2, 1), SH2_Get_R(&S_SH2, 2), SH2_Get_R(&S_SH2, 3), SH2_Get_R(&S_SH2, 4), SH2_Get_R(&S_SH2, 5), SH2_Get_R(&S_SH2, 6), SH2_Get_R(&S_SH2, 7), SH2_Get_R(&S_SH2, 8), SH2_Get_R(&S_SH2, 9), SH2_Get_R(&S_SH2, 0xA), SH2_Get_R(&S_SH2, 0xB), SH2_Get_R(&S_SH2, 0xC), SH2_Get_R(&S_SH2, 0xD), SH2_Get_R(&S_SH2, 0xE), SH2_Get_R(&S_SH2, 0xF));
-	SendDlgItemMessage(hSSH2, IDC_SSH2_STATUS_ADR, WM_SETTEXT, 0, (LPARAM)debug_string);
+	wsprintf(debug_string, "R0=%.8X R1=%.8X R2=%.8X R3=%.8X\r\nR4=%.8X R5=%.8X R6=%.8X R7=%.8X\r\nR8=%.8X R9=%.8X RA=%.8X RB=%.8X\r\nRC=%.8X RD=%.8X RE=%.8X RF=%.8X", SH2_Get_R(&S_SH2, 0), SH2_Get_R(&S_SH2, 1), SH2_Get_R(&S_SH2, 2), SH2_Get_R(&S_SH2, 3), SH2_Get_R(&S_SH2, 4), SH2_Get_R(&S_SH2, 5), SH2_Get_R(&S_SH2, 6), SH2_Get_R(&S_SH2, 7), SH2_Get_R(&S_SH2, 8), SH2_Get_R(&S_SH2, 9), SH2_Get_R(&S_SH2, 0xA), SH2_Get_R(&S_SH2, 0xB), SH2_Get_R(&S_SH2, 0xC), SH2_Get_R(&S_SH2, 0xD), SH2_Get_R(&S_SH2, 0xE), SH2_Get_R(&S_SH2, 0xF));
+	lstrcat(register_text, debug_string);
+		lstrcat(register_text, "\r\n");
 
-	wsprintf(debug_string, "GBR=%.8X VBR=%.8X PR=%.8X\nMACH=%.8X MACL=%.8X\nIL=%.2X IV=%.2X", SH2_Get_GBR(&S_SH2), SH2_Get_VBR(&S_SH2), SH2_Get_PR(&S_SH2), SH2_Get_MACH(&S_SH2), SH2_Get_MACL(&S_SH2), S_SH2.INT.Prio, S_SH2.INT.Vect);
-	SendDlgItemMessage(hSSH2, IDC_SSH2_STATUS_DATA, WM_SETTEXT, 0, (LPARAM)debug_string);
+	wsprintf(debug_string, "GBR=%.8X VBR=%.8X PR=%.8X\r\nMACH=%.8X MACL=%.8X\r\nIL=%.2X IV=%.2X", SH2_Get_GBR(&S_SH2), SH2_Get_VBR(&S_SH2), SH2_Get_PR(&S_SH2), SH2_Get_MACH(&S_SH2), SH2_Get_MACL(&S_SH2), S_SH2.INT.Prio, S_SH2.INT.Vect);
+	lstrcat(register_text, debug_string);
+	SetDlgItemText(hSSH2, IDC_SSH2_STATUS_SR, register_text);
 
 	wsprintf(debug_string, "PC=%.8X", SH2_Get_PC(&S_SH2));//(S_SH2.PC - S_SH2.Base_PC) - 4);
-	SendDlgItemMessage(hSSH2, IDC_SSH2_PC, WM_SETTEXT, (WPARAM)0, (LPARAM)debug_string);
+	SendDlgItemMessage(hSSH2, IDC_SSH2_PC, WM_SETTEXT, 0, (LPARAM)debug_string);
 
 }
 
@@ -198,15 +202,11 @@ void SwitchSSH2ViewMode_KMod()
 
 BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	HFONT hFont = NULL;
 	unsigned int curPC;
 	switch (Message)
 	{
 	case WM_INITDIALOG:
-		hFont = (HFONT)GetStockObject(ANSI_FIXED_FONT);
-		SendDlgItemMessage(hwnd, IDC_SSH2_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
-		SendDlgItemMessage(hwnd, IDC_SSH2_STATUS_ADR, WM_SETFONT, (WPARAM)hFont, TRUE);
-		SendDlgItemMessage(hwnd, IDC_SSH2_STATUS_DATA, WM_SETFONT, (WPARAM)hFont, TRUE);
+		SubclassRegisterText(hwnd, IDC_SSH2_STATUS_SR);
 		SendDlgItemMessage(hwnd, IDC_SSH2_JUMP_TO_INPUT, WM_SETTEXT, (WPARAM)0, (LPARAM)"0x00000000");
 
 		SubclassEditMaxText(hwnd, IDC_SSH2_JUMP_TO_INPUT);
@@ -368,7 +368,6 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_DESTROY:
-		DeleteObject((HGDIOBJ)hFont);
 		sSH2_destroy( );
 		PostQuitMessage(0);
 		break;

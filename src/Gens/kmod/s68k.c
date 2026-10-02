@@ -23,6 +23,7 @@
 static HWND hCD_68K;
 static int Current_PC_S68K;
 static CHAR debug_string[1024];
+static CHAR register_text[2048];
 
 unsigned short Next_Word_S68K(void)
 {
@@ -113,16 +114,19 @@ void UpdateCD_68K_KMod()
 
 
 	wsprintf(debug_string, "X=%d N=%d Z=%d V=%d C=%d  SR=%.4X Cycles=%.10d", (sub68k_context.sr & 0x10) ? 1 : 0, (sub68k_context.sr & 0x8) ? 1 : 0, (sub68k_context.sr & 0x4) ? 1 : 0, (sub68k_context.sr & 0x2) ? 1 : 0, (sub68k_context.sr & 0x1) ? 1 : 0, sub68k_context.sr, sub68k_context.odometer);
-	SendDlgItemMessage(hCD_68K, IDC_S68K_STATUS_SR, WM_SETTEXT, 0, (LPARAM)debug_string);
+	lstrcpy(register_text, debug_string);
+		lstrcat(register_text, "\r\n");
 
-	wsprintf(debug_string, "A0=%.8X A1=%.8X A2=%.8X A3=%.8X A4=%.8X A5=%.8X A6=%.8X A7=%.8X\n", sub68k_context.areg[0], sub68k_context.areg[1], sub68k_context.areg[2], sub68k_context.areg[3], sub68k_context.areg[4], sub68k_context.areg[5], sub68k_context.areg[6], sub68k_context.areg[7]);
-	SendDlgItemMessage(hCD_68K, IDC_S68K_STATUS_ADR, WM_SETTEXT, 0, (LPARAM)debug_string);
+	wsprintf(debug_string, "A0=%.8X A1=%.8X A2=%.8X A3=%.8X A4=%.8X A5=%.8X A6=%.8X A7=%.8X", sub68k_context.areg[0], sub68k_context.areg[1], sub68k_context.areg[2], sub68k_context.areg[3], sub68k_context.areg[4], sub68k_context.areg[5], sub68k_context.areg[6], sub68k_context.areg[7]);
+	lstrcat(register_text, debug_string);
+		lstrcat(register_text, "\r\n");
 
-	wsprintf(debug_string, "D0=%.8X D1=%.8X D2=%.8X D3=%.8X D4=%.8X D5=%.8X D6=%.8X D7=%.8X\n", sub68k_context.dreg[0], sub68k_context.dreg[1], sub68k_context.dreg[2], sub68k_context.dreg[3], sub68k_context.dreg[4], sub68k_context.dreg[5], sub68k_context.dreg[6], sub68k_context.dreg[7]);
-	SendDlgItemMessage(hCD_68K, IDC_S68K_STATUS_DATA, WM_SETTEXT, 0, (LPARAM)debug_string);
+	wsprintf(debug_string, "D0=%.8X D1=%.8X D2=%.8X D3=%.8X D4=%.8X D5=%.8X D6=%.8X D7=%.8X", sub68k_context.dreg[0], sub68k_context.dreg[1], sub68k_context.dreg[2], sub68k_context.dreg[3], sub68k_context.dreg[4], sub68k_context.dreg[5], sub68k_context.dreg[6], sub68k_context.dreg[7]);
+	lstrcat(register_text, debug_string);
+	SetDlgItemText(hCD_68K, IDC_S68K_STATUS_SR, register_text);
 
 	wsprintf(debug_string, "PC=%.8X", sub68k_context.pc);
-	SendDlgItemMessage(hCD_68K, IDC_S68K_PC, WM_SETTEXT, (WPARAM)0, (LPARAM)debug_string);
+	SendDlgItemMessage(hCD_68K, IDC_S68K_PC, WM_SETTEXT, 0, (LPARAM)debug_string);
 
 }
 
@@ -233,15 +237,10 @@ void DumpS68KWRam_KMod(HWND hwnd)
 BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 
-	HFONT hFont = NULL;
-
 	switch (Message)
 	{
 	case WM_INITDIALOG:
-		hFont = (HFONT)GetStockObject(ANSI_FIXED_FONT);
-		SendDlgItemMessage(hwnd, IDC_S68K_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
-		SendDlgItemMessage(hwnd, IDC_S68K_STATUS_ADR, WM_SETFONT, (WPARAM)hFont, TRUE);
-		SendDlgItemMessage(hwnd, IDC_S68K_STATUS_DATA, WM_SETFONT, (WPARAM)hFont, TRUE);
+		SubclassRegisterText(hwnd, IDC_S68K_STATUS_SR);
 		SendDlgItemMessage(hwnd, IDC_S68K_JUMP_TO_INPUT, WM_SETTEXT, (WPARAM)0, (LPARAM)"0x00000000");
 
 		SubclassEditMaxText(hwnd, IDC_S68K_JUMP_TO_INPUT);
@@ -381,7 +380,6 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 		break;
 
 	case WM_DESTROY:
-		DeleteObject((HGDIOBJ)hFont);
 		DestroyWindow(hCD_68K);
 		PostQuitMessage(0);
 		break;

@@ -23,7 +23,7 @@ static HWND hZ80;
 static BOOL Z80_ViewMode;
 static unsigned int  Z80_StartLineDisasm, Z80_StartLineMem;
 static CHAR debug_string[1024];
-HFONT hFont;
+static CHAR register_text[2048];
 
 static BOOL CALLBACK GetZ80DasmInstruction(void* context, DWORD offset, DWORD* nextOffset, LPSTR text, UINT textCapacity)
 {
@@ -83,19 +83,24 @@ void UpdateZ80_KMod()
 
 
 	wsprintf(debug_string, "AF =%.4X BC =%.4X DE =%.4X HL =%.4X\nAF2=%.4X BC2=%.4X DE2=%.4X HL2=%.4X", z80_Get_AF(&M_Z80), M_Z80.BC.w.BC, M_Z80.DE.w.DE, M_Z80.HL.w.HL, z80_Get_AF2(&M_Z80), M_Z80.BC2.w.BC2, M_Z80.DE2.w.DE2, M_Z80.HL2.w.HL2);
-	SendDlgItemMessage(hZ80, IDC_Z80_STATUS_RS1, WM_SETTEXT, 0, (LPARAM)debug_string);
+	lstrcpy(register_text, debug_string);
+		lstrcat(register_text, "\r\n");
 
 	wsprintf(debug_string, "IX =%.4X IY =%.4X SP =%.4X ", M_Z80.IX.w.IX, M_Z80.IY.w.IY, M_Z80.SP.w.SP);
-	SendDlgItemMessage(hZ80, IDC_Z80_STATUS_RS3, WM_SETTEXT, 0, (LPARAM)debug_string);
+	lstrcat(register_text, debug_string);
+		lstrcat(register_text, "\r\n");
 
 	wsprintf(debug_string, "IFF1=%d IFF2=%d I=%.2X R=%.2X IM=%.2X", M_Z80.IFF.b.IFF1, M_Z80.IFF.b.IFF2, M_Z80.I, M_Z80.R.b.R1, M_Z80.IM);
-	SendDlgItemMessage(hZ80, IDC_Z80_STATUS_MISC, WM_SETTEXT, 0, (LPARAM)debug_string);
+	lstrcat(register_text, debug_string);
+		lstrcat(register_text, "\r\n");
 
 	wsprintf(debug_string, "S=%d Z=%d Y=%d H=%d X=%d P=%d N=%d C=%d", (z80_Get_AF(&M_Z80) & 0x80) >> 7, (z80_Get_AF(&M_Z80) & 0x40) >> 6, (z80_Get_AF(&M_Z80) & 0x20) >> 5, (z80_Get_AF(&M_Z80) & 0x10) >> 4, (z80_Get_AF(&M_Z80) & 0x08) >> 3, (z80_Get_AF(&M_Z80) & 0x04) >> 2, (z80_Get_AF(&M_Z80) & 0x02) >> 1, (z80_Get_AF(&M_Z80) & 0x01) >> 0);
-	SendDlgItemMessage(hZ80, IDC_Z80_STATUS_FLAG, WM_SETTEXT, 0, (LPARAM)debug_string);
+	lstrcat(register_text, debug_string);
+		lstrcat(register_text, "\r\n");
 
 	wsprintf(debug_string, "Bank = %0.8X State=%.2X", Bank_Z80, Z80_State);
-	SendDlgItemMessage(hZ80, IDC_Z80_STATUS_BANK, WM_SETTEXT, 0, (LPARAM)debug_string);
+	lstrcat(register_text, debug_string);
+	SetDlgItemText(hZ80, IDC_Z80_STATUS_RS1, register_text);
 
 	wsprintf(debug_string, "PC=%.4X", z80_Get_PC(&M_Z80));
 	SendDlgItemMessage(hZ80, IDC_Z80_PC, WM_SETTEXT, 0, (LPARAM)debug_string);
@@ -164,13 +169,7 @@ BOOL CALLBACK Z80DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	switch (Message)
 	{
 	case WM_INITDIALOG:
-		hFont = (HFONT)GetStockObject(ANSI_FIXED_FONT);
-		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_RS1, WM_SETFONT, (WPARAM)hFont, TRUE);
-		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_RS2, WM_SETFONT, (WPARAM)hFont, TRUE);
-		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_RS3, WM_SETFONT, (WPARAM)hFont, TRUE);
-		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_MISC, WM_SETFONT, (WPARAM)hFont, TRUE);
-		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_FLAG, WM_SETFONT, (WPARAM)hFont, TRUE);
-		SendDlgItemMessage(hwnd, IDC_Z80_STATUS_BANK, WM_SETFONT, (WPARAM)hFont, TRUE);
+		SubclassRegisterText(hwnd, IDC_Z80_STATUS_RS1);
 		SendDlgItemMessage(hwnd, IDC_Z80_JUMP_TO_INPUT, WM_SETTEXT, (WPARAM)0, (LPARAM)"0x0000");
 
 		SubclassEditMaxText(hwnd, IDC_Z80_JUMP_TO_INPUT);
@@ -300,7 +299,6 @@ void z80debug_reset()
 }
 void z80debug_destroy()
 {
-	DeleteObject((HGDIOBJ)hFont);
 	DestroyWindow(hZ80);
 }
 

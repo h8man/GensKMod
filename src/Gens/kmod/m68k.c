@@ -22,7 +22,7 @@
 static HWND hM68K;
 static int Current_PC_M68K;
 static CHAR debug_string[1024];
-HFONT hFont;
+static CHAR register_text[2048];
 
 static unsigned short Next_Word_M68K(void)
 {
@@ -140,16 +140,21 @@ static void UpdateM68k_KMod()
 	}
 
 	wsprintf(debug_string, "X=%d N=%d Z=%d V=%d C=%d  SR=%.4X Cycles=%.10d", (main68k_context.sr & 0x10) ? 1 : 0, (main68k_context.sr & 0x8) ? 1 : 0, (main68k_context.sr & 0x4) ? 1 : 0, (main68k_context.sr & 0x2) ? 1 : 0, (main68k_context.sr & 0x1) ? 1 : 0, main68k_context.sr, main68k_context.odometer);
-	SendDlgItemMessage(hM68K, IDC_68K_STATUS_SR, WM_SETTEXT, 0, (LPARAM)debug_string);
+	lstrcpy(register_text, debug_string);
+	lstrcat(register_text, "\r\n");
+	lstrcat(register_text, "\r\n");
 
-	wsprintf(debug_string, "A0=%.8X A1=%.8X A2=%.8X A3=%.8X\nA4=%.8X A5=%.8X A6=%.8X A7=%.8X\n", main68k_context.areg[0], main68k_context.areg[1], main68k_context.areg[2], main68k_context.areg[3], main68k_context.areg[4], main68k_context.areg[5], main68k_context.areg[6], main68k_context.areg[7]);
-	SendDlgItemMessage(hM68K, IDC_68K_STATUS_ADR, WM_SETTEXT, 0, (LPARAM)debug_string);
+	wsprintf(debug_string, "A0=%.8X A1=%.8X A2=%.8X A3=%.8X\r\nA4=%.8X A5=%.8X A6=%.8X A7=%.8X", main68k_context.areg[0], main68k_context.areg[1], main68k_context.areg[2], main68k_context.areg[3], main68k_context.areg[4], main68k_context.areg[5], main68k_context.areg[6], main68k_context.areg[7]);
+	lstrcat(register_text, debug_string);
+	lstrcat(register_text, "\r\n");
+	lstrcat(register_text, "\r\n");
 
-	wsprintf(debug_string, "D0=%.8X D1=%.8X D2=%.8X D3=%.8X\nD4=%.8X D5=%.8X D6=%.8X D7=%.8X\n", main68k_context.dreg[0], main68k_context.dreg[1], main68k_context.dreg[2], main68k_context.dreg[3], main68k_context.dreg[4], main68k_context.dreg[5], main68k_context.dreg[6], main68k_context.dreg[7]);
-	SendDlgItemMessage(hM68K, IDC_68K_STATUS_DATA, WM_SETTEXT, 0, (LPARAM)debug_string);
+	wsprintf(debug_string, "D0=%.8X D1=%.8X D2=%.8X D3=%.8X\r\nD4=%.8X D5=%.8X D6=%.8X D7=%.8X", main68k_context.dreg[0], main68k_context.dreg[1], main68k_context.dreg[2], main68k_context.dreg[3], main68k_context.dreg[4], main68k_context.dreg[5], main68k_context.dreg[6], main68k_context.dreg[7]);
+	lstrcat(register_text, debug_string);
+	SetDlgItemText(hM68K, IDC_68K_STATUS_SR, register_text);
 
 	wsprintf(debug_string, "PC=%.8X", main68k_context.pc);
-	SendDlgItemMessage(hM68K, IDC_68K_PC, WM_SETTEXT, (WPARAM)0, (LPARAM)debug_string);
+	SendDlgItemMessage(hM68K, IDC_68K_PC, WM_SETTEXT, 0, (LPARAM)debug_string);
 
 	/*
 	sprintf(GString, "Bank for Z80 = %.8X\n", Bank_Z80);
@@ -245,10 +250,7 @@ BOOL CALLBACK M68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	switch (Message)
 	{
 	case WM_INITDIALOG:
-		hFont = (HFONT)GetStockObject(ANSI_FIXED_FONT);
-		SendDlgItemMessage(hwnd, IDC_68K_STATUS_SR, WM_SETFONT, (WPARAM)hFont, TRUE);
-		SendDlgItemMessage(hwnd, IDC_68K_STATUS_ADR, WM_SETFONT, (WPARAM)hFont, TRUE);
-		SendDlgItemMessage(hwnd, IDC_68K_STATUS_DATA, WM_SETFONT, (WPARAM)hFont, TRUE);
+		SubclassRegisterText(hwnd, IDC_68K_STATUS_SR);
 		SendDlgItemMessage(hwnd, IDC_68K_JUMP_TO_INPUT, WM_SETTEXT, (WPARAM)0, (LPARAM)"0x00000000");
 
 		SubclassEditMaxText(hwnd, IDC_68K_JUMP_TO_INPUT);
@@ -388,7 +390,6 @@ void m68kdebug_reset()
 }
 void m68kdebug_destroy()
 {
-	DeleteObject((HGDIOBJ)hFont);
 	DestroyWindow(hM68K);
 }
 
