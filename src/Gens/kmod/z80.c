@@ -85,17 +85,21 @@ void UpdateZ80_KMod()
 	wsprintf(debug_string, "AF =%.4X BC =%.4X DE =%.4X HL =%.4X\nAF2=%.4X BC2=%.4X DE2=%.4X HL2=%.4X", z80_Get_AF(&M_Z80), M_Z80.BC.w.BC, M_Z80.DE.w.DE, M_Z80.HL.w.HL, z80_Get_AF2(&M_Z80), M_Z80.BC2.w.BC2, M_Z80.DE2.w.DE2, M_Z80.HL2.w.HL2);
 	lstrcpy(register_text, debug_string);
 		lstrcat(register_text, "\r\n");
+		lstrcat(register_text, "\r\n");
 
 	wsprintf(debug_string, "IX =%.4X IY =%.4X SP =%.4X ", M_Z80.IX.w.IX, M_Z80.IY.w.IY, M_Z80.SP.w.SP);
 	lstrcat(register_text, debug_string);
+		lstrcat(register_text, "\r\n");
 		lstrcat(register_text, "\r\n");
 
 	wsprintf(debug_string, "IFF1=%d IFF2=%d I=%.2X R=%.2X IM=%.2X", M_Z80.IFF.b.IFF1, M_Z80.IFF.b.IFF2, M_Z80.I, M_Z80.R.b.R1, M_Z80.IM);
 	lstrcat(register_text, debug_string);
 		lstrcat(register_text, "\r\n");
+		lstrcat(register_text, "\r\n");
 
 	wsprintf(debug_string, "S=%d Z=%d Y=%d H=%d X=%d P=%d N=%d C=%d", (z80_Get_AF(&M_Z80) & 0x80) >> 7, (z80_Get_AF(&M_Z80) & 0x40) >> 6, (z80_Get_AF(&M_Z80) & 0x20) >> 5, (z80_Get_AF(&M_Z80) & 0x10) >> 4, (z80_Get_AF(&M_Z80) & 0x08) >> 3, (z80_Get_AF(&M_Z80) & 0x04) >> 2, (z80_Get_AF(&M_Z80) & 0x02) >> 1, (z80_Get_AF(&M_Z80) & 0x01) >> 0);
 	lstrcat(register_text, debug_string);
+		lstrcat(register_text, "\r\n");
 		lstrcat(register_text, "\r\n");
 
 	wsprintf(debug_string, "Bank = %0.8X State=%.2X", Bank_Z80, Z80_State);

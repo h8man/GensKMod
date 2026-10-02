@@ -121,9 +121,11 @@ void UpdateSSH2_KMod()
 	wsprintf(debug_string, "T=%d S=%d Q=%d M=%d I=%.1X SR=%.4X Status=%.4X", SH2_Get_SR(&S_SH2) & 1, (SH2_Get_SR(&S_SH2) >> 1) & 1, (SH2_Get_SR(&S_SH2) >> 8) & 1, (SH2_Get_SR(&S_SH2) >> 9) & 1, (SH2_Get_SR(&S_SH2) >> 4) & 0xF, SH2_Get_SR(&S_SH2), S_SH2.Status & 0xFFFF);
 	lstrcpy(register_text, debug_string);
 		lstrcat(register_text, "\r\n");
+		lstrcat(register_text, "\r\n");
 
 	wsprintf(debug_string, "R0=%.8X R1=%.8X R2=%.8X R3=%.8X\r\nR4=%.8X R5=%.8X R6=%.8X R7=%.8X\r\nR8=%.8X R9=%.8X RA=%.8X RB=%.8X\r\nRC=%.8X RD=%.8X RE=%.8X RF=%.8X", SH2_Get_R(&S_SH2, 0), SH2_Get_R(&S_SH2, 1), SH2_Get_R(&S_SH2, 2), SH2_Get_R(&S_SH2, 3), SH2_Get_R(&S_SH2, 4), SH2_Get_R(&S_SH2, 5), SH2_Get_R(&S_SH2, 6), SH2_Get_R(&S_SH2, 7), SH2_Get_R(&S_SH2, 8), SH2_Get_R(&S_SH2, 9), SH2_Get_R(&S_SH2, 0xA), SH2_Get_R(&S_SH2, 0xB), SH2_Get_R(&S_SH2, 0xC), SH2_Get_R(&S_SH2, 0xD), SH2_Get_R(&S_SH2, 0xE), SH2_Get_R(&S_SH2, 0xF));
 	lstrcat(register_text, debug_string);
+		lstrcat(register_text, "\r\n");
 		lstrcat(register_text, "\r\n");
 
 	wsprintf(debug_string, "GBR=%.8X VBR=%.8X PR=%.8X\r\nMACH=%.8X MACL=%.8X\r\nIL=%.2X IV=%.2X", SH2_Get_GBR(&S_SH2), SH2_Get_VBR(&S_SH2), SH2_Get_PR(&S_SH2), SH2_Get_MACH(&S_SH2), SH2_Get_MACL(&S_SH2), S_SH2.INT.Prio, S_SH2.INT.Vect);
