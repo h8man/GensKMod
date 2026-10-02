@@ -376,11 +376,35 @@ static BOOL FocusedControlWantsMessage(LPMSG lpMsg)
 		(SendMessage(focus, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg) & DLGC_WANTMESSAGE) != 0;
 }
 
+static BOOL FocusedEditHandlesClipboardKey(LPMSG lpMsg)
+{
+	HWND focus;
+	char className[16];
+
+	if (lpMsg->message != WM_KEYDOWN ||
+		(lpMsg->wParam != 'C' && lpMsg->wParam != 'V') ||
+		!(GetKeyState(VK_CONTROL) & 0x8000))
+		return FALSE;
+
+	focus = GetFocus();
+	if (!focus || focus != lpMsg->hwnd)
+		return FALSE;
+
+	if (!GetClassNameA(focus, className, sizeof(className)) ||
+		lstrcmpiA(className, "Edit") != 0)
+		return FALSE;
+
+	TranslateMessage(lpMsg);
+	DispatchMessage(lpMsg);
+	return TRUE;
+}
+
 BOOL IsDialogMsg_KMod( LPMSG lpMsg )
 {
 	UCHAR mode;
 
 	if (vdpdebug_isMessage(lpMsg))	return TRUE;
+	if (FocusedEditHandlesClipboardKey(lpMsg)) return TRUE;
 	if (FocusedControlWantsMessage(lpMsg))
 	{
 		TranslateMessage(lpMsg);
