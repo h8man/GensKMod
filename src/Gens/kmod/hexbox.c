@@ -228,9 +228,9 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 		{
 			LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
 			LONG_PTR exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
-			if (!(style & WS_VSCROLL) || !(style & WS_CLIPCHILDREN) || !(exStyle & WS_EX_CLIENTEDGE))
+			if (!(style & WS_VSCROLL) || !(style & WS_CLIPCHILDREN) || !(style & WS_TABSTOP) || !(exStyle & WS_EX_CLIENTEDGE))
 			{
-				SetWindowLongPtr(hwnd, GWL_STYLE, style | WS_VSCROLL | WS_CLIPCHILDREN);
+				SetWindowLongPtr(hwnd, GWL_STYLE, style | WS_VSCROLL | WS_CLIPCHILDREN | WS_TABSTOP);
 				SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle | WS_EX_CLIENTEDGE);
 				SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
 			}
@@ -305,6 +305,19 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 		if (state && (GetWindowLongPtr(hwnd, GWL_STYLE) & HEXBOX_STYLE_EDITABLE))
 			HexBox_ShowEditor(hwnd, state, (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam));
 		return 0;
+	case WM_GETDLGCODE:
+		return (wParam == VK_PRIOR || wParam == VK_NEXT) ? DLGC_WANTMESSAGE : 0;
+	case WM_LBUTTONDOWN:
+		SetFocus(hwnd);
+		return 0;
+	case WM_KEYDOWN:
+		if (state && (wParam == VK_PRIOR || wParam == VK_NEXT))
+		{
+			SendMessage(hwnd, WM_VSCROLL,
+				MAKEWPARAM(wParam == VK_PRIOR ? SB_PAGEUP : SB_PAGEDOWN, 0), 0);
+			return 0;
+		}
+		break;
 	case WM_SIZE:
 		HexBox_HideEditor(state);
 		HexBox_UpdateScroll(hwnd, state);	

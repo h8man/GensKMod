@@ -38,9 +38,9 @@ static LRESULT CALLBACK DasmBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, 
 		{
 			LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
 			LONG_PTR exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
-			if (!(style & WS_VSCROLL) || !(exStyle & WS_EX_CLIENTEDGE))
+			if (!(style & WS_VSCROLL) || !(style & WS_TABSTOP) || !(exStyle & WS_EX_CLIENTEDGE))
 			{
-				SetWindowLongPtr(hwnd, GWL_STYLE, style | WS_VSCROLL);
+				SetWindowLongPtr(hwnd, GWL_STYLE, style | WS_VSCROLL | WS_TABSTOP);
 				SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle | WS_EX_CLIENTEDGE);
 				SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
 			}
@@ -84,6 +84,19 @@ static LRESULT CALLBACK DasmBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, 
 	case WM_SIZE:
 		DasmBox_UpdateScroll(hwnd, state);
 		return 0;
+	case WM_GETDLGCODE:
+		return (wParam == VK_PRIOR || wParam == VK_NEXT) ? DLGC_WANTMESSAGE : 0;
+	case WM_LBUTTONDOWN:
+		SetFocus(hwnd);
+		return 0;
+	case WM_KEYDOWN:
+		if (state && (wParam == VK_PRIOR || wParam == VK_NEXT))
+		{
+			SendMessage(hwnd, WM_VSCROLL,
+				MAKEWPARAM(wParam == VK_PRIOR ? SB_PAGEUP : SB_PAGEDOWN, 0), 0);
+			return 0;
+		}
+		break;
 	case WM_VSCROLL:
 		if (state)
 		{
