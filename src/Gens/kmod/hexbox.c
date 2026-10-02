@@ -408,6 +408,12 @@ static LRESULT CALLBACK HexBox_WndProc(HWND hwnd, UINT message, WPARAM wParam, L
 					//text[i] = value >= 32 && value < 127 ? value : '.';
 					text[i] = value ? value : '.';
 				}
+				WORD glyphIndices[HEXBOX_MAX_ITEMS_PER_ROW * 2];
+				if (GetGlyphIndicesA(dc, text, (int)count, glyphIndices, GGI_MARK_NONEXISTING_GLYPHS) != GDI_ERROR)
+				{
+					for (SIZE_T i = 0; i < count; ++i)
+						if (glyphIndices[i] == 0xFFFF) text[i] = '?';
+				}
 				for (UINT i = 0; i < state->itemsPerRow; ++i)
 				{
 					UINT available = (UINT)(count > (SIZE_T)i * itemSize ? count - (SIZE_T)i * itemSize : 0);
