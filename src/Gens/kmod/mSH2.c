@@ -251,8 +251,17 @@ void DumpMSH2Cache_KMod(HWND hwnd)
 
 void SwitchMSH2ViewMode_KMod()
 {
+	BOOL editableRamView = (MSH2_ViewMode & 8) && !(MSH2_ViewMode & 4);
+	HWND hexBox = GetDlgItem(hMSH2, IDC_MSH2_HEXBOX);
+	LONG_PTR hexBoxStyle = GetWindowLongPtr(hexBox, GWL_STYLE);
+	if (editableRamView)
+		hexBoxStyle |= HEXBOX_STYLE_EDITABLE;
+	else
+		hexBoxStyle &= ~((LONG_PTR)HEXBOX_STYLE_EDITABLE);
+	SetWindowLongPtr(hexBox, GWL_STYLE, hexBoxStyle);
+
 	ShowWindow(GetDlgItem(hMSH2, IDC_MSH2_DASMBOX), MSH2_IsDisasmView() ? SW_SHOW : SW_HIDE);
-	ShowWindow(GetDlgItem(hMSH2, IDC_MSH2_HEXBOX), MSH2_IsDisasmView() ? SW_HIDE : SW_SHOW);
+	ShowWindow(hexBox, MSH2_IsDisasmView() ? SW_HIDE : SW_SHOW);
 
 	if (MSH2_ViewMode & 2)
 	{
@@ -290,6 +299,23 @@ BOOL CALLBACK MSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			SwitchMSH2ViewMode_KMod();
 			UpdateMSH2_KMod();
 			RestoreMSH2Position();
+		}
+		break;
+
+	case WM_NOTIFY:
+		if (lParam)
+		{
+			HEXBOX_EDIT_NOTIFICATION* notification = (HEXBOX_EDIT_NOTIFICATION*)lParam;
+			if (notification->hdr.idFrom == IDC_MSH2_HEXBOX &&
+				notification->hdr.code == HEXBOXN_EDIT &&
+				(MSH2_ViewMode & 8) && !(MSH2_ViewMode & 4) &&
+				notification->itemSize == 2 &&
+				notification->offset < sizeof(_32X_Ram) &&
+				sizeof(_32X_Ram) - notification->offset >= 2)
+			{
+				_32X_Ram[notification->offset] = (unsigned char)(notification->value >> 8);
+				_32X_Ram[notification->offset + 1] = (unsigned char)notification->value;
+			}
 		}
 		break;
 

@@ -70,8 +70,16 @@ static BOOL CALLBACK GetS68kDasmInstruction(void* context, DWORD offset, DWORD* 
 void SwitchS68kViewMode_KMod()
 {
 	BOOL disasmView = (S68k_ViewMode & 2) && (S68k_ViewMode & 1);
+	HWND hexBox = GetDlgItem(hCD_68K, IDC_S68K_HEXBOX);
+	LONG_PTR hexBoxStyle = GetWindowLongPtr(hexBox, GWL_STYLE);
+	if (!disasmView)
+		hexBoxStyle |= HEXBOX_STYLE_EDITABLE;
+	else
+		hexBoxStyle &= ~((LONG_PTR)HEXBOX_STYLE_EDITABLE);
+	SetWindowLongPtr(hexBox, GWL_STYLE, hexBoxStyle);
+
 	ShowWindow(GetDlgItem(hCD_68K, IDC_S68K_DASMBOX), disasmView ? SW_SHOW : SW_HIDE);
-	ShowWindow(GetDlgItem(hCD_68K, IDC_S68K_HEXBOX), disasmView ? SW_HIDE : SW_SHOW);
+	ShowWindow(hexBox, disasmView ? SW_HIDE : SW_SHOW);
 	SendDlgItemMessage(hCD_68K, IDC_S68K_VIEW_PRAM, WM_SETTEXT, 0,
 		(LPARAM)(disasmView ? "View PRAM" : "View Disasm"));
 }
@@ -245,6 +253,40 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 		SwitchS68kViewMode_KMod();
 		break;
 
+	case WM_NOTIFY:
+		if (lParam)
+		{
+			HEXBOX_EDIT_NOTIFICATION* notification = (HEXBOX_EDIT_NOTIFICATION*)lParam;
+			unsigned char* data = NULL;
+			SIZE_T dataSize = 0;
+
+			if (notification->hdr.idFrom == IDC_S68K_HEXBOX &&
+				notification->hdr.code == HEXBOXN_EDIT)
+			{
+				if ((S68k_ViewMode & 2) && !(S68k_ViewMode & 1))
+				{
+					data = Ram_Prg;
+					dataSize = sizeof(Ram_Prg);
+				}
+				else if (S68k_ViewMode & 8)
+				{
+					data = Ram_Word_1M;
+					dataSize = sizeof(Ram_Word_1M);
+				}
+
+				if (data && notification->offset < dataSize)
+				{
+					if (notification->itemSize == 1)
+						data[notification->offset] = (unsigned char)notification->value;
+					else if (notification->itemSize == 2 && dataSize - notification->offset >= 2)
+					{
+						data[notification->offset] = (unsigned char)notification->value;
+						data[notification->offset + 1] = (unsigned char)(notification->value >> 8);
+					}
+				}
+			}
+		}
+		break;
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam))

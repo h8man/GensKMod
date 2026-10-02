@@ -48,8 +48,16 @@ static BOOL CALLBACK GetZ80DasmInstruction(void* context, DWORD offset, DWORD* n
 
 void SwitchZ80ViewMode_KMod()
 {
+	HWND hexBox = GetDlgItem(hZ80, IDC_Z80_HEXBOX);
+	LONG_PTR hexBoxStyle = GetWindowLongPtr(hexBox, GWL_STYLE);
+	if (Z80_ViewMode)
+		hexBoxStyle |= HEXBOX_STYLE_EDITABLE;
+	else
+		hexBoxStyle &= ~((LONG_PTR)HEXBOX_STYLE_EDITABLE);
+	SetWindowLongPtr(hexBox, GWL_STYLE, hexBoxStyle);
+
 	ShowWindow(GetDlgItem(hZ80, IDC_Z80_DASMBOX), Z80_ViewMode ? SW_HIDE : SW_SHOW);
-	ShowWindow(GetDlgItem(hZ80, IDC_Z80_HEXBOX), Z80_ViewMode ? SW_SHOW : SW_HIDE);
+	ShowWindow(hexBox, Z80_ViewMode ? SW_SHOW : SW_HIDE);
 	SendDlgItemMessage(hZ80, IDC_Z80_VIEW_MEM, WM_SETTEXT, 0,
 		(LPARAM)(Z80_ViewMode ? "View Disasm" : "View Memory"));
 }
@@ -176,6 +184,17 @@ BOOL CALLBACK Z80DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			SwitchZ80ViewMode_KMod();
 			UpdateZ80_KMod();
 			RestoreZ80Position();
+		}
+		break;
+
+	case WM_NOTIFY:
+		if (lParam)
+		{
+			HEXBOX_EDIT_NOTIFICATION* notification = (HEXBOX_EDIT_NOTIFICATION*)lParam;
+			if (notification->hdr.idFrom == IDC_Z80_HEXBOX &&
+				notification->hdr.code == HEXBOXN_EDIT && Z80_ViewMode &&
+				notification->itemSize == 1 && notification->offset < sizeof(Ram_Z80))
+				Ram_Z80[notification->offset] = (unsigned char)notification->value;
 		}
 		break;
 
