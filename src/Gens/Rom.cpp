@@ -582,6 +582,65 @@ Rom *Load_Bios(HWND hWnd, char *Name)
 }
 
 
+int Load_Bios_Data(const char *Name, unsigned char *Data, unsigned int Size)
+{
+	FILE *f;
+	unzFile Zip_File;
+	unz_file_info Infos;
+	char File_Name[256];
+	char *Extension;
+	unsigned int Read_Size;
+	int Current, Bytes_Read;
+	size_t Name_Length;
+
+	if (!Name || !Data || !Size) return 0;
+
+	memset(Data, 0, Size);
+	Name_Length = strlen(Name);
+
+	if ((Name_Length >= 4) && !stricmp("ZIP", Name + Name_Length - 3))
+	{
+		SetCurrentDirectory(Gens_Path);
+		Zip_File = unzOpen(Name);
+		if (!Zip_File) return 0;
+
+		Current = unzGoToFirstFile(Zip_File);
+		while (Current == UNZ_OK)
+		{
+			if (unzGetCurrentFileInfo(Zip_File, &Infos, File_Name, sizeof(File_Name), NULL, 0, NULL, 0) == UNZ_OK &&
+				Infos.size_filename < sizeof(File_Name) && Infos.uncompressed_size > 0)
+			{
+				File_Name[sizeof(File_Name) - 1] = 0;
+				Extension = strrchr(File_Name, '.');
+				if (Extension && (!stricmp(Extension, ".SMD") || !stricmp(Extension, ".BIN") ||
+					!stricmp(Extension, ".GEN") || !stricmp(Extension, ".32X") || !stricmp(Extension, ".MD")))
+					break;
+			}
+
+			Current = unzGoToNextFile(Zip_File);
+		}
+
+		if (Current != UNZ_OK || unzOpenCurrentFile(Zip_File) != UNZ_OK)
+		{
+			unzClose(Zip_File);
+			return 0;
+		}
+
+		Read_Size = Infos.uncompressed_size < Size ? (unsigned int) Infos.uncompressed_size : Size;
+		Bytes_Read = unzReadCurrentFile(Zip_File, Data, Read_Size);
+		unzCloseCurrentFile(Zip_File);
+		unzClose(Zip_File);
+		return Bytes_Read == (int) Read_Size;
+	}
+
+	f = fopen(Name, "rb");
+	if (!f) return 0;
+	fread(Data, 1, Size, f);
+	fclose(f);
+	return 1;
+}
+
+
 Rom *Load_Rom(HWND hWnd, const char *Name, int inter)
 {
 	HANDLE Rom_File;

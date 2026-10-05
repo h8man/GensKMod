@@ -57,6 +57,7 @@ int Run_Rom(HWND hWnd, const char * Name, int File_Type_Index);
 int Pre_Load_Rom(HWND hWnd, const char *Name);
 int Load_Rom_CC(char *Name, int Size);
 struct Rom *Load_Bios(HWND hWnd, char *Name);
+int Load_Bios_Data(const char *Name, unsigned char *Data, unsigned int Size);
 struct Rom *Load_Rom(HWND hWnd, const char *Name, int inter);
 struct Rom *Load_Rom_Zipped(HWND hWnd, const char *Name, int inter);
 void Fix_Checksum(void);

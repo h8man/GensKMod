@@ -4338,49 +4338,49 @@ LRESULT CALLBACK FilesProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case ID_CHANGE_GENESISBIOS:
 					GetDlgItemText(hDlg, IDC_EDIT_GENESISBIOS, Str_Tmp2, 1024);
 					strcpy(Str_Tmp, "genesis.bin"); 
-					if (Change_File_S(Str_Tmp, Str_Tmp2, "Genesis bios file", "bios files\0*.bin\0\0", "bin"))
+					if (Change_File_L(Str_Tmp, Str_Tmp2, "Genesis bios file", "BIOS files (*.bin;*.zip)\0*.bin;*.zip\0All files\0*.*\0\0", "bin"))
 						SetDlgItemText(hDlg, IDC_EDIT_GENESISBIOS, Str_Tmp);
 					break;
 
 				case ID_CHANGE_32XGBIOS:
 					GetDlgItemText(hDlg, IDC_EDIT_32XGBIOS, Str_Tmp2, 1024);
 					strcpy(Str_Tmp, "32X_G_bios.bin"); 
-					if (Change_File_S(Str_Tmp, Str_Tmp2, "32X M68000 bios file", "bios files\0*.bin\0\0", "bin"))
+					if (Change_File_L(Str_Tmp, Str_Tmp2, "32X M68000 bios file", "BIOS files (*.bin;*.zip)\0*.bin;*.zip\0All files\0*.*\0\0", "bin"))
 						SetDlgItemText(hDlg, IDC_EDIT_32XGBIOS, Str_Tmp);
 					break;
 
 				case ID_CHANGE_32XMBIOS:
 					GetDlgItemText(hDlg, IDC_EDIT_32XMBIOS, Str_Tmp2, 1024);
 					strcpy(Str_Tmp, "32X_M_bios.bin"); 
-					if (Change_File_S(Str_Tmp, Str_Tmp2, "32X Master SH2 bios file", "bios files\0*.bin\0\0", "bin"))
+					if (Change_File_L(Str_Tmp, Str_Tmp2, "32X Master SH2 bios file", "BIOS files (*.bin;*.zip)\0*.bin;*.zip\0All files\0*.*\0\0", "bin"))
 						SetDlgItemText(hDlg, IDC_EDIT_32XMBIOS, Str_Tmp);
 					break;
 
 				case ID_CHANGE_32XSBIOS:
 					GetDlgItemText(hDlg, IDC_EDIT_32XSBIOS, Str_Tmp2, 1024);
 					strcpy(Str_Tmp, "32X_S_bios.bin"); 
-					if (Change_File_S(Str_Tmp, Str_Tmp2, "32X Slave SH2 bios file", "bios files\0*.bin\0\0", "bin"))
+					if (Change_File_L(Str_Tmp, Str_Tmp2, "32X Slave SH2 bios file", "BIOS files (*.bin;*.zip)\0*.bin;*.zip\0All files\0*.*\0\0", "bin"))
 						SetDlgItemText(hDlg, IDC_EDIT_32XSBIOS, Str_Tmp);
 					break;
 
 				case ID_CHANGE_USBIOS:
 					GetDlgItemText(hDlg, IDC_EDIT_USBIOS, Str_Tmp2, 1024);
 					strcpy(Str_Tmp, "us_scd1_9210.bin"); 
-					if (Change_File_S(Str_Tmp, Str_Tmp2, "USA CD bios file", "bios files\0*.bin\0\0", "bin"))
+					if (Change_File_L(Str_Tmp, Str_Tmp2, "USA CD bios file", "BIOS files (*.bin;*.zip)\0*.bin;*.zip\0All files\0*.*\0\0", "bin"))
 						SetDlgItemText(hDlg, IDC_EDIT_USBIOS, Str_Tmp);
 					break;
 
 				case ID_CHANGE_EUBIOS:
 					GetDlgItemText(hDlg, IDC_EDIT_EUBIOS, Str_Tmp2, 1024);
 					strcpy(Str_Tmp, "eu_mcd1_9210.bin"); 
-					if (Change_File_S(Str_Tmp, Str_Tmp2, "EUROPEAN CD bios file", "bios files\0*.bin\0\0", "bin"))
+					if (Change_File_L(Str_Tmp, Str_Tmp2, "EUROPEAN CD bios file", "BIOS files (*.bin;*.zip)\0*.bin;*.zip\0All files\0*.*\0\0", "bin"))
 						SetDlgItemText(hDlg, IDC_EDIT_EUBIOS, Str_Tmp);
 					break;
 
 				case ID_CHANGE_JABIOS:
 					GetDlgItemText(hDlg, IDC_EDIT_JABIOS, Str_Tmp2, 1024);
 					strcpy(Str_Tmp, "jp_mcd1_9112.bin"); 
-					if (Change_File_S(Str_Tmp, Str_Tmp2, "JAPAN CD bios file", "bios files\0*.bin\0\0", "bin"))
+					if (Change_File_L(Str_Tmp, Str_Tmp2, "JAPAN CD bios file", "BIOS files (*.bin;*.zip)\0*.bin;*.zip\0All files\0*.*\0\0", "bin"))
 						SetDlgItemText(hDlg, IDC_EDIT_JABIOS, Str_Tmp);
 					break;
 

@@ -450,13 +450,9 @@ void Detect_Country_Genesis(void)
 
 void Init_Genesis_Bios(void)
 {
-	FILE *f;
-
-	if (f = fopen(Genesis_Bios, "rb"))
+	if (Load_Bios_Data(Genesis_Bios, &Genesis_Rom[0], 2 * 1024))
 	{
-		fread(&Genesis_Rom[0], 1, 2 * 1024, f);
 		Byte_Swap(&Genesis_Rom[0], 2 * 1024);
-		fclose(f);
 	}
 	else memset(Genesis_Rom, 0, 2 * 1024);
 
@@ -978,14 +974,11 @@ int Do_Genesis_Frame()
 int Init_32X(struct Rom *MD_Rom)
 {
 	char Str_Err[256];
-	FILE *f;
 	int i;
 
-	if (f = fopen(_32X_Genesis_Bios, "rb"))
+	if (Load_Bios_Data(_32X_Genesis_Bios, &_32X_Genesis_Rom[0], 256))
 	{
-		fread(&_32X_Genesis_Rom[0], 1, 256, f);
 		Byte_Swap(&_32X_Genesis_Rom[0], 256);
-		fclose(f);
 	}
 	else
 	{
@@ -993,23 +986,13 @@ int Init_32X(struct Rom *MD_Rom)
 		return 0;
 	}
 
-	if (f = fopen(_32X_Master_Bios, "rb"))
-	{
-		fread(&_32X_MSH2_Rom[0], 1, 2 * 1024, f);
-		fclose(f);
-	}
-	else
+	if (!Load_Bios_Data(_32X_Master_Bios, &_32X_MSH2_Rom[0], 2 * 1024))
 	{
 		MessageBox(NULL, "Your 32X bios files aren't correctly configured :\nMaster SH2 bios not found.\nGo to menu 'Option -> Bios/Misc Files' to set up them", "Error", MB_OK);
 		return 0;
 	}
 
-	if (f = fopen(_32X_Slave_Bios, "rb"))
-	{
-		fread(&_32X_SSH2_Rom[0], 1, 1 * 1024, f);
-		fclose(f);
-	}
-	else
+	if (!Load_Bios_Data(_32X_Slave_Bios, &_32X_SSH2_Rom[0], 1 * 1024))
 	{
 		MessageBox(NULL, "Your 32X bios files aren't correctly configured :\nSlave SH2 bios not found.\nGo to menu 'Option -> Bios/Misc Files' to set up them", "Error", MB_OK);
 		return 0;
