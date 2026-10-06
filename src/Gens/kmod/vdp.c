@@ -311,8 +311,21 @@ void DumpCRAM_KMod(HWND hwnd)
 {
 	OPENFILENAME szFile;
 	char szFileName[MAX_PATH];
-	HANDLE hFr;
-	DWORD dwBytesToWrite, dwBytesWritten;
+	char *extension;
+	char *dot;
+	char *slash;
+	FILE *output;
+	unsigned int palette;
+	unsigned int color;
+	unsigned int colorIndex;
+	unsigned int selectedCount;
+	unsigned int selectedPalettes[4];
+	unsigned int row, column;
+	COLORREF rgb;
+	unsigned char yyChrPalette[4 * 16 * 3];
+	unsigned char bmpPixels[4 * 16 * 3];
+	BITMAPFILEHEADER bmfh;
+	BITMAPINFOHEADER bmiHeader;
 
 	ZeroMemory(&szFile, sizeof(szFile));
 	szFileName[0] = 0;  /*WITHOUT THIS, CRASH */
@@ -323,28 +336,120 @@ void DumpCRAM_KMod(HWND hwnd)
 
 	szFile.lStructSize = sizeof(szFile);
 	szFile.hwndOwner = hwnd;
-	szFile.lpstrFilter = "RAM dump (*.ram)\0*.ram\0\0";
+	szFile.lpstrFilter = "RAM dump (*.ram)\0*.ram\0GIMP palette (*.gpl)\0*.gpl\0YY-CHR palette (*.pal)\0*.pal\0Bitmap palette (*.bmp)\0*.bmp\0\0";
 	szFile.lpstrFile = szFileName;
 	szFile.nMaxFile = sizeof(szFileName);
 	szFile.lpstrFileTitle = (LPSTR)NULL;
 	szFile.lpstrInitialDir = (LPSTR)NULL;
 	szFile.lpstrTitle = "Dump CRAM";
+	szFile.nFilterIndex = 1;
 	szFile.Flags = OFN_EXPLORER | OFN_LONGNAMES | OFN_NONETWORKBUTTON |
 		OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
-	szFile.lpstrDefExt = "ram";
+	szFile.lpstrDefExt = NULL;
 
 	if (GetSaveFileName(&szFile) != TRUE)   return;
 
-	hFr = CreateFile(szFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (hFr == INVALID_HANDLE_VALUE)
+	selectedCount = 0;
+	for (palette = 0; palette < 4; palette++)
+	{
+		if (ActivePal & (1 << palette))
+			selectedPalettes[selectedCount++] = palette;
+	}
+	if (szFile.nFilterIndex != 1 && selectedCount == 0)
+	{
+		Put_Info("No palettes selected", 1500);
+		return;
+	}
+
+	switch (szFile.nFilterIndex)
+	{
+		case 2: extension = ".gpl"; break;
+		case 3: extension = ".pal"; break;
+		case 4: extension = ".bmp"; break;
+		default: extension = ".ram"; break;
+	}
+	dot = strrchr(szFileName, '.');
+	slash = strrchr(szFileName, '\\');
+	if (dot == NULL || (slash != NULL && dot < slash))
+	{
+		if (strlen(szFileName) + strlen(extension) >= sizeof(szFileName))
+			return;
+		strcat(szFileName, extension);
+	}
+
+	output = fopen(szFileName, "wb");
+	if (output == NULL)
 		return;
 
-	dwBytesToWrite = 64 * 8;
-	WriteFile(hFr, CRam, dwBytesToWrite, &dwBytesWritten, NULL);
+	if (szFile.nFilterIndex == 1)
+	{
+		fwrite(CRam, 1, 64 * 8, output);
+	}
+	else
+	{
+		for (palette = 0; palette < selectedCount; palette++)
+		{
+			for (color = 0; color < 16; color++)
+			{
+				colorIndex = palette * 16 + color;
+				rgb = vdpdebug_getColor(selectedPalettes[palette], color);
+				yyChrPalette[colorIndex * 3] = (unsigned char)GetRValue(rgb);
+				yyChrPalette[colorIndex * 3 + 1] = (unsigned char)GetGValue(rgb);
+				yyChrPalette[colorIndex * 3 + 2] = (unsigned char)GetBValue(rgb);
+			}
+		}
 
-	CloseHandle(hFr);
+		if (szFile.nFilterIndex == 2)
+		{
+			fprintf(output, "GIMP Palette\r\nName: Gens CRAM\r\nColumns: 16\r\n#\r\n");
+			for (colorIndex = 0; colorIndex < selectedCount * 16; colorIndex++)
+			{
+				fprintf(output, "%3u %3u %3u Palette %u Color %u\r\n",
+					yyChrPalette[colorIndex * 3],
+					yyChrPalette[colorIndex * 3 + 1],
+					yyChrPalette[colorIndex * 3 + 2],
+					selectedPalettes[colorIndex / 16] + 1, colorIndex % 16);
+			}
+		}
+		else if (szFile.nFilterIndex == 3)
+		{
+			fwrite(yyChrPalette, 1, selectedCount * 16 * 3, output);
+		}
+		else
+		{
+			ZeroMemory(&bmfh, sizeof(bmfh));
+			ZeroMemory(&bmiHeader, sizeof(bmiHeader));
+			bmfh.bfType = 0x4D42;
+			bmfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+			bmfh.bfSize = bmfh.bfOffBits + selectedCount * 16 * 3;
+			bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+			bmiHeader.biWidth = 16;
+			bmiHeader.biHeight = selectedCount;
+			bmiHeader.biPlanes = 1;
+			bmiHeader.biBitCount = 24;
+			bmiHeader.biCompression = BI_RGB;
+			bmiHeader.biSizeImage = selectedCount * 16 * 3;
 
-	Put_Info("CRAM dumped", 1500);
+			for (row = 0; row < selectedCount; row++)
+			{
+				for (column = 0; column < 16; column++)
+				{
+					colorIndex = (selectedCount - row - 1) * 16 + column;
+					bmpPixels[(row * 16 + column) * 3] = yyChrPalette[colorIndex * 3 + 2];
+					bmpPixels[(row * 16 + column) * 3 + 1] = yyChrPalette[colorIndex * 3 + 1];
+					bmpPixels[(row * 16 + column) * 3 + 2] = yyChrPalette[colorIndex * 3];
+				}
+			}
+
+			fwrite(&bmfh, 1, sizeof(bmfh), output);
+			fwrite(&bmiHeader, 1, sizeof(bmiHeader), output);
+			fwrite(bmpPixels, 1, selectedCount * 16 * 3, output);
+		}
+	}
+
+	fclose(output);
+
+	Put_Info(szFile.nFilterIndex == 1 ? "CRAM dumped" : "CRAM palette saved", 1500);
 }
 
 void VDPPal_Choose()
