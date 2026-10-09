@@ -9,6 +9,7 @@ extern "C" {
 
 void lua_script_create(HINSTANCE hInstance, HWND hWndParent);
 void lua_script_show(BOOL visibility);
+void kmod_lua_output(const char *owner, const char *message);
 
 #ifdef __cplusplus
 }
