@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "message.h"
+#include "lua_script.h"
 #include "watchers.h"
 #include "layers.h"
 #include "planes.h"
@@ -68,6 +69,9 @@ void CloseWindow_KMod(UCHAR mode)
 	case DMODE_PLANECOMPOSITE:
 		planes_composite_show(FALSE);
 		break; 
+	case DMODE_LUASCRIPT:
+		lua_script_show(FALSE);
+		break;
 	case DMODE_68K:
 		m68kdebug_show(FALSE);
 		break;
@@ -138,6 +142,9 @@ void OpenWindow_KMod(UCHAR mode)
 		break;
 	case DMODE_PLANECOMPOSITE:
 		planes_composite_show(TRUE);
+		break;
+	case DMODE_LUASCRIPT:
+		lua_script_show(TRUE);
 		break;
 	case DMODE_68K:
 		m68kdebug_show(TRUE);

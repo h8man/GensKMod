@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "gens.h"
-#include "resource.h"
+#include "kmod/resource.h"
 #include "G_main.h"
 #include "G_gfx.h" // for Put_Info
 #include "vdp_io.h" // to know which system is active
@@ -11,6 +11,7 @@
 
 
 #include "kmod\common.h"
+#include "kmod\lua_script.h"
 #include "kmod\utils.h"
 #include "kmod\config.h"
 #include "kmod\message.h"
@@ -36,6 +37,8 @@
 #include "kmod\sSH2.h"
 #include "kmod\vdp_32x.h"
 #include "kmod\s32x_reg.h"
+
+#include "kmod\vdp_composite.h"
 
 #include "kmod\dasmbox.h"
 #include "kmod\hexbox.h"
@@ -202,6 +205,7 @@ void Init_KMod( )
 	planes_create(ghInstance, HWnd);
 	planes_composite_create(ghInstance, HWnd);
 
+	lua_script_create(ghInstance, HWnd);
    
 	//HandleWindow_KMod[0] = hM68K;
 	//HandleWindow_KMod[1] = hZ80;
@@ -342,7 +346,7 @@ void ToggleWindow_KMod( HWND hWnd, int Debug_Mode)
 		}
 		else
 		{
-			if ((!Game) && (Debug_Mode != DMODE_MSG))	return; //only message windows can be opened without game
+			if ((!Game) && (Debug_Mode != DMODE_MSG) && (Debug_Mode != DMODE_LUASCRIPT))	return;
 
 			OpenWindow_KMod( (UCHAR) Debug_Mode );
 		}

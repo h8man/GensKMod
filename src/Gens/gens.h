@@ -27,6 +27,7 @@ extern "C" {
 #define DMODE_32_VDP	9
 #define DMODE_PREVIEW	0x1000
 
+#ifdef GENS_KMOD
 #define DMODE_VDP_REG	10
 #define DMODE_SPRITES	11
 #define DMODE_YM2612	12
@@ -38,8 +39,10 @@ extern "C" {
 #define DMODE_32_REG	18
 #define DMODE_PLANEEXPLORER 19
 #define DMODE_PLANECOMPOSITE 20
+#define DMODE_LUASCRIPT 21
 
-#define WIN_NUMBER	DMODE_PLANECOMPOSITE
+#define WIN_NUMBER	DMODE_LUASCRIPT
+#endif
 
 extern int Debug;
 extern int Frame_Skip;

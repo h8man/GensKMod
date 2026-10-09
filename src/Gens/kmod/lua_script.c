@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <commctrl.h>
+#include <shellapi.h>
 
 #include "../gens.h"
 #include "common.h"
@@ -62,6 +63,23 @@ static BOOL CALLBACK LuaScriptDlgProc(HWND hwnd, UINT message, WPARAM wParam, LP
 		CloseWindow_KMod(DMODE_LUASCRIPT);
 		return TRUE;
 
+	case WM_COMMAND:
+		if (LOWORD(wParam) == IDC_LUA_WEBSITE && HIWORD(wParam) == STN_CLICKED)
+		{
+			ShellExecuteA(hwnd, "open", "https://www.lua.org", NULL, NULL, SW_SHOWNORMAL);
+			return TRUE;
+		}
+		return FALSE;
+
+	case WM_CTLCOLORSTATIC:
+		if (GetDlgCtrlID((HWND)lParam) == IDC_LUA_WEBSITE)
+		{
+			SetTextColor((HDC)wParam, RGB(0, 0, 255));
+			SetBkMode((HDC)wParam, TRANSPARENT);
+			return (BOOL)(INT_PTR)GetSysColorBrush(COLOR_BTNFACE);
+		}
+		break;
+
 	default:
 		return FALSE;
 	}
@@ -69,7 +87,25 @@ static BOOL CALLBACK LuaScriptDlgProc(HWND hwnd, UINT message, WPARAM wParam, LP
 
 void lua_script_create(HINSTANCE hInstance, HWND hWndParent)
 {
+	INITCOMMONCONTROLSEX controls;
+	HICON smallIcon;
+	HICON largeIcon;
+	controls.dwSize = sizeof(controls);
+	controls.dwICC = ICC_BAR_CLASSES;
+	InitCommonControlsEx(&controls);
+
 	hLuaScript = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_LUASCRIPT), hWndParent, LuaScriptDlgProc);
+	if (hLuaScript != NULL)
+	{
+		smallIcon = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_LUA_SCRIPT), IMAGE_ICON,
+			GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+		largeIcon = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_LUA_SCRIPT), IMAGE_ICON,
+			GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), LR_SHARED);
+		if (smallIcon != NULL)
+			SendMessage(hLuaScript, WM_SETICON, ICON_SMALL, (LPARAM)smallIcon);
+		if (largeIcon != NULL)
+			SendMessage(hLuaScript, WM_SETICON, ICON_BIG, (LPARAM)largeIcon);
+	}
 }
 
 void lua_script_show(BOOL visibility)

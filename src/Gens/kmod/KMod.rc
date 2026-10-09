@@ -406,8 +406,7 @@ STYLE DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "Lua Script Editor"
 FONT 9, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    ICON            IDI_LUA_SCRIPT,IDC_LUA_ICON,7,7,16,16
-    LTEXT           "Lua Script Editor",-1,27,10,100,12
+    LTEXT           "Lua Script Editor",-1,7,10,100,12
     CONTROL         "",IDC_LUA_TOOLBAR,"ToolbarWindow32",WS_CHILD | WS_VISIBLE | 0x0800 | 0x0100,145,7,200,22
     LTEXT           "Script",-1,7,33,50,10
     LTEXT           "Recent scripts",-1,439,33,100,10
@@ -415,7 +414,7 @@ BEGIN
     LISTBOX         IDC_LUA_RECENT,439,45,194,236,LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_BORDER | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Output",-1,7,289,50,10
     EDITTEXT        IDC_LUA_OUTPUT,7,301,626,106,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL | WS_BORDER
-    CONTROL         "<a href='https://www.lua.org'>https://www.lua.org</a>",IDC_LUA_WEBSITE,"SysLink",WS_TABSTOP,7,429,150,16
+    CONTROL         "https://www.lua.org",IDC_LUA_WEBSITE,"Static",SS_NOTIFY | WS_TABSTOP,7,429,150,16
 END
 
 IDD_DEBUG32X_REG DIALOG 0, 0, 314, 244

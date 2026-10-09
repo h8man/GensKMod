@@ -11,7 +11,7 @@
 #include "Debug.h"
 #include "rom.h"
 #include "save.h"
-#include "resource.h"
+#include "kmod/resource.h"
 #include "misc.h"
 #include "blit.h"
 #include "ggenie.h"
@@ -2304,6 +2304,11 @@ long PASCAL WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     Change_Debug(hWnd, DMODE_PLANECOMPOSITE);
                     return 0;
 
+				case ID_CPU_DEBUG_LUASCRIPT:
+					MINIMIZE
+					Change_Debug(hWnd, DMODE_LUASCRIPT);
+					return 0;
+
 				case ID_CPU_DEBUG_SEGACD_REG:
 					MINIMIZE
 					Change_Debug(hWnd, DMODE_CD_REG);
@@ -3113,7 +3118,7 @@ HMENU Build_Main_Menu(void)
 	OptionsCDDrive = CreatePopupMenu();
 	OptionsSRAMSize = CreatePopupMenu();
 
-	// Création des sous-menu pricipaux
+	// CrÃ©ation des sous-menu pricipaux
 
 	Flags = MF_BYPOSITION | MF_POPUP | MF_STRING;
 
@@ -3492,8 +3497,8 @@ HMENU Build_Main_Menu(void)
 	MENU_L(CPUDebug, 2, Flags, ID_CPU_DEBUG_LAYERS, "Layers", "", "Layers");
     MENU_L(CPUDebug, 3, Flags, ID_CPU_DEBUG_PLANEEXPLORER, "Plane Explorer", "\tShift+P", "Plane Explorer");
     MENU_L(CPUDebug, 4, Flags, ID_CPU_DEBUG_PLANECOMPOSITE, "Planes Composite", "", "Planes Composite");
-	
 	MENU_L(CPUDebug, 5, Flags | MF_POPUP, (UINT)DebugMD, "Genesis", "", "Genesis");
+	MENU_L(CPUDebug, 6, Flags, ID_CPU_DEBUG_LUASCRIPT, "Lua Scripting", "", "Lua Scripting");
 
 	MENU_L(DebugMD, 0, Flags, ID_CPU_DEBUG_GENESIS_68000, "Genesis - 68K", "\tShift+D", "Genesis - 68K");
 	MENU_L(DebugMD, 1, Flags, ID_CPU_DEBUG_GENESIS_Z80, "Z80", "", "Z80");
@@ -3502,6 +3507,7 @@ HMENU Build_Main_Menu(void)
 	MENU_L(DebugMD, 4, Flags, ID_CPU_DEBUG_GENESIS_SPRITES, "VDP - Sprites", "\tShift+S", "VDP - Sprites");
 	MENU_L(DebugMD, 5, Flags, ID_CPU_DEBUG_GENESIS_YM2612, "Sound - YM2612", "", "Sound - YM2612");
 	MENU_L(DebugMD, 6, Flags, ID_CPU_DEBUG_GENESIS_PSG, "Sound - PSG", "", "Sound - PSG");
+
 	i = 7;
 #else
 	if (Debug == DMODE_68K) Flags |= MF_CHECKED;

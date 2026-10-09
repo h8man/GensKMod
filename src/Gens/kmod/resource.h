@@ -311,7 +311,6 @@
 #define IDC_LUA_EDIT             56006
 #define IDC_LUA_SAVE             56007
 #define IDC_LUA_TOOLBAR          56008
-#define IDC_LUA_ICON             56011
 
 /*********/
 #endif
