@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "../gens.h"
-#include "../resource.h"
+#include "resource.h"
 #include "../Mem_M68k.h"
 #include "../Mem_S68k.h"
 

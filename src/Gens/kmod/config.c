@@ -4,7 +4,7 @@
 
 #include "../gens.h"
 #include "../G_main.h"
-#include "../resource.h"
+#include "resource.h"
 #include "config.h"
 
 //TODO could be handle by typedef struct channel__ .enabled ?

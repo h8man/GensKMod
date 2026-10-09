@@ -168,6 +168,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="kmod\lua_script.c" />
     <ClCompile Include="kmod\dasmbox.c" />
     <ClCompile Include="kmod\hexbox.c" />
     <ClCompile Include="kmod\layers.c">
@@ -452,6 +453,7 @@
       <FileType>CppHeader</FileType>
     </ClInclude>
     <ClInclude Include="kmod\gmv.h" />
+    <ClInclude Include="kmod\lua_script.h" />
     <ClInclude Include="kmod\hexbox.h">
       <FileType>CppHeader</FileType>
     </ClInclude>
@@ -512,6 +514,7 @@
     <ClInclude Include="psg.h" />
     <ClInclude Include="pwm.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="kmod\resource.h" />
     <ClInclude Include="resrc1.h" />
     <ClInclude Include="Rom.h" />
     <ClInclude Include="save.h" />

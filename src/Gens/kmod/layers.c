@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "../gens.h"
-#include "../resource.h"
+#include "resource.h"
 #include "../vdp_rend.h" //for ActiveLayer
 
 //TODO remove to use right header(s)

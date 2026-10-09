@@ -4,7 +4,7 @@
 
 #include "../M68KD.h"
 #include "../gens.h"
-#include "../resource.h"
+#include "resource.h"
 #include "../Star_68k.h"
 #include "../Mem_M68k.h"
 #include "../Misc.h" //for Byte_Swap

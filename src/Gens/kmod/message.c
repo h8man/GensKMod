@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "../gens.h"
-#include "../resource.h"
+#include "resource.h"
 
 #include "../G_main.h"
 

@@ -4,7 +4,7 @@
 
 #include "../gens.h"
 #include "../G_main.h"
-#include "../resource.h"
+#include "resource.h"
 #include "../ym2612.h"
 #include "../z80.h" //for M_Z80 & z80_Read_Odo
 #include "../mem_M68K.h"

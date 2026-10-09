@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "../gens.h"
-#include "../resource.h"
+#include "resource.h"
 
 #include "../mem_Z80.h"
 #include "../z80.h"

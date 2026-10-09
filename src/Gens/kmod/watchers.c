@@ -8,7 +8,7 @@
 
 #include "../Mem_M68k.h"
 
-#include "../resource.h"
+#include "resource.h"
 #include "../parser.h" //used for struct watchers
 
 //TODO remove to use right header(s)

@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "../gens.h"
-#include "../resource.h"
+#include "resource.h"
 #include "../LC89510.h"
 
 //TODO remove to use right header(s)

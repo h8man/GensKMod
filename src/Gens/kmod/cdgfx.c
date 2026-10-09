@@ -4,7 +4,7 @@
 
 #include "../gens.h"
 #include "../G_main.h" //for Paused
-#include "../resource.h"
+#include "resource.h"
 #include "../Mem_S68k.h"
 #include "../G_gfx.h" //used for Put_Info
 

@@ -6,7 +6,7 @@
 #include "../G_gfx.h" // for Put_Info
 #include "../G_main.h"
 #include "../io.h"
-#include "../resource.h"
+#include "resource.h"
 #include "gmv.h"
 
 HANDLE	hGMVFile_In;

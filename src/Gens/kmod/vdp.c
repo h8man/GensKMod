@@ -4,7 +4,7 @@
 
 #include "../gens.h"
 #include "../G_main.h"
-#include "../resource.h"
+#include "resource.h"
 #include "../vdp_io.h"
 #include "../vdp_rend.h"
 

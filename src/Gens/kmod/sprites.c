@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "../gens.h"
-#include "../resource.h"
+#include "resource.h"
 #include "../vdp_io.h"
 #include "../G_gfx.h" //used for Put_Info
 
