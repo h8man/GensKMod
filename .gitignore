@@ -19,3 +19,5 @@ src/**.vcxproj.filters
 /src/Starscream/Sub68k/*.user
 /.vs
 /src/Gens/*.user
+/src/Lua/bin
+/src/Lua/Lua.vcxproj.user
