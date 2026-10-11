@@ -1,0 +1,1 @@
+kmod.log("hello world")

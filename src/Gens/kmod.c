@@ -11,6 +11,7 @@
 
 
 #include "kmod\common.h"
+#include "kmod\lua_module.h"
 #include "kmod\lua_script.h"
 #include "kmod\utils.h"
 #include "kmod\config.h"
@@ -230,6 +231,7 @@ void Init_KMod( )
 
 void Update_KMod( )
 {
+	lua_module_update();
 	watchers_update();
 	message_update();
 //	layers_update(); //no update needed
@@ -278,6 +280,7 @@ void Update_KMod( )
 void kmod_close()
 {
 	UCHAR mode;
+	lua_module_close();
 
 	for (mode = 0; mode < WIN_NUMBER; mode++)
 	{
@@ -303,6 +306,7 @@ void kmod_close()
 //TODO rename kmod_resetOnLoad()
 void ResetDebug_KMod(  )
 {
+	lua_module_reset();
 	message_reset();
 	watchers_reset();
 	layers_reset();
@@ -334,7 +338,6 @@ void ResetDebug_KMod(  )
 
 	Put_Info("Debug reset", 1500);
 }
-
 
 void ToggleWindow_KMod( HWND hWnd, int Debug_Mode)
 {

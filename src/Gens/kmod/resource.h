@@ -63,6 +63,7 @@
 #define IDB_UP                          409
 #define IDB_DOWN                        410
 #define IDB_YM2612_IMAGELIST            411
+#define IDB_LUA_TOOLBAR                 412
 
 #define IDC_68K_HEXBOX          50001
 #define IDC_68K_STATUS_SR       50002
@@ -311,6 +312,10 @@
 #define IDC_LUA_EDIT             56006
 #define IDC_LUA_SAVE             56007
 #define IDC_LUA_TOOLBAR          56008
+#define IDC_LUA_RUN              56009
+#define IDC_LUA_STOP             56010
+#define IDC_LUA_STATUS           56011
+#define IDC_LUA_CURRENT_SCRIPT   56012
 
 /*********/
 #endif

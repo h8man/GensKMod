@@ -402,14 +402,18 @@ BEGIN
 END
 
 IDD_LUASCRIPT DIALOGEX 0, 0, 640, 454
-STYLE DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Lua Script Editor"
 FONT 9, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "Lua Script Editor",-1,7,10,100,12
-    CONTROL         "",IDC_LUA_TOOLBAR,"ToolbarWindow32",WS_CHILD | WS_VISIBLE | 0x0800 | 0x0100,145,7,200,22
-    LTEXT           "Script",-1,7,33,50,10
-    LTEXT           "Recent scripts",-1,439,33,100,10
+    CONTROL         "",IDC_LUA_TOOLBAR,"ToolbarWindow32",WS_CHILD | WS_VISIBLE | 0x0800 | 0x0100,145,7,330,22
+    LTEXT           "Script", -1, 7, 33, 50, 10
+    LTEXT           "Status:", -1, 439, 23, 50, 10
+    LTEXT           "",IDC_LUA_STATUS,490,23,145,12
+    LTEXT           "Executing:",-1, 439,13,50,10
+    LTEXT           "",IDC_LUA_CURRENT_SCRIPT,490,13,373,10
+    LTEXT           "Recent scripts:",-1,439,33,100,10
     EDITTEXT        IDC_LUA_EDITOR,7,45,424,236,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL | WS_HSCROLL | WS_BORDER | WS_TABSTOP
     LISTBOX         IDC_LUA_RECENT,439,45,194,236,LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_BORDER | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Output",-1,7,289,50,10
@@ -600,6 +604,7 @@ END
 #endif    // APSTUDIO_INVOKED
 IDI_LUA_SCRIPT          ICON                    "resource\\lua.ico"
 IDR_DEBUGZIP            RCDATA                  "resource\\debug_S.zip"
+IDB_LUA_TOOLBAR         BITMAP                  "resource\\lua_toolbar.bmp"
 
 
 
