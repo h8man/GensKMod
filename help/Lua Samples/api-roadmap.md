@@ -16,7 +16,7 @@ GensKMod registers `emu` and legacy `gens` as aliases to one shared table, plus 
 | `input` | **Implemented:** host input get, hotkey registration, popup, prompt, and read alias. | **Not implemented.** Host-input and UI access need separate assessment. | Unclear; defer. |
 | `movie` | **Implemented:** active/recording/playing/mode/length/name, rerecord count and controls, read-only state, frame count, play/replay/stop and aliases. | **Not implemented as a Lua module.** KMod has GMV record/playback features, but equivalence is unverified. | Partial mapping may be possible; full format/behavior parity is unestablished. |
 | `sound` | **Implemented:** `get`, `clear`. | **Not implemented.** Check for safe existing sound controls before adding bindings. | Unclear; defer. |
-| `bit` | **Implemented:** LuaBitOp-compatible conversion, boolean bitwise operations, shifts, rotates, byte swap, hex formatting. | **Not implemented as a compatibility module.** Lua 5.5 has native bitwise operators; legacy global aliases are also absent. | No core change needed for a KMod-local compatibility library. |
+| `bit` | **Implemented:** LuaBitOp-compatible conversion, boolean bitwise operations, shifts, rotates, byte swap, hex formatting. | **No compatibility module planned for this slice.** Use Lua 5.5 native integer operators (`&`, `|`, `~`, `<<`, `>>`); legacy global aliases are absent. `help/Lua Samples/test_bitops.lua` exercises the native operators. | No core change needed for a KMod-local compatibility library if later required. |
 | `vdp` | **Implemented:** read/write cell, palette, VRAM/VSRAM word access. | **Not implemented.** Consider read-only methods after confirming address/format/timing semantics. | Some reads may be KMod-local; writes require more review. |
 | `tile` | **Implemented:** create, pixel read/write, raw data. | **Not implemented.** Could be a self-contained KMod utility module. | Likely no core changes. |
 | `palette` / `pal` | **Implemented:** create, color read/write, raw data. | **Not implemented.** Could be a self-contained KMod utility module with `pal` alias. | Likely no core changes. |
@@ -24,33 +24,19 @@ GensKMod registers `emu` and legacy `gens` as aliases to one shared table, plus 
 | Global helpers | **Implemented:** `print`, `tostring`, `addressof`, `copytable`, and legacy bit globals. | **Available:** Lua base `print` and `tostring`. **Not implemented:** Re-Recording-specific `addressof`, `copytable`, and legacy bit globals. | No for KMod-local helpers; `addressof` is intentionally excluded from the current plan. |
 | `kmod` (KMod-specific) | No direct equivalent. | **Implemented:** `kmod.log(message)` with signature metadata in `kmod.signatures.log`. | No. |
 
-## Implemented API and remaining first slice
-
-The initial emulator metadata slice is implemented in `src/Gens/kmod/lua_bind.c` and uses existing Gens state without Gens-core edits:
-
-- `emu.framecount()` / `gens.framecount()` return the existing frame counter.
-- `emu.ispaused()` / `gens.ispaused()` return the pause state.
-- `emu.getromsize()` / `gens.getromsize()` return the current ROM size.
-- `emu.getsystems()` / `gens.getsystems()` return the Genesis, Sega CD, and 32X active flags separately; combined configurations are possible.
-- Signatures for these methods are available through `emu.signatures` and `gens.signatures`. `kmod.log(message)` is described by `kmod.signatures.log`.
-
-The read-only `memory` API is implemented in `src/Gens/kmod/lua_bind.c`: `isvalid(address[, size])`, byte/word/dword reads and signed variants, and `readbyterange(address, length)`. `memory.signatures` documents these methods. Reads are limited to validated ROM, main 68K RAM, Z80 RAM, active Sega CD PRG/word RAM, and active 32X RAM regions; each requested span must remain within one region. `readbyterange` is capped at 64 KiB per call. Writes, CPU registers, hooks, mapped I/O, and VDP addresses are not exposed.
-
-Each entire requested width/range is checked against one supported region before reading; invalid addresses, region-crossing spans, and overflow are rejected. Do not expose mapped I/O or VDP addresses in this slice, because reads there may have hardware side effects.
-
 ## Deferred work and risks
 
-- Do not include memory writes, CPU register mutation, or read/write/execute hooks in the first slice. Hooks can run on performance-critical emulator paths, and write behavior can have hardware side effects.
+- Memory writes, CPU register mutation, and read/write/execute hooks are not implemented. Hooks can run on performance-critical emulator paths, and write behavior can have hardware side effects.
 - Do not include `frameadvance`, `wait`, speed controls, frame callbacks, or multi-script scheduling. GensKMod currently has one Lua state/coroutine and a KMod update path; matching Re-Recording's callback and scheduling model needs separate design.
 - Do not claim GMV is equivalent to Re-Recording movie files or semantics without checking format and behavior.
 - Treat savestate callbacks/persistent script data, GUI overlays, joypad injection, host-input UI, and VDP writes as later investigations.
 - Preserve the existing KMod init/reset/close lifecycle. Keep KMod-specific implementation in `src/Gens/kmod` wherever possible.
 - Use Lua 5.5-compatible registration APIs; do not copy the old `luaL_register` calls directly.
 
-## Validation status and future checks
+## Samples and validation
 
-- `help/Lua Samples/test_emu.lua` exercises each implemented `emu` method and checks its return types, system flags, signatures, and alias relationship.
-- `help/Lua Samples/list_modules.lua` dynamically lists global/module functions and prints available signatures.
-- `help/Lua Samples/test_memory.lua` exercises the memory signatures, available RAM boundaries, signed byte values, invalid/unsupported addresses, zero-length and capped ranges, and read failures.
-- `memory.isvalid` reports false for invalid/unsupported ranges; read methods raise Lua argument errors for rejected ranges.
-- The C++ workspace build passed after adding the emulator metadata methods; memory-module build validation is pending. No Gens-core or project files were modified for the memory API.
+- `help/Lua Samples/test_emu.lua` checks emulator method return types, system flags, signatures, and the `emu`/`gens` alias.
+- `help/Lua Samples/test_memory.lua` checks memory signatures, region boundaries, signed byte values, unsupported addresses, capped ranges, and rejected reads.
+- `help/Lua Samples/test_bitops.lua` checks native Lua 5.5 integer bitwise operators.
+- `help/Lua Samples/list_modules.lua` lists registered modules and their available signatures.
+- The C++ workspace build succeeds. Lua samples are intended to be run in GensKMod's Lua Script window; they have not been runtime-validated here.
