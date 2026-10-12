@@ -170,6 +170,12 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\%(RelativeDir)\%(Filename)</ObjectFileName>
     </ClCompile>
     <ClCompile Include="kmod\lua_bind.c" />
+    <ClCompile Include="kmod\lua_bind_emu.c" />
+    <ClCompile Include="kmod\lua_bind_kmod.c" />
+    <ClCompile Include="kmod\lua_bind_memory.c" />
+    <ClCompile Include="kmod\lua_bind_joypad.c" />
+    <ClCompile Include="kmod\lua_bind_palette.c" />
+    <ClCompile Include="kmod\lua_bind_tile.c" />
     <ClCompile Include="kmod\lua_module.c" />
     <ClCompile Include="kmod\lua_script.c" />
     <ClCompile Include="kmod\dasmbox.c" />
