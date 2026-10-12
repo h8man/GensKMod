@@ -2,40 +2,41 @@
 
 This document compares the Lua modules registered by Gens Re-Recording with a proposed, phased implementation for GensKMod. The intent is to reuse current Gens interfaces and keep KMod-specific implementation in `src/Gens/kmod`; do not modify Gens core for the initial slice.
 
-GensKMod currently registers only `kmod.log` in `lua_bind.c`. It creates one Lua state, opens the standard libraries with `luaL_openlibs`, and advances scripts through the existing KMod update/lifecycle flow. The GensKMod Lua library is Lua 5.5.1. The Re-Recording source uses older registration APIs such as `luaL_register`, so its module names and behavior are compatibility references—not code to copy verbatim.
+GensKMod registers `emu` and legacy `gens` as aliases to one shared table, plus a separate `kmod` table. The `emu`/`gens` table currently provides `framecount`, `ispaused`, `getromsize`, and `getsystems`; both API tables expose signature metadata. `kmod.log` is also registered with its `(message)` signature. Lua state creation opens the standard libraries with `luaL_openlibs`, and scripts run through the existing KMod update/lifecycle flow. GensKMod uses Lua 5.5.1. The Re-Recording source uses older registration APIs such as `luaL_register`, so its module names and behavior are compatibility references—not code to copy verbatim.
 
 ## Module comparison
 
-| Module | Gens Re-Recording API examples | Proposed GensKMod API | Gens-core changes for proposed scope? |
+| Module | Gens Re-Recording status and functions | GensKMod status and functions | Gens-core changes needed? |
 |---|---|---|---|
-| `emu` / `gens` | `frameadvance`, `speedmode`, `wait`, `pause`, `unpause`, `emulateframe`, `emulateframefast`, `emulateframeinvisible`, `redraw`, `framecount`, `lagcount`, `lagged`, `emulating`, `atframeboundary`, frame/start/exit callbacks, persistent globals, messages, script and ROM loading | **First:** `framecount` in both aliases. KMod additions: `ispaused`, `getromsize`, `getsystems` (Genesis, Sega CD, and 32X active flags). Defer frame control, callbacks, ROM loading, and script persistence. | No for the proposed read-only metadata; control and callback functions require more lifecycle/frame-loop analysis. |
-| `gui` | `register`, `text`, `box`, `line`, `pixel`, `getpixel`, opacity/transparency, `popup`, `parsecolor`, screenshot/overlay functions, `redraw`; drawing aliases such as `drawtext`, `drawbox`, `drawline`, `drawpixel` | Later: consider a small overlay/drawing API after confirming a KMod-owned render hook. | Not established; overlay drawing may require integration with the Gens render path. |
-| `savestate` | `create`, `save`, `load`, script-data load/save, `registersave`, `registerload` | Later: evaluate state operations and script-data persistence against existing Gens/KMod state handling. | Not established for parity; defer until behavior and lifecycle are checked. |
-| `memory` | `readbyte`, `readbytesigned`, `readword`, `readwordsigned`, `readdword`, `readdwordsigned`, `readbyterange`; corresponding write functions; `isvalid`; CPU register access; read/write/execute hooks and aliases | **First:** read-only `readbyte`, `readbytesigned`, `readword`, `readwordsigned`, `readdword`, `readdwordsigned`, `readbyterange`, and `isvalid`. Initially validate and limit access to ROM and main 68K RAM. Defer writes, CPU registers, and hooks. | No for bounded wrappers using existing accessors; no Gens-side hooks or new core interfaces in the first slice. |
-| `joypad` | `get`, `getdown`, `getup`, `peek`, `peekdown`, `peekup`, `set`; aliases `read`, `write`, `readdown`, `readup` | Later: inspect current input state for read-only observation; defer input injection until frame timing and playback interactions are clear. | `set` and reliable frame-synchronized behavior may require core input integration. |
-| `input` | `get`, `registerhotkey`, `popup`, `prompt`; alias `read` | Later: assess host-input reads and UI functions separately from game/joypad input. | Not established; defer. |
-| `movie` | `active`, `recording`, `playing`, `mode`, `length`, `name`, rerecord count and controls, read-only state, frame count, `play`, `replay`, `stop`; aliases `open`, `close`, `playback` | Later: compare each operation with KMod GMV playback/recording. Do not promise Re-Recording movie compatibility based only on the existence of GMV controls. | Partial mapping may be possible, but full behavioral/format parity is not established. |
-| `sound` | `get`, `clear` | Later: check for safe existing sound controls before exposing them. | Not established; defer. |
-| `bit` | `tobit`, `bnot`, `band`, `bor`, `bxor`, shifts, rotates, `bswap`, `tohex` | Later: offer a compatibility `bit` table if scripts need it. Consider old globals `AND`, `OR`, `XOR`, `SHIFT`, and `BIT` only as compatibility shims. | No; Lua 5.5 already provides native bitwise operators, though its operators are not a drop-in replacement for every LuaBitOp function. |
-| `vdp` | `readcell`, `writecell`, `readpalette`, `writepalette`, `readwordvram`, `readwordvsram` | Later: start with read-only operations after confirming address, format, and timing semantics against the current VDP state. | No new Gens interfaces may be needed for some reads, but semantics must be checked; defer writes. |
-| `tile` | `new`/`create`, `getpixel`/`readpixel`, `setpixel`/`writepixel`, `rawdata` | Later: consider as a self-contained Lua utility module. | Likely KMod-only; not part of the first slice. |
-| `palette` / `pal` | `new`/`create`, `getcolor`/`readcolor`, `setcolor`/`writecolor`, `rawdata` | Later: consider as a self-contained utility module, with `pal` as an alias if compatibility requires it. | Likely KMod-only; not part of the first slice. |
-| Standard libraries | Re-Recording explicitly lists base, package, table, I/O, OS, string, math, and debug | No new work: GensKMod calls `luaL_openlibs`; its Lua 5.5 library set also includes coroutine and UTF-8 libraries. | No. |
-| Global helpers | `print`, `tostring`, `addressof`, `copytable`; legacy bit globals | `print` and `tostring` already come from Lua's base library. Consider `copytable` later. Defer `addressof` because it exposes pointers. | No for a KMod-local helper; `addressof` is intentionally excluded. |
-| `kmod` (KMod-specific) | No direct Re-Recording equivalent | Existing `kmod.log` remains available alongside compatibility modules. | No. |
+| `emu` / `gens` | **Implemented:** `frameadvance`, speed controls, wait/pause controls, frame emulation/redraw/count and lag queries, frame boundary queries, callbacks, persistent globals, messages, script/ROM loading. | **Implemented:** shared `emu`/`gens` aliases with `framecount`, `ispaused`, `getromsize`, and `getsystems`; signatures are in `.signatures`. Other Re-Recording methods are not implemented. | No for current metadata methods; control and callbacks require more lifecycle/frame-loop analysis. |
+| `gui` | **Implemented:** register, text/box/line/pixel drawing and reads, opacity/transparency, popup, color parsing, screenshot/overlay, redraw, plus drawing aliases. | **Not implemented.** Possible later work: KMod-local drawing after confirming an appropriate render hook. | Overlay drawing may require Gens render-path integration. |
+| `savestate` | **Implemented:** create/save/load, script-data save/load, save/load callbacks. | **Not implemented.** Existing Gens state handling needs investigation before defining Lua behavior. | Unclear for full parity; assess existing interfaces and lifecycle. |
+| `memory` | **Implemented:** signed/unsigned byte/word/dword reads, byte-range reads, writes, validity checks, CPU registers, read/write/execute hooks and aliases. | **Planned, not implemented:** bounded read-only byte/word/dword methods, signed variants, byte-range reads, and `isvalid`, initially limited to ROM/main 68K RAM. | No new core API expected for bounded reads; hooks or writes need separate review. |
+| `joypad` | **Implemented:** get/down/up, peek/down/up, set, and read/write aliases. | **Not implemented.** Read-only input observation may be evaluated later; defer input injection until frame timing and playback behavior are clear. | Input injection may require core input integration. |
+| `input` | **Implemented:** host input get, hotkey registration, popup, prompt, and read alias. | **Not implemented.** Host-input and UI access need separate assessment. | Unclear; defer. |
+| `movie` | **Implemented:** active/recording/playing/mode/length/name, rerecord count and controls, read-only state, frame count, play/replay/stop and aliases. | **Not implemented as a Lua module.** KMod has GMV record/playback features, but equivalence is unverified. | Partial mapping may be possible; full format/behavior parity is unestablished. |
+| `sound` | **Implemented:** `get`, `clear`. | **Not implemented.** Check for safe existing sound controls before adding bindings. | Unclear; defer. |
+| `bit` | **Implemented:** LuaBitOp-compatible conversion, boolean bitwise operations, shifts, rotates, byte swap, hex formatting. | **Not implemented as a compatibility module.** Lua 5.5 has native bitwise operators; legacy global aliases are also absent. | No core change needed for a KMod-local compatibility library. |
+| `vdp` | **Implemented:** read/write cell, palette, VRAM/VSRAM word access. | **Not implemented.** Consider read-only methods after confirming address/format/timing semantics. | Some reads may be KMod-local; writes require more review. |
+| `tile` | **Implemented:** create, pixel read/write, raw data. | **Not implemented.** Could be a self-contained KMod utility module. | Likely no core changes. |
+| `palette` / `pal` | **Implemented:** create, color read/write, raw data. | **Not implemented.** Could be a self-contained KMod utility module with `pal` alias. | Likely no core changes. |
+| Standard libraries | **Opened per the supplied list:** base, package, table, I/O, OS, string, math, debug. | **Implemented:** `luaL_openlibs` opens the Lua 5.5 standard libraries, including coroutine and UTF-8. | No. |
+| Global helpers | **Implemented:** `print`, `tostring`, `addressof`, `copytable`, and legacy bit globals. | **Available:** Lua base `print` and `tostring`. **Not implemented:** Re-Recording-specific `addressof`, `copytable`, and legacy bit globals. | No for KMod-local helpers; `addressof` is intentionally excluded from the current plan. |
+| `kmod` (KMod-specific) | No direct equivalent. | **Implemented:** `kmod.log(message)` with signature metadata in `kmod.signatures.log`. | No. |
 
-## Initial implementation slice
+## Implemented API and remaining first slice
 
-Keep the first slice read-only and KMod-local:
+The initial emulator metadata slice is implemented in `src/Gens/kmod/lua_bind.c` and uses existing Gens state without Gens-core edits:
 
-- `emu.framecount()` and `gens.framecount()` read the existing frame counter.
-- `emu.ispaused()` / `gens.ispaused()` report the existing pause state.
-- `emu.getromsize()` / `gens.getromsize()` report the current ROM size.
-- `emu.getsystems()` / `gens.getsystems()` report Genesis, Sega CD, and 32X active flags separately; these flags can describe combined hardware configurations.
-- `memory.isvalid(address[, size])` validates only the initially supported ROM and main 68K RAM regions.
-- `memory.readbyte(address)`, `readword(address)`, and `readdword(address)`, their signed forms, and `readbyterange(address, length)` perform bounded reads only within those supported regions.
+- `emu.framecount()` / `gens.framecount()` return the existing frame counter.
+- `emu.ispaused()` / `gens.ispaused()` return the pause state.
+- `emu.getromsize()` / `gens.getromsize()` return the current ROM size.
+- `emu.getsystems()` / `gens.getsystems()` return the Genesis, Sega CD, and 32X active flags separately; combined configurations are possible.
+- Signatures for these methods are available through `emu.signatures` and `gens.signatures`. `kmod.log(message)` is described by `kmod.signatures.log`.
 
-Implement the `emu` and legacy `gens` names as aliases over one shared function set. Check that the entire requested width/range lies within one supported region before reading; reject invalid addresses and overflow rather than wrapping. Use existing Gens 68K read accessors only after confirming they behave safely for the whitelisted ROM/RAM ranges. Do not expose mapped I/O or VDP addresses in this slice, because reads there may have hardware side effects.
+The remaining first-slice work is the planned read-only `memory` API: `isvalid(address[, size])`, byte/word/dword reads and signed variants, and `readbyterange(address, length)`, initially restricted to validated ROM and main 68K RAM addresses.
+
+Before adding memory methods, confirm the existing Gens 68K read accessors are safe for the whitelisted ROM/RAM ranges. Check that the entire requested width/range lies within one supported region before reading; reject invalid addresses and overflow rather than wrapping. Do not expose mapped I/O or VDP addresses in this slice, because reads there may have hardware side effects.
 
 ## Deferred work and risks
 
@@ -46,9 +47,10 @@ Implement the `emu` and legacy `gens` names as aliases over one shared function 
 - Preserve the existing KMod init/reset/close lifecycle. Keep KMod-specific implementation in `src/Gens/kmod` wherever possible.
 - Use Lua 5.5-compatible registration APIs; do not copy the old `luaL_register` calls directly.
 
-## Validation for a future implementation
+## Validation status and future checks
 
-- Confirm Lua scripts can call the shared `emu` and `gens` metadata functions and receive consistent values.
-- Test reads at region starts/ends, invalid addresses, unsupported regions, negative sizes, and address-plus-size overflow.
-- Confirm scripts cannot write memory or access mapped I/O through the initial API.
-- Build and run the existing GensKMod configurations without modifying Gens-core or project files.
+- `help/Lua Samples/test_emu.lua` exercises each implemented `emu` method and checks its return types, system flags, signatures, and alias relationship.
+- `help/Lua Samples/list_modules.lua` dynamically lists global/module functions and prints available signatures.
+- For future memory methods, test region boundaries, invalid/unsupported addresses, negative sizes, and address-plus-size overflow.
+- Confirm future read-only memory methods cannot write memory or access mapped I/O.
+- The C++ workspace build passed after adding the emulator metadata methods; no Gens-core or project files were modified.

@@ -14,6 +14,7 @@
 #include "lua_script.h"
 
 #define LUA_RECENT_COUNT 10
+#define LUA_OUTPUT_MAX_LENGTH (65 * 1024)
 #define WM_KMOD_LUA_OUTPUT (WM_APP + 0x415)
 
 static HWND hLuaScript;
@@ -31,6 +32,7 @@ static const char *const luaScriptStatusText[] = {
 };
 
 static void LuaScriptRefreshRecent(HWND hwnd);
+static const char *LuaScriptFileName(const char *path);
 
 static void LuaScriptSetStatus(HWND hwnd, LuaScriptStatus status)
 {
@@ -51,7 +53,7 @@ static void LuaScriptSetStatus(HWND hwnd, LuaScriptStatus status)
 	canStop = moduleState == LUA_MODULE_STATE_RUNNING;
 	SetDlgItemText(hwnd, IDC_LUA_STATUS, luaScriptStatusText[status]);
 	if (lua_module_get_current_script(script, MAX_PATH))
-		SetDlgItemText(hwnd, IDC_LUA_CURRENT_SCRIPT, script);
+		SetDlgItemText(hwnd, IDC_LUA_CURRENT_SCRIPT, LuaScriptFileName(script));
 	else
 		SetDlgItemText(hwnd, IDC_LUA_CURRENT_SCRIPT, "");
 	SendMessage(toolbar, TB_ENABLEBUTTON, IDC_LUA_RUN, MAKELONG(canRun, 0));
@@ -146,15 +148,18 @@ static void LuaScriptAppendOutput(HWND hwnd, const char *message)
 	HWND output = GetDlgItem(hwnd, IDC_LUA_OUTPUT);
 	int currentLength = GetWindowTextLength(output);
 	size_t messageLength = strlen(message);
-	char *contents = (char *)malloc((size_t)currentLength + messageLength + 1);
 
-	if (contents == NULL)
-		return;
-	GetDlgItemText(hwnd, IDC_LUA_OUTPUT, contents, currentLength + 1);
-	memcpy(contents + currentLength, message, messageLength + 1);
+	if (currentLength + messageLength > LUA_OUTPUT_MAX_LENGTH)
+	{
+		int removeLength = currentLength + messageLength - LUA_OUTPUT_MAX_LENGTH;
+		SendMessage(output, EM_SETSEL, 0, (LPARAM)removeLength);
+		SendMessage(output, EM_REPLACESEL, FALSE, (LPARAM)"");
+		currentLength -= removeLength;
+	}
+	SendMessage(output, EM_SETSEL, (WPARAM)currentLength, (LPARAM)currentLength);
+	SendMessage(output, EM_REPLACESEL, FALSE, (LPARAM)message);
 
-	SetDlgItemText(hwnd, IDC_LUA_OUTPUT, contents);
-	free(contents);
+
 	currentLength = GetWindowTextLength(output);
 	SendMessage(output, EM_SETSEL, currentLength, currentLength);
 	SendMessage(output, EM_SCROLLCARET, 0, 0);
@@ -482,7 +487,7 @@ static BOOL CALLBACK LuaScriptDlgProc(HWND hwnd, UINT message, WPARAM wParam, LP
 		LuaScriptToolbarInit(hwnd);
 		LuaScriptSetStatus(hwnd, LUA_SCRIPT_STATUS_NO_ROM);
 		SendDlgItemMessage(hwnd, IDC_LUA_EDITOR, EM_SETLIMITTEXT, 0x7ffffffe, 0);
-		SendDlgItemMessage(hwnd, IDC_LUA_OUTPUT, EM_SETLIMITTEXT, 0x7ffffffe, 0);
+		SendDlgItemMessage(hwnd, IDC_LUA_OUTPUT, EM_SETLIMITTEXT, LUA_OUTPUT_MAX_LENGTH, 0);
 		LuaScriptLoadRecent();
 		LuaScriptRefreshRecent(hwnd);
 		return TRUE;
