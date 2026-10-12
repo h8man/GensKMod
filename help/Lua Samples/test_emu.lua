@@ -20,7 +20,7 @@ assert(romSize >= 0, "emu.getromsize() returned a negative size")
 
 local systems = emu.getsystems()
 checkMethod("getsystems", systems, "table")
-for _, name in ipairs({"genesis", "sega_cd", "32x"}) do
+for _, name in ipairs({"genesis", "sega_cd", "x32"}) do
 	assert(type(systems[name]) == "boolean",
 		"emu.getsystems() field '" .. name .. "' should be a boolean")
 end

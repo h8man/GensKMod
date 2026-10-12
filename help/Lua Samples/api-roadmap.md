@@ -11,7 +11,7 @@ GensKMod registers `emu` and legacy `gens` as aliases to one shared table, plus 
 | `emu` / `gens` | **Implemented:** `frameadvance`, speed controls, wait/pause controls, frame emulation/redraw/count and lag queries, frame boundary queries, callbacks, persistent globals, messages, script/ROM loading. | **Implemented:** shared `emu`/`gens` aliases with `framecount`, `ispaused`, `getromsize`, and `getsystems`; signatures are in `.signatures`. Other Re-Recording methods are not implemented. | No for current metadata methods; control and callbacks require more lifecycle/frame-loop analysis. |
 | `gui` | **Implemented:** register, text/box/line/pixel drawing and reads, opacity/transparency, popup, color parsing, screenshot/overlay, redraw, plus drawing aliases. | **Not implemented.** Possible later work: KMod-local drawing after confirming an appropriate render hook. | Overlay drawing may require Gens render-path integration. |
 | `savestate` | **Implemented:** create/save/load, script-data save/load, save/load callbacks. | **Not implemented.** Existing Gens state handling needs investigation before defining Lua behavior. | Unclear for full parity; assess existing interfaces and lifecycle. |
-| `memory` | **Implemented:** signed/unsigned byte/word/dword reads, byte-range reads, writes, validity checks, CPU registers, read/write/execute hooks and aliases. | **Planned, not implemented:** bounded read-only byte/word/dword methods, signed variants, byte-range reads, and `isvalid`, initially limited to ROM/main 68K RAM. | No new core API expected for bounded reads; hooks or writes need separate review. |
+| `memory` | **Implemented:** signed/unsigned byte/word/dword reads, byte-range reads, writes, validity checks, CPU registers, read/write/execute hooks and aliases. | **Implemented (read-only subset):** signed/unsigned byte/word/dword reads, byte-range reads capped at 64 KiB per call, and `isvalid`; supports ROM, 68K RAM, Z80 RAM, active Sega CD PRG/word RAM, and active 32X RAM. Writes, CPU registers, and hooks are not exposed. | No new core API needed for bounded reads; hooks or writes need separate review. |
 | `joypad` | **Implemented:** get/down/up, peek/down/up, set, and read/write aliases. | **Not implemented.** Read-only input observation may be evaluated later; defer input injection until frame timing and playback behavior are clear. | Input injection may require core input integration. |
 | `input` | **Implemented:** host input get, hotkey registration, popup, prompt, and read alias. | **Not implemented.** Host-input and UI access need separate assessment. | Unclear; defer. |
 | `movie` | **Implemented:** active/recording/playing/mode/length/name, rerecord count and controls, read-only state, frame count, play/replay/stop and aliases. | **Not implemented as a Lua module.** KMod has GMV record/playback features, but equivalence is unverified. | Partial mapping may be possible; full format/behavior parity is unestablished. |
@@ -34,9 +34,9 @@ The initial emulator metadata slice is implemented in `src/Gens/kmod/lua_bind.c`
 - `emu.getsystems()` / `gens.getsystems()` return the Genesis, Sega CD, and 32X active flags separately; combined configurations are possible.
 - Signatures for these methods are available through `emu.signatures` and `gens.signatures`. `kmod.log(message)` is described by `kmod.signatures.log`.
 
-The remaining first-slice work is the planned read-only `memory` API: `isvalid(address[, size])`, byte/word/dword reads and signed variants, and `readbyterange(address, length)`, initially restricted to validated ROM and main 68K RAM addresses.
+The read-only `memory` API is implemented in `src/Gens/kmod/lua_bind.c`: `isvalid(address[, size])`, byte/word/dword reads and signed variants, and `readbyterange(address, length)`. `memory.signatures` documents these methods. Reads are limited to validated ROM, main 68K RAM, Z80 RAM, active Sega CD PRG/word RAM, and active 32X RAM regions; each requested span must remain within one region. `readbyterange` is capped at 64 KiB per call. Writes, CPU registers, hooks, mapped I/O, and VDP addresses are not exposed.
 
-Before adding memory methods, confirm the existing Gens 68K read accessors are safe for the whitelisted ROM/RAM ranges. Check that the entire requested width/range lies within one supported region before reading; reject invalid addresses and overflow rather than wrapping. Do not expose mapped I/O or VDP addresses in this slice, because reads there may have hardware side effects.
+Each entire requested width/range is checked against one supported region before reading; invalid addresses, region-crossing spans, and overflow are rejected. Do not expose mapped I/O or VDP addresses in this slice, because reads there may have hardware side effects.
 
 ## Deferred work and risks
 
@@ -51,6 +51,6 @@ Before adding memory methods, confirm the existing Gens 68K read accessors are s
 
 - `help/Lua Samples/test_emu.lua` exercises each implemented `emu` method and checks its return types, system flags, signatures, and alias relationship.
 - `help/Lua Samples/list_modules.lua` dynamically lists global/module functions and prints available signatures.
-- For future memory methods, test region boundaries, invalid/unsupported addresses, negative sizes, and address-plus-size overflow.
-- Confirm future read-only memory methods cannot write memory or access mapped I/O.
-- The C++ workspace build passed after adding the emulator metadata methods; no Gens-core or project files were modified.
+- `help/Lua Samples/test_memory.lua` exercises the memory signatures, available RAM boundaries, signed byte values, invalid/unsupported addresses, zero-length and capped ranges, and read failures.
+- `memory.isvalid` reports false for invalid/unsupported ranges; read methods raise Lua argument errors for rejected ranges.
+- The C++ workspace build passed after adding the emulator metadata methods; memory-module build validation is pending. No Gens-core or project files were modified for the memory API.
