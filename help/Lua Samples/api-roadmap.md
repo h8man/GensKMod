@@ -19,7 +19,7 @@ GensKMod registers `emu` and legacy `gens` as aliases to one shared table, plus 
 | `bit` | **Implemented:** LuaBitOp-compatible conversion, boolean bitwise operations, shifts, rotates, byte swap, hex formatting. | **No compatibility module planned for this slice.** Use Lua 5.5 native integer operators (`&`, `|`, `~`, `<<`, `>>`); legacy global aliases are absent. `help/Lua Samples/test_bitops.lua` exercises the native operators. | No core change needed for a KMod-local compatibility library if later required. |
 | `vdp` | **Implemented:** read/write cell, palette, VRAM/VSRAM word access. | **Not implemented.** Consider read-only methods after confirming address/format/timing semantics. | Some reads may be KMod-local; writes require more review. |
 | `tile` | **Implemented:** create, pixel read/write, raw data. | **Not implemented.** Could be a self-contained KMod utility module. | Likely no core changes. |
-| `palette` / `pal` | **Implemented:** create, color read/write, raw data. | **Not implemented.** Could be a self-contained KMod utility module with `pal` alias. | Likely no core changes. |
+| `palette` / `pal` | **Implemented:** create, color read/write, raw data. | **Implemented:** script-owned 16-color Genesis-format palettes with Re-Recording aliases, plus read-only live CRAM color reads for hardware palette indices 0–3. | No core changes; live color reads reuse KMod's CRAM conversion helper. |
 | Standard libraries | **Opened per the supplied list:** base, package, table, I/O, OS, string, math, debug. | **Implemented:** `luaL_openlibs` opens the Lua 5.5 standard libraries, including coroutine and UTF-8. | No. |
 | Global helpers | **Implemented:** `print`, `tostring`, `addressof`, `copytable`, and legacy bit globals. | **Available:** Lua base `print` and `tostring`. **Not implemented:** Re-Recording-specific `addressof`, `copytable`, and legacy bit globals. | No for KMod-local helpers; `addressof` is intentionally excluded from the current plan. |
 | `kmod` (KMod-specific) | No direct equivalent. | **Implemented:** `kmod.log(message)` with signature metadata in `kmod.signatures.log`. | No. |
@@ -38,6 +38,7 @@ GensKMod registers `emu` and legacy `gens` as aliases to one shared table, plus 
 - `help/Lua Samples/test_emu.lua` checks emulator method return types, system flags, signatures, and the `emu`/`gens` alias.
 - `help/Lua Samples/test_memory.lua` checks memory signatures, region boundaries, signed byte values, unsupported addresses, capped ranges, and rejected reads.
 - `help/Lua Samples/test_joypad.lua` checks `joypad.get` signature, button booleans, and invalid player rejection.
+- `help/Lua Samples/test_palette.lua` checks palette creation, color conversion, transparency, raw bytes, aliases, and read-only CRAM bounds.
 - `help/Lua Samples/test_bitops.lua` checks native Lua 5.5 integer bitwise operators.
 - `help/Lua Samples/list_modules.lua` lists registered modules and their available signatures.
 - The C++ workspace build succeeds. Lua samples are intended to be run in GensKMod's Lua Script window; they have not been runtime-validated here.
