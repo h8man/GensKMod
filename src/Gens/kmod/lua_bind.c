@@ -15,6 +15,8 @@
 #define LUA_MEMORY_MAX_RANGE (64 * 1024)
 #define LUA_PALETTE_SIZE 16
 #define LUA_PALETTE_METATABLE "kmod.palette"
+#define LUA_TILE_SIZE 32
+#define LUA_TILE_METATABLE "kmod.tile"
 
 typedef struct LuaMemoryRegion
 {
@@ -44,6 +46,11 @@ typedef struct LuaPalette
 {
 	unsigned short colors[LUA_PALETTE_SIZE];
 } LuaPalette;
+
+typedef struct LuaTile
+{
+	unsigned char pixels[LUA_TILE_SIZE];
+} LuaTile;
 
 #define KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, name, function, signature) \
 	do { \
@@ -344,6 +351,76 @@ static int LuaBindPaletteReadCramColor(lua_State *state)
 	return 1;
 }
 
+static LuaTile *LuaTileCheck(lua_State *state, int index)
+{
+	return (LuaTile *)luaL_checkudata(state, index, LUA_TILE_METATABLE);
+}
+
+static int LuaTileCheckCoordinate(lua_State *state, int index)
+{
+	lua_Integer coordinate = luaL_checkinteger(state, index);
+	if (coordinate < 1 || coordinate > 8)
+	{
+		luaL_argerror(state, index, "tile coordinate must be between 1 and 8");
+		return 0;
+	}
+	return (int)coordinate - 1;
+}
+
+static int LuaBindTileCreate(lua_State *state)
+{
+	LuaTile *tile = (LuaTile *)lua_newuserdata(state, sizeof(LuaTile));
+	int i;
+	for (i = 0; i < LUA_TILE_SIZE; i++)
+		tile->pixels[i] = 0;
+	luaL_setmetatable(state, LUA_TILE_METATABLE);
+	return 1;
+}
+
+static int LuaBindTileGetPixel(lua_State *state)
+{
+	LuaTile *tile = LuaTileCheck(state, 1);
+	int x = LuaTileCheckCoordinate(state, 2);
+	int y = LuaTileCheckCoordinate(state, 3);
+	unsigned char packed = tile->pixels[y * 4 + x / 2];
+	unsigned int color = (x % 2 == 0) ? (packed >> 4) : (packed & 0x0F);
+	lua_pushinteger(state, color);
+	return 1;
+}
+
+static int LuaBindTileSetPixel(lua_State *state)
+{
+	LuaTile *tile = LuaTileCheck(state, 1);
+	int x = LuaTileCheckCoordinate(state, 2);
+	int y = LuaTileCheckCoordinate(state, 3);
+	lua_Integer color = lua_isnoneornil(state, 4) ? 0 : luaL_checkinteger(state, 4);
+	int byteIndex = y * 4 + x / 2;
+
+	if (color < 0 || color > 15)
+	{
+		luaL_argerror(state, 4, "pixel color must be between 0 and 15");
+		return 0;
+	}
+	if (x % 2 == 0)
+		tile->pixels[byteIndex] = (unsigned char)((tile->pixels[byteIndex] & 0x0F) | ((unsigned int)color << 4));
+	else
+		tile->pixels[byteIndex] = (unsigned char)((tile->pixels[byteIndex] & 0xF0) | (unsigned int)color);
+	return 0;
+}
+
+static int LuaBindTileGetRaw(lua_State *state)
+{
+	LuaTile *tile = LuaTileCheck(state, 1);
+	int i;
+	lua_createtable(state, LUA_TILE_SIZE, 0);
+	for (i = 0; i < LUA_TILE_SIZE; i++)
+	{
+		lua_pushinteger(state, tile->pixels[i]);
+		lua_rawseti(state, -2, i + 1);
+	}
+	return 1;
+}
+
 static unsigned char LuaMemoryReadByteAt(lua_Integer address)
 {
 	LuaMemoryRegion region;
@@ -518,6 +595,9 @@ void lua_bind_register(lua_State *state)
 	int paletteIndex;
 	int paletteSignaturesIndex;
 	int paletteMetaIndex;
+	int tileIndex;
+	int tileSignaturesIndex;
+	int tileMetaIndex;
 
 	lua_createtable(state, 0, 5);
 	apiIndex = lua_absindex(state, -1);
@@ -595,4 +675,26 @@ void lua_bind_register(lua_State *state)
 	lua_pushvalue(state, paletteIndex);
 	lua_setglobal(state, "pal");
 	lua_setglobal(state, "palette");
+
+	luaL_newmetatable(state, LUA_TILE_METATABLE);
+	tileMetaIndex = lua_absindex(state, -1);
+	lua_pushvalue(state, tileMetaIndex);
+	lua_setfield(state, tileMetaIndex, "__index");
+	lua_pop(state, 1);
+
+	lua_createtable(state, 0, 7);
+	tileIndex = lua_absindex(state, -1);
+	lua_createtable(state, 0, 7);
+	tileSignaturesIndex = lua_absindex(state, -1);
+	KMOD_LUA_BIND_FUNCTION(state, tileIndex, tileSignaturesIndex, "new", LuaBindTileCreate, "()");
+	KMOD_LUA_BIND_FUNCTION(state, tileIndex, tileSignaturesIndex, "create", LuaBindTileCreate, "()");
+	KMOD_LUA_BIND_FUNCTION(state, tileIndex, tileSignaturesIndex, "getpixel", LuaBindTileGetPixel, "(tile, x, y)");
+	KMOD_LUA_BIND_FUNCTION(state, tileIndex, tileSignaturesIndex, "readpixel", LuaBindTileGetPixel, "(tile, x, y)");
+	KMOD_LUA_BIND_FUNCTION(state, tileIndex, tileSignaturesIndex, "setpixel", LuaBindTileSetPixel, "(tile, x, y, color)");
+	KMOD_LUA_BIND_FUNCTION(state, tileIndex, tileSignaturesIndex, "writepixel", LuaBindTileSetPixel, "(tile, x, y, color)");
+	KMOD_LUA_BIND_FUNCTION(state, tileIndex, tileSignaturesIndex, "rawdata", LuaBindTileGetRaw, "(tile)");
+	lua_pushvalue(state, tileSignaturesIndex);
+	lua_setfield(state, tileIndex, "signatures");
+	lua_pop(state, 1);
+	lua_setglobal(state, "tile");
 }
