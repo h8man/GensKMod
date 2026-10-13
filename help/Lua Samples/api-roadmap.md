@@ -1,6 +1,6 @@
 # Lua API Integration Roadmap
 
-This document compares the Lua modules registered by Gens Re-Recording with a proposed, phased implementation for GensKMod. The intent is to reuse current Gens interfaces and keep KMod-specific implementation in `src/Gens/kmod`; do not modify Gens core for the initial slice.
+This document compares Gens Re-Recording's Lua modules with the current GensKMod implementation. KMod-specific bindings live in `src/Gens/kmod`; the Re-Recording source is a behavioral reference, not code to copy verbatim.
 
 GensKMod registers `emu` and legacy `gens` as aliases to one shared table, plus a separate `kmod` table. The `emu`/`gens` table currently provides `framecount`, `ispaused`, `getromsize`, and `getsystems`; both API tables expose signature metadata. `kmod.log` is also registered with its `(message)` signature. Lua state creation opens the standard libraries with `luaL_openlibs`, and scripts run through the existing KMod update/lifecycle flow. GensKMod uses Lua 5.5.1. The Re-Recording source uses older registration APIs such as `luaL_register`, so its module names and behavior are compatibility references—not code to copy verbatim.
 
@@ -17,8 +17,8 @@ GensKMod registers `emu` and legacy `gens` as aliases to one shared table, plus 
 | `movie` | **Implemented:** active/recording/playing/mode/length/name, rerecord count and controls, read-only state, frame count, play/replay/stop and aliases. | **Not implemented as a Lua module.** KMod has GMV record/playback features, but equivalence is unverified. | Partial mapping may be possible; full format/behavior parity is unestablished. |
 | `sound` | **Implemented:** `get`, `clear`. | **Not implemented.** Check for safe existing sound controls before adding bindings. | Unclear; defer. |
 | `bit` | **Implemented:** LuaBitOp-compatible conversion, boolean bitwise operations, shifts, rotates, byte swap, hex formatting. | **No compatibility module planned for this slice.** Use Lua 5.5 native integer operators (`&`, `|`, `~`, `<<`, `>>`); legacy global aliases are absent. `help/Lua Samples/test_bitops.lua` exercises the native operators. | No core change needed for a KMod-local compatibility library if later required. |
-| `vdp` | **Implemented:** read/write cell, palette, VRAM/VSRAM word access. | **Not implemented.** Consider read-only methods after confirming address/format/timing semantics. | Some reads may be KMod-local; writes require more review. |
-| `tile` | **Implemented:** create, pixel read/write, raw data. | **Implemented (object-only):** script-owned 8×8 4-bpp tile objects with pixel read/write and raw bytes. VDP/VRAM transfer is deferred. | No core changes for tile objects; VDP transfer needs separate work. |
+| `vdp` | **Implemented:** read/write cell, palette, VRAM/VSRAM word access. | **Implemented:** `readcell`/`writecell` transfer tile userdata at bounded pattern-data addresses; `readpalette`/`writepalette` transfer palette userdata and lists; `readwordvram` and `readwordvsram` read bounded words. Requires a running Genesis VDP. | No new core API; reuses VDP memory arrays and refresh flags. Cell/CRAM writes directly mutate emulated video memory. |
+| `tile` | **Implemented:** create, pixel read/write, raw data. | **Implemented:** script-owned 8×8 4-bpp tile userdata with pixel read/write and raw bytes; VDP transfers use this userdata. | No core changes. |
 | `palette` / `pal` | **Implemented:** create, color read/write, raw data. | **Implemented:** script-owned 16-color Genesis-format palettes with Re-Recording aliases, plus read-only live CRAM color reads for hardware palette indices 0–3. | No core changes; live color reads reuse KMod's CRAM conversion helper. |
 | Standard libraries | **Opened per the supplied list:** base, package, table, I/O, OS, string, math, debug. | **Implemented:** `luaL_openlibs` opens the Lua 5.5 standard libraries, including coroutine and UTF-8. | No. |
 | Global helpers | **Implemented:** `print`, `tostring`, `addressof`, `copytable`, and legacy bit globals. | **Available:** Lua base `print` and `tostring`. **Not implemented:** Re-Recording-specific `addressof`, `copytable`, and legacy bit globals. | No for KMod-local helpers; `addressof` is intentionally excluded from the current plan. |
@@ -29,7 +29,7 @@ GensKMod registers `emu` and legacy `gens` as aliases to one shared table, plus 
 - Memory writes, CPU register mutation, and read/write/execute hooks are not implemented. Hooks can run on performance-critical emulator paths, and write behavior can have hardware side effects.
 - Do not include `frameadvance`, `wait`, speed controls, frame callbacks, or multi-script scheduling. GensKMod currently has one Lua state/coroutine and a KMod update path; matching Re-Recording's callback and scheduling model needs separate design.
 - Do not claim GMV is equivalent to Re-Recording movie files or semantics without checking format and behavior.
-- Treat savestate callbacks/persistent script data, GUI overlays, joypad injection, host-input UI, and VDP writes as later investigations.
+- Treat savestate callbacks/persistent script data, GUI overlays, joypad injection, and host-input UI as later investigations. VDP transfer writes are implemented and directly mutate emulated video memory.
 - Preserve the existing KMod init/reset/close lifecycle. Keep KMod-specific implementation in `src/Gens/kmod` wherever possible.
 - Use Lua 5.5-compatible registration APIs; do not copy the old `luaL_register` calls directly.
 
@@ -40,6 +40,7 @@ GensKMod registers `emu` and legacy `gens` as aliases to one shared table, plus 
 - `help/Lua Samples/test_joypad.lua` checks `joypad.get` signature, button booleans, and invalid player rejection.
 - `help/Lua Samples/test_palette.lua` checks palette creation, color conversion, transparency, raw bytes, aliases, and read-only CRAM bounds.
 - `help/Lua Samples/test_tile.lua` checks tile creation, packed pixel access, raw bytes, aliases, and invalid input rejection; it does not exercise VDP/VRAM transfer.
+- `help/Lua Samples/test_vdp.lua` checks VDP method signatures and address bounds, reads VRAM/VSRAM words and a cell at fixed address `0x0000`, exercises tile and palette userdata/list transfers, and restores the modified cell and CRAM line. Run it with an active Genesis ROM; live behavior has been smoke-tested in the emulator.
 - `help/Lua Samples/test_bitops.lua` checks native Lua 5.5 integer bitwise operators.
 - `help/Lua Samples/list_modules.lua` lists registered modules and their available signatures.
-- The C++ workspace build succeeds. Lua samples are intended to be run in GensKMod's Lua Script window; they have not been runtime-validated here.
+- The C++ workspace build succeeds. Lua samples are intended to be run in GensKMod's Lua Script window; only the samples explicitly noted above have runtime confirmation.

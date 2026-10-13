@@ -176,6 +176,7 @@
     <ClCompile Include="kmod\lua_bind_joypad.c" />
     <ClCompile Include="kmod\lua_bind_palette.c" />
     <ClCompile Include="kmod\lua_bind_tile.c" />
+    <ClCompile Include="kmod\lua_bind_vdp.c" />
     <ClCompile Include="kmod\lua_module.c" />
     <ClCompile Include="kmod\lua_script.c" />
     <ClCompile Include="kmod\dasmbox.c" />
@@ -463,6 +464,8 @@
     </ClInclude>
     <ClInclude Include="kmod\gmv.h" />
     <ClInclude Include="kmod\lua_bind.h" />
+    <ClInclude Include="kmod\lua_bind_tile.h" />
+    <ClInclude Include="kmod\lua_bind_palette.h" />
     <ClInclude Include="kmod\lua_module.h" />
     <ClInclude Include="kmod\lua_script.h" />
     <ClInclude Include="kmod\hexbox.h">

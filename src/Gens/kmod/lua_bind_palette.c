@@ -1,21 +1,23 @@
 #include "lauxlib.h"
 
 #include "lua_bind.h"
+#include "lua_bind_palette.h"
 #include "../gens.h"
 #include "../vdp_io.h"
 #include "vdp.h"
 
-#define LUA_PALETTE_SIZE 16
 #define LUA_PALETTE_METATABLE "kmod.palette"
 
-typedef struct LuaPalette
-{
-	unsigned short colors[LUA_PALETTE_SIZE];
-} LuaPalette;
-
-static LuaPalette *LuaPaletteCheck(lua_State *state, int index)
+LuaPalette *LuaPaletteCheck(lua_State *state, int index)
 {
 	return (LuaPalette *)luaL_checkudata(state, index, LUA_PALETTE_METATABLE);
+}
+
+void LuaPalettePush(lua_State *state, const unsigned char *colors)
+{
+	LuaPalette *palette = (LuaPalette *)lua_newuserdata(state, sizeof(LuaPalette));
+	memcpy(palette->colors, colors, sizeof(palette->colors));
+	luaL_setmetatable(state, LUA_PALETTE_METATABLE);
 }
 
 static int LuaPaletteCheckIndex(lua_State *state, int index)

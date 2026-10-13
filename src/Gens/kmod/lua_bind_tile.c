@@ -1,18 +1,20 @@
 #include "lauxlib.h"
 
 #include "lua_bind.h"
+#include "lua_bind_tile.h"
 
-#define LUA_TILE_SIZE 32
 #define LUA_TILE_METATABLE "kmod.tile"
 
-typedef struct LuaTile
-{
-	unsigned char pixels[LUA_TILE_SIZE];
-} LuaTile;
-
-static LuaTile *LuaTileCheck(lua_State *state, int index)
+LuaTile *LuaTileCheck(lua_State *state, int index)
 {
 	return (LuaTile *)luaL_checkudata(state, index, LUA_TILE_METATABLE);
+}
+
+void LuaTilePush(lua_State *state, const unsigned char *pixels)
+{
+	LuaTile *tile = (LuaTile *)lua_newuserdata(state, sizeof(LuaTile));
+	memcpy(tile->pixels, pixels, LUA_TILE_SIZE);
+	luaL_setmetatable(state, LUA_TILE_METATABLE);
 }
 
 static int LuaTileCheckCoordinate(lua_State *state, int index)

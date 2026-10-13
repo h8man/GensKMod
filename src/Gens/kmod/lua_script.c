@@ -8,6 +8,7 @@
 
 #include "../gens.h"
 #include "../G_main.h"
+#include "../G_dsound.h"
 #include "common.h"
 #include "lua_module.h"
 #include "resource.h"
@@ -387,6 +388,7 @@ static void LuaScriptBrowse(HWND hwnd)
 {
 	OPENFILENAME dialog;
 	char path[MAX_PATH];
+	BOOL resumeSound = Sound_Is_Playing != 0;
 
 	ZeroMemory(&dialog, sizeof(dialog));
 	path[0] = '\0';
@@ -402,10 +404,14 @@ static void LuaScriptBrowse(HWND hwnd)
 	dialog.lpstrDefExt = "lua";
 	dialog.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
+	if (resumeSound)
+		Stop_Sound();
 	if (GetOpenFileName(&dialog))
 		LuaScriptOpen(hwnd, path);
 	else if (CommDlgExtendedError() != 0)
 		LuaScriptSetOutput(hwnd, "Unable to open the file picker.");
+	if (resumeSound)
+		Play_Sound();
 }
 
 static BOOL LuaScriptToolbarInit(HWND hwnd)

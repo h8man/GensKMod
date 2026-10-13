@@ -8,4 +8,5 @@ void lua_bind_register(lua_State *state)
 	lua_bind_joypad_register(state);
 	lua_bind_palette_register(state);
 	lua_bind_tile_register(state);
+	lua_bind_vdp_register(state);
 }

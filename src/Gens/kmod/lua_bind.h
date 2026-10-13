@@ -14,6 +14,7 @@ void lua_bind_memory_register(lua_State *state);
 void lua_bind_joypad_register(lua_State *state);
 void lua_bind_palette_register(lua_State *state);
 void lua_bind_tile_register(lua_State *state);
+void lua_bind_vdp_register(lua_State *state);
 
 #define KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, name, function, signature) \
 	do { \
