@@ -6,6 +6,7 @@
 #include "lualib.h"
 
 #include "lua_bind.h"
+#include "lua_bind_joypad.h"
 #include "lua_module.h"
 #include "lua_script.h"
 
@@ -22,6 +23,11 @@ static LuaRunRequest *pendingRequest;
 static LuaRunRequest *activeRequest;
 static volatile LONG luaModuleState = LUA_MODULE_STATE_CLOSED;
 static SRWLOCK requestLock = SRWLOCK_INIT;
+
+void lua_module_pre_update(void)
+{
+	LuaJoypadAppplyState();
+}
 
 BOOL lua_module_get_current_script(char *buffer, DWORD bufferSize)
 {

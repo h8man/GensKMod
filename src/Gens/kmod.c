@@ -277,6 +277,12 @@ void Update_KMod( )
 	}
 }
 
+void PreUpdate_KMod(void)
+{
+	GMVUpdatePlay_KMod();
+	lua_module_pre_update();
+}
+
 void kmod_close()
 {
 	UCHAR mode;

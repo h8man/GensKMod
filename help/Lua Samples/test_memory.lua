@@ -1,4 +1,4 @@
--- Smoke-test the read-only memory API and its supported ranges.
+-- Smoke-test memory reads/writes and mapped ranges. Writes below restore the original work RAM bytes.
 assert(type(memory) == "table", "memory module is unavailable")
 assert(type(memory.signatures) == "table", "memory signature metadata is unavailable")
 
@@ -10,13 +10,55 @@ local methods = {
 	"readwordsigned",
 	"readdword",
 	"readdwordsigned",
-	"readbyterange"
+	"readbyterange",
+	"writebyte",
+	"writeword",
+	"writedword",
+	"writebyterange",
+	"readbyteunsigned",
+	"readwordunsigned",
+	"readdwordunsigned",
+	"readshort",
+	"readshortunsigned",
+	"readshortsigned",
+	"readlong",
+	"readlongunsigned",
+	"readlongsigned",
+	"writeshort",
+	"writelong",
+	"getregister",
+	"setregister"
 }
 for _, name in ipairs(methods) do
 	assert(type(memory[name]) == "function", "memory." .. name .. " is unavailable")
 	assert(type(memory.signatures[name]) == "string", "signature missing for memory." .. name)
 	kmod.log("PASS memory." .. name .. memory.signatures[name])
 end
+
+local originalD0 = memory.getregister("d0")
+assert(type(originalD0) == "number", "unqualified register names should read main 68000 registers")
+assert(memory.getregister("main.d0") == originalD0, "main.d0 should alias d0")
+assert(memory.getregister("m68k.d0") == originalD0, "m68k.d0 should alias d0")
+assert(type(memory.getregister("main.pc")) == "number", "main PC should be readable")
+assert(type(memory.getregister("main.sr")) == "number", "main SR should be readable")
+local registerWriteOk, registerWriteError = pcall(function()
+	memory.setregister("main.d0", originalD0 ~ 0xFFFFFFFF)
+	assert(memory.getregister("d0") == (originalD0 ~ 0xFFFFFFFF), "main register write/read round trip failed")
+end)
+memory.setregister("d0", originalD0)
+assert(registerWriteOk, registerWriteError)
+if emu.getsystems().sega_cd then
+	local originalSubD0 = memory.getregister("sub.d0")
+	assert(memory.getregister("s68k.d0") == originalSubD0, "s68k.d0 should alias sub.d0")
+	local subRegisterWriteOk, subRegisterWriteError = pcall(function()
+		memory.setregister("s68k.d0", originalSubD0 ~ 0xFFFFFFFF)
+		assert(memory.getregister("sub.d0") == (originalSubD0 ~ 0xFFFFFFFF), "sub register write/read round trip failed")
+	end)
+	memory.setregister("sub.d0", originalSubD0)
+	assert(subRegisterWriteOk, subRegisterWriteError)
+end
+assert(memory.getregister("not_a_register") == nil, "unknown register names should return nil")
+memory.setregister("not_a_register", 1)
 
 assert(memory.isvalid(-1) == false, "negative addresses must be invalid")
 assert(memory.isvalid(0xFF0000), "main 68K RAM should be valid")
@@ -56,4 +98,41 @@ assert(not ok, "byte ranges larger than 64 KiB should fail")
 ok = pcall(memory.readbyte, 0xA02000)
 assert(not ok, "reads outside Z80 RAM should fail")
 
-kmod.log("All memory method tests passed.")
+local testAddress = 0xFF0100
+local originalBytes = memory.readbyterange(testAddress, 9)
+local writeTestOk, writeTestError = pcall(function()
+	memory.writebyte(testAddress, 0xA5)
+	assert(memory.readbyte(testAddress) == 0xA5, "writebyte/readbyte round trip failed")
+	memory.writeword(testAddress + 1, 0x1234)
+	assert(memory.readword(testAddress + 1) == 0x1234, "writeword/readword round trip failed")
+	memory.writedword(testAddress + 3, 0x89ABCDEF)
+	assert(memory.readdword(testAddress + 3) == 0x89ABCDEF, "writedword/readdword round trip failed")
+	assert(memory.writebyterange(testAddress + 7, {0x12, 0x34}) == 2, "writebyterange should return number of bytes written")
+	local writtenBytes = memory.readbyterange(testAddress + 7, 2)
+	assert(writtenBytes[1] == 0x12 and writtenBytes[2] == 0x34, "writebyterange/readbyterange round trip failed")
+	assert(memory.readshort(testAddress + 1) == 0x1234, "short aliases should match word reads")
+	assert(memory.readlong(testAddress + 3) == 0x89ABCDEF, "long aliases should match dword reads")
+end)
+local restoreCount = memory.writebyterange(testAddress, originalBytes)
+assert(restoreCount == #originalBytes, "failed to restore original work RAM bytes")
+assert(writeTestOk, writeTestError)
+
+assert(emu.getromsize() > 0, "ROM must be loaded to test ROM writes")
+local romTestAddress = 0
+local originalRomByte = memory.readbyte(romTestAddress)
+local romWriteOk, romWriteError = pcall(function()
+	local changedRomByte = originalRomByte ~ 0xFF
+	memory.writebyte(romTestAddress, changedRomByte)
+	assert(memory.readbyte(romTestAddress) == changedRomByte, "ROM write/read round trip failed")
+end)
+local romRestoreOk, romRestoreError = pcall(memory.writebyte, romTestAddress, originalRomByte)
+assert(romRestoreOk, "failed to restore original ROM byte: " .. tostring(romRestoreError))
+assert(romWriteOk, romWriteError)
+ok = pcall(memory.writebyte, 0xFFFFFF, 0x100)
+assert(not ok, "byte writes must reject values larger than 255")
+ok = pcall(memory.writeword, 0xFFFFFF, 0x1234)
+assert(not ok, "word writes extending past RAM must fail")
+ok = pcall(memory.writebyterange, 0xFF0000, {0, 256})
+assert(not ok, "byte ranges must reject values outside 0-255")
+
+kmod.log("All memory read/write method tests passed; original work RAM and ROM bytes were restored. Hooks are not included.")

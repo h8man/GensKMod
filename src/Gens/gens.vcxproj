@@ -464,6 +464,7 @@
     </ClInclude>
     <ClInclude Include="kmod\gmv.h" />
     <ClInclude Include="kmod\lua_bind.h" />
+    <ClInclude Include="kmod\lua_bind_joypad.h" />
     <ClInclude Include="kmod\lua_bind_tile.h" />
     <ClInclude Include="kmod\lua_bind_palette.h" />
     <ClInclude Include="kmod\lua_module.h" />

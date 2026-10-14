@@ -18,6 +18,7 @@ extern "C" {
 BOOL lua_module_init(void);
 void lua_module_reset(void);
 void lua_module_close(void);
+void lua_module_pre_update(void);
 LuaModuleState lua_module_get_state(void);
 BOOL lua_module_get_current_script(char *buffer, DWORD bufferSize);
 BOOL lua_module_run(const char *buff, const char *tag);

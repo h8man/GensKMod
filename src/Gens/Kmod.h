@@ -18,6 +18,7 @@ extern "C" {
 void Init_KMod( );
 void ResetDebug_KMod( );
 void Update_KMod( );
+void PreUpdate_KMod(void);
 void kmod_close();
 void ToggleWindow_KMod( HWND hWnd, int Debug_Mode);
 BOOL IsDialogMsg_KMod( LPMSG lpMsg );

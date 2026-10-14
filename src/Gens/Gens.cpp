@@ -30,7 +30,7 @@
 #include "cd_sys.h"
 #include "cd_file.h"
 
-#include "kmod/gmv.h"
+#include "Kmod.h"
 
 int Debug;
 int Frame_Skip;
@@ -685,7 +685,7 @@ int Do_Genesis_Frame_No_VDP(void)
 	Cycles_M68K = Cycles_Z80 = 0;
 	Last_BUS_REQ_Cnt = -1000;
 #ifdef GENS_KMOD
-	GMVUpdatePlay_KMod( );
+	PreUpdate_KMod();
 	IncTimer_KMod( main68k_tripOdometer() ); // Reads and then clears the odometer
 #else
 	main68k_tripOdometer(); // Reads and then clears the odometer
@@ -831,7 +831,7 @@ int Do_Genesis_Frame()
 	Cycles_M68K = Cycles_Z80 = 0;
 	Last_BUS_REQ_Cnt = -1000;
 #ifdef GENS_KMOD
-	GMVUpdatePlay_KMod( );
+	PreUpdate_KMod();
 	IncTimer_KMod( main68k_tripOdometer() ); // Reads and then clears the odometer
 #else
 	main68k_tripOdometer(); // Reads and then clears the odometer
@@ -1231,7 +1231,7 @@ int Do_32X_Frame_No_VDP()
 	Last_BUS_REQ_Cnt = -1000;
 
 #ifdef GENS_KMOD
-	GMVUpdatePlay_KMod( );
+	PreUpdate_KMod();
 	IncTimer_KMod( main68k_tripOdometer() ); // Reads and then clears the odometer
 #else
 	main68k_tripOdometer(); // Reads and then clears the odometer
@@ -1506,7 +1506,7 @@ int Do_32X_Frame()
 	Last_BUS_REQ_Cnt = -1000;
 
 #ifdef GENS_KMOD
-	GMVUpdatePlay_KMod( );
+	PreUpdate_KMod();
 	IncTimer_KMod( main68k_tripOdometer() ); // Reads and then clears the odometer
 #else
 	main68k_tripOdometer(); // Reads and then clears the odometer
@@ -2020,7 +2020,7 @@ int Do_SegaCD_Frame_No_VDP(void)
 	Last_BUS_REQ_Cnt = -1000;
 
 #ifdef GENS_KMOD
-	GMVUpdatePlay_KMod( );
+	PreUpdate_KMod();
 	IncTimer_KMod( main68k_tripOdometer() ); // Reads and then clears the odometer
 #else
 	main68k_tripOdometer(); // Reads and then clears the odometer
@@ -2168,7 +2168,7 @@ int Do_SegaCD_Frame_No_VDP_Cycle_Accurate(void)
 	Cycles_S68K = Cycles_M68K = Cycles_Z80 = 0;
 	Last_BUS_REQ_Cnt = -1000;
 #ifdef GENS_KMOD
-	GMVUpdatePlay_KMod( );
+	PreUpdate_KMod();
 	IncTimer_KMod( main68k_tripOdometer() ); // Reads and then clears the odometer
 #else
 	main68k_tripOdometer(); // Reads and then clears the odometer
@@ -2432,7 +2432,7 @@ int Do_SegaCD_Frame(void)
 	Cycles_S68K = Cycles_M68K = Cycles_Z80 = 0;
 	Last_BUS_REQ_Cnt = -1000;
 #ifdef GENS_KMOD
-	GMVUpdatePlay_KMod( );
+	PreUpdate_KMod();
 	IncTimer_KMod( main68k_tripOdometer() ); // Reads and then clears the odometer
 #else
 	main68k_tripOdometer(); // Reads and then clears the odometer
@@ -2609,7 +2609,7 @@ int Do_SegaCD_Frame_Cycle_Accurate(void)
 	Cycles_S68K = Cycles_M68K = Cycles_Z80 = 0;
 	Last_BUS_REQ_Cnt = -1000;
 #ifdef GENS_KMOD
-	GMVUpdatePlay_KMod( );
+	PreUpdate_KMod();
 	IncTimer_KMod( main68k_tripOdometer() ); // Reads and then clears the odometer
 #else
 	main68k_tripOdometer(); // Reads and then clears the odometer
