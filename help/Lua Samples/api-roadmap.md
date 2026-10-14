@@ -2,13 +2,11 @@
 
 This document compares Gens Re-Recording's Lua modules with the current GensKMod implementation. KMod-specific bindings live in `src/Gens/kmod`; the Re-Recording source is a behavioral reference, not code to copy verbatim.
 
-GensKMod registers `emu` and legacy `gens` as aliases to one shared table, plus a separate `kmod` table. The `emu`/`gens` table currently provides `framecount`, `ispaused`, `getromsize`, and `getsystems`; both API tables expose signature metadata. `kmod.log` is also registered with its `(message)` signature. Lua state creation opens the standard libraries with `luaL_openlibs`, and scripts run through the existing KMod update/lifecycle flow. GensKMod uses Lua 5.5.1. The Re-Recording source uses older registration APIs such as `luaL_register`, so its module names and behavior are compatibility references—not code to copy verbatim.
-
 ## Module comparison
 
 | Module | Gens Re-Recording status and functions | GensKMod status and functions | Gens-core changes needed? |
 |---|---|---|---|
-| `emu` / `gens` | **Implemented:** `frameadvance`, speed controls, wait/pause controls, frame emulation/redraw/count and lag queries, frame boundary queries, callbacks, persistent globals, messages, script/ROM loading. | `framecount`, `ispaused`, `getromsize`, `getsystems` | Shared `emu`/`gens` aliases; signatures are available in `.signatures`. Other Re-Recording methods are not implemented. Control and callbacks need lifecycle/frame-loop analysis. |
+| `emu` / `gens` | **Implemented:** `frameadvance`, speed controls, wait/pause controls, frame emulation/redraw/count and lag queries, frame boundary queries, callbacks, persistent globals, messages, script/ROM loading. | `framecount`, `ispaused`, `getromsize`, `getromname`, `getromheader`, `getcountry`, `getframeskip`, `getvisiblelines`, `getsystems` | Shared `emu`/`gens` aliases with signature metadata. ROM metadata methods return `nil` when unavailable; `getcountry` returns `usa_ntsc`, `japan_ntsc`, `europe_pal`, `asia_pal`, or nil. `getvisiblelines` returns nil when Genesis is inactive. Other Re-Recording methods are not implemented; controls and callbacks need lifecycle/frame-loop analysis. |
 | `gui` | **Implemented:** register, text/box/line/pixel drawing and reads, opacity/transparency, popup, color parsing, screenshot/overlay, redraw, plus drawing aliases. | — | Not implemented. KMod-local drawing needs an appropriate render hook; overlay drawing may require Gens render-path integration. |
 | `savestate` | **Implemented:** create/save/load, script-data save/load, save/load callbacks. | `save`, `load` | File-based quick state slots 0–9 using existing Gens state files. No in-memory state objects, script variables, or callbacks. |
 | `memory` | **Implemented:** signed/unsigned byte/word/dword reads, byte-range reads/writes, scalar writes, validity checks, CPU registers, read/write/execute hooks and aliases. | `isvalid`, `readbyte`, `readbytesigned`, `readword`, `readwordsigned`, `readdword`, `readdwordsigned`, `readbyterange`, `writebyte`, `writeword`, `writedword`, `writebyterange`, `getregister`, `setregister` | Bounded to ROM, mapped 68K RAM, Z80 RAM, active Sega CD PRG/word RAM, and active 32X RAM. Range writes are capped at 64 KiB. Register access covers main and Sega CD sub 68000 A0–A7, D0–D7, PC, SR; `main.`/`m68k.` and `sub.`/`s68k.` prefixes are accepted, with unqualified names targeting main. Writes directly mutate memory/register state; hooks are not implemented. |
@@ -33,15 +31,6 @@ GensKMod registers `emu` and legacy `gens` as aliases to one shared table, plus 
 - Preserve the existing KMod init/reset/close lifecycle. Keep KMod-specific implementation in `src/Gens/kmod` wherever possible.
 - Use Lua 5.5-compatible registration APIs; do not copy the old `luaL_register` calls directly.
 
-## Samples and validation
+## Validation
 
-- `help/Lua Samples/test_emu.lua` checks emulator method return types, system flags, signatures, and the `emu`/`gens` alias.
-- `help/Lua Samples/test_memory.lua` checks read/write/register signatures and aliases, region boundaries, signed reads, scalar and byte-range RAM round trips, ROM write/read round trip with restoration, main and optional sub 68000 register round trips with restoration, and invalid inputs. Hooks are intentionally not tested or exposed.
-- `help/Lua Samples/test_savestate.lua` checks savestate method signatures and rejects invalid slot numbers; it does not overwrite a user's state slots.
-- `help/Lua Samples/test_joypad.lua` checks `joypad.get`/`set` signatures, button booleans, queued partial-button overrides with restoration, and invalid player rejection.
-- `help/Lua Samples/test_palette.lua` checks palette creation, color conversion, transparency, raw bytes, aliases, and read-only CRAM bounds.
-- `help/Lua Samples/test_tile.lua` checks tile creation, packed pixel access, raw bytes, aliases, and invalid input rejection; it does not exercise VDP/VRAM transfer.
-- `help/Lua Samples/test_vdp.lua` checks VDP method signatures and address bounds, reads VRAM/VSRAM words and a cell at fixed address `0x0000`, exercises tile and palette userdata/list transfers, and restores the modified cell and CRAM line. Run it with an active Genesis ROM; live behavior has been smoke-tested in the emulator.
-- `help/Lua Samples/test_bitops.lua` checks native Lua 5.5 integer bitwise operators.
-- `help/Lua Samples/list_modules.lua` lists registered modules and their available signatures.
-- The C++ workspace build succeeds. Lua samples are intended to be run in GensKMod's Lua Script window; only the samples explicitly noted above have runtime confirmation.
+- `help/Lua Samples/test_emu.lua` checks emulator method return types, system flags, signatures, the `emu`/`gens` alias, and read-only query coverage for ROM metadata, country mapping, frame skip, and visible line count.
