@@ -1,0 +1,15 @@
+assert(type(savestate) == "table", "savestate module is unavailable")
+assert(type(savestate.save) == "function", "savestate.save is unavailable")
+assert(type(savestate.load) == "function", "savestate.load is unavailable")
+assert(type(savestate.signatures) == "table", "savestate signature metadata is unavailable")
+assert(type(savestate.signatures.save) == "string", "signature missing for savestate.save")
+assert(type(savestate.signatures.load) == "string", "signature missing for savestate.load")
+
+local ok = pcall(savestate.save, -1)
+assert(not ok, "negative save slots must be rejected")
+ok = pcall(savestate.load, 10)
+assert(not ok, "save slots above 9 must be rejected")
+
+kmod.log("PASS savestate.save" .. savestate.signatures.save)
+kmod.log("PASS savestate.load" .. savestate.signatures.load)
+kmod.log("Savestate API tests passed without modifying state slots.")

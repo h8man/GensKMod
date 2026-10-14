@@ -12,6 +12,7 @@ void lua_bind_emu_register(lua_State *state);
 void lua_bind_kmod_register(lua_State *state);
 void lua_bind_memory_register(lua_State *state);
 void lua_bind_joypad_register(lua_State *state);
+void lua_bind_savestate_register(lua_State *state);
 void lua_bind_palette_register(lua_State *state);
 void lua_bind_tile_register(lua_State *state);
 void lua_bind_vdp_register(lua_State *state);
