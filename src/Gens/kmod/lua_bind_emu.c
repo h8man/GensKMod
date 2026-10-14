@@ -83,6 +83,39 @@ static int LuaBindIsPaused(lua_State *state)
 	return 1;
 }
 
+static int LuaBindPause(lua_State *state)
+{
+	(void)state;
+	Paused = 1;
+	return 0;
+}
+
+static int LuaBindUnpause(lua_State *state)
+{
+	(void)state;
+	Paused = 0;
+	return 0;
+}
+
+static int LuaBindReset(lua_State *state)
+{
+	if (Kaillera_Client_Running || (!Genesis_Started && !_32X_Started && !SegaCD_Started))
+	{
+		lua_pushboolean(state, FALSE);
+		return 1;
+	}
+
+	if (Genesis_Started)
+		Reset_Genesis();
+	else if (_32X_Started)
+		Reset_32X();
+	else
+		Reset_SegaCD();
+
+	lua_pushboolean(state, TRUE);
+	return 1;
+}
+
 static int LuaBindGetRomSize(lua_State *state)
 {
 	lua_pushinteger(state, (lua_Integer)Rom_Size);
@@ -106,12 +139,15 @@ void lua_bind_emu_register(lua_State *state)
 	int apiIndex;
 	int signaturesIndex;
 
-	lua_createtable(state, 0, 10);
+	lua_createtable(state, 0, 13);
 	apiIndex = lua_absindex(state, -1);
-	lua_createtable(state, 0, 9);
+	lua_createtable(state, 0, 12);
 	signaturesIndex = lua_absindex(state, -1);
 	KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, "framecount", LuaBindFrameCount, "()");
 	KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, "ispaused", LuaBindIsPaused, "()");
+	KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, "pause", LuaBindPause, "()");
+	KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, "unpause", LuaBindUnpause, "()");
+	KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, "reset", LuaBindReset, "()");
 	KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, "getromsize", LuaBindGetRomSize, "()");
 	KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, "getromname", LuaBindGetRomName, "()");
 	KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, "getromheader", LuaBindGetRomHeader, "()");

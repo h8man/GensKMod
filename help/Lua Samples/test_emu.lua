@@ -13,6 +13,9 @@ end
 
 checkMethod("framecount", emu.framecount(), "number")
 checkMethod("ispaused", emu.ispaused(), "boolean")
+checkMethod("pause", emu.pause, "function")
+checkMethod("unpause", emu.unpause, "function")
+checkMethod("reset", emu.reset, "function")
 checkMethod("getframeskip", emu.getframeskip(), "number")
 
 local country = emu.getcountry()
