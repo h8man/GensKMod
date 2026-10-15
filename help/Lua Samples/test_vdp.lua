@@ -1,7 +1,7 @@
 -- Test VDP accessors. Write checks briefly modify live VRAM/CRAM, then restore the original data.
 assert(type(vdp) == "table", "vdp module is unavailable")
 
-local methods = {"readcell", "writecell", "readpalette", "writepalette", "readwordvram", "readwordvsram"}
+local methods = {"readcell", "writecell", "readpalette", "writepalette", "readwordvram", "readwordvsram", "readregister"}
 for _, name in ipairs(methods) do
 	assert(type(vdp[name]) == "function", "vdp." .. name .. " is unavailable")
 	assert(type(vdp.signatures[name]) == "string", "signature missing for vdp." .. name)
@@ -13,6 +13,10 @@ ok = pcall(vdp.readwordvram, 64000)
 assert(not ok, "VRAM word beyond allocated range should be rejected")
 ok = pcall(vdp.readwordvsram, 256)
 assert(not ok, "VSRAM word beyond allocated range should be rejected")
+ok = pcall(vdp.readregister, -1)
+assert(not ok, "negative VDP register index should be rejected")
+ok = pcall(vdp.readregister, 24)
+assert(not ok, "VDP register index beyond 23 should be rejected")
 ok = pcall(vdp.readpalette, 5, 1)
 assert(not ok, "palette lines beyond 4 should not produce data")
 
@@ -27,6 +31,9 @@ local vramWord = vdp.readwordvram(0)
 assert(type(vramWord) == "number" and vramWord >= 0 and vramWord <= 0xFFFF, "VRAM word read should return an unsigned word")
 local vsramWord = vdp.readwordvsram(0)
 assert(type(vsramWord) == "number" and vsramWord >= 0 and vsramWord <= 0xFFFF, "VSRAM word read should return an unsigned word")
+local vdpRegister = vdp.readregister(2)
+assert(type(vdpRegister) == "number" and vdpRegister >= 0 and vdpRegister <= 0xFF,
+	"VDP register read should return an unsigned byte")
 
 local cellAddress = 0x0000
 local cellCount, cells = vdp.readcell(cellAddress, 1)

@@ -348,6 +348,47 @@ static int LuaBindVdpReadWordVsram(lua_State *state)
 	return 1;
 }
 
+static int LuaBindVdpReadRegister(lua_State *state)
+{
+	lua_Integer reg = luaL_checkinteger(state, 1);
+	unsigned int value;
+
+	LuaVdpIsAvailable(state);
+	if (reg < 0 || reg > 23)
+		return luaL_argerror(state, 1, "VDP register index must be between 0 and 23");
+
+	switch (reg)
+	{
+	case 0: value = VDP_Reg.Set1; break;
+	case 1: value = VDP_Reg.Set2; break;
+	case 2: value = VDP_Reg.Pat_ScrA_Adr; break;
+	case 3: value = VDP_Reg.Pat_Win_Adr; break;
+	case 4: value = VDP_Reg.Pat_ScrB_Adr; break;
+	case 5: value = VDP_Reg.Spr_Att_Adr; break;
+	case 6: value = VDP_Reg.Reg6; break;
+	case 7: value = VDP_Reg.BG_Color; break;
+	case 8: value = VDP_Reg.Reg8; break;
+	case 9: value = VDP_Reg.Reg9; break;
+	case 10: value = VDP_Reg.H_Int; break;
+	case 11: value = VDP_Reg.Set3; break;
+	case 12: value = VDP_Reg.Set4; break;
+	case 13: value = VDP_Reg.H_Scr_Adr; break;
+	case 14: value = VDP_Reg.Reg14; break;
+	case 15: value = VDP_Reg.Auto_Inc; break;
+	case 16: value = VDP_Reg.Scr_Size; break;
+	case 17: value = VDP_Reg.Win_H_Pos; break;
+	case 18: value = VDP_Reg.Win_V_Pos; break;
+	case 19: value = VDP_Reg.DMA_Lenght_L; break;
+	case 20: value = VDP_Reg.DMA_Lenght_H; break;
+	case 21: value = VDP_Reg.DMA_Src_Adr_L; break;
+	case 22: value = VDP_Reg.DMA_Src_Adr_M; break;
+	default: value = VDP_Reg.DMA_Src_Adr_H; break;
+	}
+
+	lua_pushinteger(state, value);
+	return 1;
+}
+
 void lua_bind_vdp_register(lua_State *state)
 {
 	int vdpIndex;
@@ -363,6 +404,7 @@ void lua_bind_vdp_register(lua_State *state)
 	KMOD_LUA_BIND_FUNCTION(state, vdpIndex, signaturesIndex, "writepalette", LuaBindVdpWritePalette, "([line,] palettes)");
 	KMOD_LUA_BIND_FUNCTION(state, vdpIndex, signaturesIndex, "readwordvram", LuaBindVdpReadWordVram, "(address)");
 	KMOD_LUA_BIND_FUNCTION(state, vdpIndex, signaturesIndex, "readwordvsram", LuaBindVdpReadWordVsram, "(address)");
+	KMOD_LUA_BIND_FUNCTION(state, vdpIndex, signaturesIndex, "readregister", LuaBindVdpReadRegister, "(register)");
 	lua_pushvalue(state, signaturesIndex);
 	lua_setfield(state, vdpIndex, "signatures");
 	lua_pop(state, 1);
