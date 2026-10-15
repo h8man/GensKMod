@@ -313,9 +313,10 @@
 #define IDC_LUA_SAVE             56007
 #define IDC_LUA_TOOLBAR          56008
 #define IDC_LUA_RUN              56009
-#define IDC_LUA_STOP             56010
+#define IDC_LUA_ABORT            56010
 #define IDC_LUA_STATUS           56011
 #define IDC_LUA_CURRENT_SCRIPT   56012
+#define IDC_LUA_STOP             56013
 
 /*********/
 #endif

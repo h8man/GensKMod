@@ -73,7 +73,7 @@ end
   
 kmod.log("VRAM Scramble - PREFILL")
 
-while true do
+while not kmod.should_stop() do
   -- put any code you want to run after each frame here
   -- (such as getting the last frame's input or reading from memory)
 

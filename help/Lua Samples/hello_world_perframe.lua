@@ -1,6 +1,6 @@
 frame = 0
 
-while true do
+while not kmod.should_stop() do
 	frame = frame + 1
 	kmod.log("hello world #" .. frame)
 	coroutine.yield()

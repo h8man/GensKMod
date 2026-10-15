@@ -49,11 +49,16 @@ LuaModuleState lua_module_get_state(void)
 		LUA_MODULE_STATE_CLOSED, LUA_MODULE_STATE_CLOSED);
 }
 
+BOOL lua_module_should_stop(void)
+{
+	return lua_module_get_state() == LUA_MODULE_STATE_STOPPING;
+}
+
 static void LuaExecutionHook(lua_State *state, lua_Debug *debug)
 {
 	(void)debug;
-	if (lua_module_get_state() == LUA_MODULE_STATE_STOPPING)
-		luaL_error(state, "Script stopped.");
+	if (lua_module_get_state() == LUA_MODULE_STATE_ABORTING)
+		luaL_error(state, "Script aborted.");
 	lua_yield(state, 0);
 }
 
@@ -194,6 +199,24 @@ BOOL lua_module_stop(void)
 	return TRUE;
 }
 
+BOOL lua_module_abort(void)
+{
+	LuaModuleState state;
+
+	for (;;)
+	{
+		state = lua_module_get_state();
+		if (state != LUA_MODULE_STATE_RUNNING && state != LUA_MODULE_STATE_STOPPING)
+			return FALSE;
+		if (InterlockedCompareExchange(&luaModuleState, LUA_MODULE_STATE_ABORTING,
+			state) == state)
+			break;
+	}
+
+	lua_script_set_status(LUA_SCRIPT_STATUS_ABORTING);
+	return TRUE;
+}
+
 void lua_module_update(void)
 {
 	LuaRunRequest *request = NULL;
@@ -239,9 +262,13 @@ void lua_module_update(void)
 	if (status == LUA_YIELD)
 		return;
 
-	if (status == LUA_OK)
+	if (status == LUA_OK && (lua_module_get_state() == LUA_MODULE_STATE_STOPPING ||
+		lua_module_get_state() == LUA_MODULE_STATE_ABORTING))
+		result = LUA_SCRIPT_STATUS_STOPPED;
+	else if (status == LUA_OK)
 		result = LUA_SCRIPT_STATUS_COMPLETED;
-	else if (lua_module_get_state() == LUA_MODULE_STATE_STOPPING)
+	else if (lua_module_get_state() == LUA_MODULE_STATE_STOPPING ||
+		lua_module_get_state() == LUA_MODULE_STATE_ABORTING)
 		result = LUA_SCRIPT_STATUS_STOPPED;
 	else
 	{

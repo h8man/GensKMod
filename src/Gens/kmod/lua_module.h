@@ -8,7 +8,8 @@ typedef enum LuaModuleState
 	LUA_MODULE_STATE_CLOSED,
 	LUA_MODULE_STATE_READY,
 	LUA_MODULE_STATE_RUNNING,
-	LUA_MODULE_STATE_STOPPING
+	LUA_MODULE_STATE_STOPPING,
+	LUA_MODULE_STATE_ABORTING
 } LuaModuleState;
 
 #ifdef __cplusplus
@@ -20,9 +21,11 @@ void lua_module_reset(void);
 void lua_module_close(void);
 void lua_module_pre_update(void);
 LuaModuleState lua_module_get_state(void);
+BOOL lua_module_should_stop(void);
 BOOL lua_module_get_current_script(char *buffer, DWORD bufferSize);
 BOOL lua_module_run(const char *buff, const char *tag);
 BOOL lua_module_stop(void);
+BOOL lua_module_abort(void);
 void lua_module_update(void);
 
 #ifdef __cplusplus

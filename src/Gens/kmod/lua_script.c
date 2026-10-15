@@ -26,6 +26,7 @@ static const char *const luaScriptStatusText[] = {
 	"Idle",
 	"Running",
 	"Stopping",
+	"Aborting",
 	"Completed",
 	"Error",
 	"Stopped",
@@ -42,6 +43,7 @@ static void LuaScriptSetStatus(HWND hwnd, LuaScriptStatus status)
 	LuaModuleState moduleState;
 	BOOL canRun;
 	BOOL canStop;
+	BOOL canAbort;
 
 	if (status < LUA_SCRIPT_STATUS_NO_ROM || status > LUA_SCRIPT_STATUS_UNAVAILABLE)
 		status = LUA_SCRIPT_STATUS_UNAVAILABLE;
@@ -52,6 +54,8 @@ static void LuaScriptSetStatus(HWND hwnd, LuaScriptStatus status)
 		status == LUA_SCRIPT_STATUS_STOPPED;
 	canRun = canRun && moduleState == LUA_MODULE_STATE_READY;
 	canStop = moduleState == LUA_MODULE_STATE_RUNNING;
+	canAbort = moduleState == LUA_MODULE_STATE_RUNNING ||
+		moduleState == LUA_MODULE_STATE_STOPPING;
 	SetDlgItemText(hwnd, IDC_LUA_STATUS, luaScriptStatusText[status]);
 	if (lua_module_get_current_script(script, MAX_PATH))
 		SetDlgItemText(hwnd, IDC_LUA_CURRENT_SCRIPT, LuaScriptFileName(script));
@@ -59,6 +63,7 @@ static void LuaScriptSetStatus(HWND hwnd, LuaScriptStatus status)
 		SetDlgItemText(hwnd, IDC_LUA_CURRENT_SCRIPT, "");
 	SendMessage(toolbar, TB_ENABLEBUTTON, IDC_LUA_RUN, MAKELONG(canRun, 0));
 	SendMessage(toolbar, TB_ENABLEBUTTON, IDC_LUA_STOP, MAKELONG(canStop, 0));
+	SendMessage(toolbar, TB_ENABLEBUTTON, IDC_LUA_ABORT, MAKELONG(canAbort, 0));
 }
 
 void lua_script_set_status(LuaScriptStatus status)
@@ -283,6 +288,8 @@ static void LuaScriptRun(HWND hwnd)
 			LuaScriptSetStatus(hwnd, LUA_SCRIPT_STATUS_RUNNING);
 		else if (moduleState == LUA_MODULE_STATE_STOPPING)
 			LuaScriptSetStatus(hwnd, LUA_SCRIPT_STATUS_STOPPING);
+		else if (moduleState == LUA_MODULE_STATE_ABORTING)
+			LuaScriptSetStatus(hwnd, LUA_SCRIPT_STATUS_ABORTING);
 		else if (moduleState == LUA_MODULE_STATE_CLOSED)
 			LuaScriptSetStatus(hwnd, LUA_SCRIPT_STATUS_NO_ROM);
 		else
@@ -298,6 +305,11 @@ static void LuaScriptRun(HWND hwnd)
 static void LuaScriptStop(void)
 {
 	lua_module_stop();
+}
+
+static void LuaScriptAbort(void)
+{
+	lua_module_abort();
 }
 
 static BOOL LuaScriptSave(HWND hwnd)
@@ -425,7 +437,7 @@ static BOOL LuaScriptToolbarInit(HWND hwnd)
 	HWND toolbar;
 	HIMAGELIST toolbarImages;
 	HBITMAP toolbarBitmap;
-	TBBUTTON buttons[5];
+	TBBUTTON buttons[6];
 	int stringBase;
 	int imageBase;
 
@@ -449,7 +461,7 @@ static BOOL LuaScriptToolbarInit(HWND hwnd)
 	DeleteObject(toolbarBitmap);
 	if (imageBase == -1)
 		return FALSE;
-	stringBase = (int)SendMessage(toolbar, TB_ADDSTRING, 0, (LPARAM)"Browse\0Edit\0Save\0Run\0Stop\0");
+	stringBase = (int)SendMessage(toolbar, TB_ADDSTRING, 0, (LPARAM)"Browse\0Edit\0Save\0Run\0Abort\0Stop\0");
 	if (stringBase == -1)
 		return FALSE;
 
@@ -479,12 +491,18 @@ static BOOL LuaScriptToolbarInit(HWND hwnd)
 	buttons[3].iString = stringBase + 3;
 
 	buttons[4].iBitmap = imageBase + 1;
-	buttons[4].idCommand = IDC_LUA_STOP;
+	buttons[4].idCommand = IDC_LUA_ABORT;
 	buttons[4].fsState = TBSTATE_ENABLED;
 	buttons[4].fsStyle = BTNS_BUTTON | BTNS_SHOWTEXT;
 	buttons[4].iString = stringBase + 4;
 
-	if (!SendMessage(toolbar, TB_ADDBUTTONS, 5, (LPARAM)buttons))
+	buttons[5].iBitmap = imageBase + 2;
+	buttons[5].idCommand = IDC_LUA_STOP;
+	buttons[5].fsState = TBSTATE_ENABLED;
+	buttons[5].fsStyle = BTNS_BUTTON | BTNS_SHOWTEXT;
+	buttons[5].iString = stringBase + 5;
+
+	if (!SendMessage(toolbar, TB_ADDBUTTONS, 6, (LPARAM)buttons))
 		return FALSE;
 
 	SendMessage(toolbar, TB_AUTOSIZE, 0, 0);
@@ -551,6 +569,9 @@ static BOOL CALLBACK LuaScriptDlgProc(HWND hwnd, UINT message, WPARAM wParam, LP
 			return TRUE;
 		case IDC_LUA_STOP:
 			LuaScriptStop();
+			return TRUE;
+		case IDC_LUA_ABORT:
+			LuaScriptAbort();
 			return TRUE;
 		case IDC_LUA_RECENT:
 			if (HIWORD(wParam) == LBN_DBLCLK)
