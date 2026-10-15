@@ -195,6 +195,12 @@ void kmod_lua_output(const char *owner, const char *message)
 		free(formatted);
 }
 
+void kmod_lua_clear_output(void)
+{
+	if (hLuaScript != NULL)
+		PostMessage(hLuaScript, WM_KMOD_LUA_CLEAR_OUTPUT, 0, 0);
+}
+
 static BOOL LuaScriptOpen(HWND hwnd, const char *path)
 {
 	FILE *file;
@@ -508,6 +514,10 @@ static BOOL CALLBACK LuaScriptDlgProc(HWND hwnd, UINT message, WPARAM wParam, LP
 		}
 		return TRUE;
 	}
+
+	case WM_KMOD_LUA_CLEAR_OUTPUT:
+		SetDlgItemText(hwnd, IDC_LUA_OUTPUT, "");
+		return TRUE;
 
 	case WM_KMOD_LUA_STATUS:
 		LuaScriptSetStatus(hwnd, (LuaScriptStatus)wParam);

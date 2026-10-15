@@ -4,6 +4,7 @@
 #include <windows.h>
 
 #define WM_KMOD_LUA_STATUS (WM_APP + 0x416)
+#define WM_KMOD_LUA_CLEAR_OUTPUT (WM_APP + 0x417)
 
 typedef enum LuaScriptStatus
 {
@@ -25,6 +26,7 @@ void lua_script_create(HINSTANCE hInstance, HWND hWndParent);
 void lua_script_show(BOOL visibility);
 void lua_script_set_status(LuaScriptStatus status);
 void kmod_lua_output(const char *owner, const char *message);
+void kmod_lua_clear_output(void);
 
 #ifdef __cplusplus
 }

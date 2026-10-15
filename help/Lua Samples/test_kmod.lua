@@ -1,0 +1,10 @@
+assert(type(kmod) == "table", "kmod module is unavailable")
+assert(type(kmod.log) == "function", "kmod.log is unavailable")
+assert(type(kmod.clearlog) == "function", "kmod.clearlog is unavailable")
+assert(type(kmod.signatures) == "table", "kmod signature metadata is unavailable")
+assert(kmod.signatures.log == "(message)", "unexpected signature for kmod.log")
+assert(kmod.signatures.clearlog == "()", "unexpected signature for kmod.clearlog")
+
+kmod.clearlog()
+kmod.log("PASS kmod.clearlog" .. kmod.signatures.clearlog)
+kmod.log("All kmod API tests passed.")
