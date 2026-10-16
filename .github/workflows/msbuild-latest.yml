@@ -37,6 +37,7 @@ jobs:
       run: |
         mkdir release
         xcopy src\Gens\bin\Release\*.exe release\
+        xcopy help\*.chm release\
         powershell Compress-Archive -Path release\* -DestinationPath genskmod-release-latest.zip
         
     - name: Upload EXE artifact
