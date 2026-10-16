@@ -627,8 +627,8 @@ IDB_ALGO7               BITMAP                  "resource\\raw\\algo7.bmp"
 IDB_YM2612_IMAGELIST    BITMAP                  "resource\\tab_image.bmp"
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,7,7,0
- PRODUCTVERSION 0,7,7,0
+ FILEVERSION 0,7,8,0
+ PRODUCTVERSION 0,7,8,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -645,12 +645,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "SpritesMind"
             VALUE "FileDescription", "Gens KMod"
-            VALUE "FileVersion", "0.7.7.0"
+            VALUE "FileVersion", "0.7.8.0"
             VALUE "InternalName", "Gens KMod"
             VALUE "LegalCopyright", "Copyright © 2015"
             VALUE "OriginalFilename", "gens.exe"
             VALUE "ProductName", "Gens KMod"
-            VALUE "ProductVersion", "0.7.7.0"
+            VALUE "ProductVersion", "0.7.8.0"
         END
     END
     BLOCK "VarFileInfo"
