@@ -45,6 +45,13 @@ jobs:
       with:
         name: genskmod-windows-release
         path: release\
+
+    - name: Move latest tag to this build
+      run: |
+        git tag --force latest $env:GITHUB_SHA
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        git push --force origin refs/tags/latest
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         
     - name: Release
       uses: softprops/action-gh-release@v3
