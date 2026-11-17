@@ -68,7 +68,7 @@ struct STARSCREAM_DATAREGION {
 
 /* Common context info for all 680x0 types */
 #define STARSCREAM_CONTEXTINFO_COMMON                     \
-	void         (*resethandler)(void);                   \
+	unsigned     (*resethandler)(void);                   \
 	unsigned       dreg[8];                               \
 	unsigned       areg[8];                               \
 	unsigned       asp;                                   \

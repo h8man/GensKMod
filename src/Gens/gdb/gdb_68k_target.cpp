@@ -375,14 +375,24 @@ protected:
     static bool            s_broke;
     static unsigned int    s_bkpt_pc;
 
-    static void reset_handler(void)
+    // Called for RESET and TRAP. Returns non-zero if handled; the return
+    // value only matters for TRAP, where zero runs the 68K trap exception.
+    // TRAP #15 is the GDB breakpoint; other traps belong to the program.
+    static unsigned int reset_handler(void)
     {
         unsigned int vector = 0;
         unsigned short opcode = 0;
+        unsigned int pc = (is_main ? main68k_readPC() : sub68k_readPC()) - 2;
+
+        opcode = is_main ? main68k_fetch(pc) : sub68k_fetch(pc);
+
+        if ((opcode & 0xFFF0) == 0x4E40 && (opcode & 0xF) != 0xF)
+            return 0;
+
         Paused = 1;
         Sleep(10);
 
-        s_bkpt_pc = (is_main ? main68k_readPC() : sub68k_readPC()) - 2;
+        s_bkpt_pc = pc;
         s_broke = true;
 
         if (is_main)
@@ -390,7 +400,6 @@ protected:
             main68k_releaseTimeslice();
             main68k_tripOdometer();
             main68k_releaseCycles();
-            opcode = main68k_fetch(s_bkpt_pc);
         }
         else
         {
@@ -399,7 +408,6 @@ protected:
             // There doesn't seem to be a 'sub68k_releaseCycles' - not sure
             // why - haven't investigated.
             // sub68k_releaseCycles();
-            opcode = sub68k_fetch(s_bkpt_pc);
         }
 
         vector = (opcode & 0xF);
@@ -416,6 +424,8 @@ protected:
                 s_controller->InjectSignal(143);
                 break;
         }
+
+        return 1;
     }
 
     void check_breakpoint()

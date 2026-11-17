@@ -3674,17 +3674,21 @@ static void i_move_to_usp(void){
 
 static void i_trap(void){
     int myline = linenum; linenum++;
-    //*
+    emit("and ebx,byte 0Fh\n");
+    /* The client's handler (if any) is called for TRAP, and a non-zero
+       return means it handled the trap and execution proceeds to the next
+       instruction. Zero (or no handler) runs the 68K trap exception. */
     emit("mov ecx,[__resethandler]\n");
     emit("or ecx,ecx\n");
     emit("jz short ln%d\n", myline);
     airlock_exit();
     emit("call ecx\n");
+    emit("mov ecx,eax\n");
     airlock_enter();
+    emit("or ecx,ecx\n");
+    emit("jz short ln%d\n", myline);
     ret_timing((cputype == 68010) ? 38 : 34);
     emit("ln%d:\n", myline);
-    //**/
-    emit("and ebx,byte 0Fh\n");
     emit("lea edx,[80h+ebx*4]\n");
     emit("call group_2_exception\n");
     perform_cached_rebase();
@@ -4301,14 +4305,15 @@ static void i_fline(void){
 }
 
 static void i_reset(void){
-    emit("int3\n");
-    privilegecheck();
+	int myline = linenum; linenum++;
+	privilegecheck();
 	emit("mov ecx,[__resethandler]\n");
 	emit("or ecx,ecx\n");
-	emit("jz near invalidins\n");
+	emit("jz short ln%d\n", myline);
 	airlock_exit();
 	emit("call ecx\n");
 	airlock_enter();
+	emit("ln%d:\n", myline);
 	ret_timing((cputype==68010)?130:132);
 }
 
