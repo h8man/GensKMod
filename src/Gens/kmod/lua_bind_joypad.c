@@ -159,8 +159,8 @@ void lua_bind_joypad_register(lua_State *state)
 	joypadIndex = lua_absindex(state, -1);
 	lua_createtable(state, 0, 2);
 	signaturesIndex = lua_absindex(state, -1);
-	KMOD_LUA_BIND_FUNCTION(state, joypadIndex, signaturesIndex, "get", LuaBindJoypadGet, "(player)");
-	KMOD_LUA_BIND_FUNCTION(state, joypadIndex, signaturesIndex, "set", LuaBindJoypadSet, "(player, buttons)");
+	KMOD_LUA_BIND_FUNCTION_REQUIRES(state, joypadIndex, signaturesIndex, "get", LuaBindJoypadGet, "(player)", KMOD_LUA_REQUIREMENT_SYSTEM);
+	KMOD_LUA_BIND_FUNCTION_REQUIRES(state, joypadIndex, signaturesIndex, "set", LuaBindJoypadSet, "(player, buttons)", KMOD_LUA_REQUIREMENT_SYSTEM);
 	lua_pushvalue(state, signaturesIndex);
 	lua_setfield(state, joypadIndex, "signatures");
 	lua_pop(state, 1);

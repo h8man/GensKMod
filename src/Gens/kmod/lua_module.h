@@ -17,7 +17,6 @@ extern "C" {
 #endif
 
 BOOL lua_module_init(void);
-void lua_module_reset(void);
 void lua_module_close(void);
 void lua_module_pre_update(void);
 LuaModuleState lua_module_get_state(void);

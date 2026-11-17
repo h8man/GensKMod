@@ -16,6 +16,7 @@ checkMethod("ispaused", emu.ispaused(), "boolean")
 checkMethod("pause", emu.pause, "function")
 checkMethod("unpause", emu.unpause, "function")
 checkMethod("reset", emu.reset, "function")
+checkMethod("loadrom", emu.loadrom, "function")
 checkMethod("getframeskip", emu.getframeskip(), "number")
 
 local country = emu.getcountry()

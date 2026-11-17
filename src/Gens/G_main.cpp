@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "G_main.h"
+#ifdef GENS_KMOD
+#include "Kmod.h"
+#endif
 #include "G_gfx.h"
 #include "G_dsound.h"
 #include "G_Input.h"
@@ -1664,6 +1667,9 @@ void End_GDBStubs(void)
 void End_All(void)
 {
 	Free_Rom(Game);
+#ifdef GENS_KMOD
+	kmod_close();
+#endif
     End_GFX();
 	End_Input();
 	YM2612_End();
@@ -1862,8 +1868,13 @@ int PASCAL WinMain(HINSTANCE hInst,	HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 		{
 			Clear_Back_Screen(HWnd);
 			Flip_GFX(HWnd);
-			Sleep(200);
+			Sleep(30);
 		}
+
+#ifdef GENS_KMOD
+		if (!Genesis_Started && !_32X_Started && !SegaCD_Started)
+			Update_KMod();
+#endif
 	}
 
 	strcpy(Str_Tmp, Gens_Path);

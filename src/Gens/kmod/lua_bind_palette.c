@@ -184,7 +184,7 @@ void lua_bind_palette_register(lua_State *state)
 	KMOD_LUA_BIND_FUNCTION(state, paletteIndex, signaturesIndex, "setcolor", LuaBindPaletteSetColor, "(palette, index, color)");
 	KMOD_LUA_BIND_FUNCTION(state, paletteIndex, signaturesIndex, "writecolor", LuaBindPaletteSetColor, "(palette, index, color)");
 	KMOD_LUA_BIND_FUNCTION(state, paletteIndex, signaturesIndex, "rawdata", LuaBindPaletteGetRaw, "(palette)");
-	KMOD_LUA_BIND_FUNCTION(state, paletteIndex, signaturesIndex, "readcramcolor", LuaBindPaletteReadCramColor, "(palette, index)");
+	KMOD_LUA_BIND_FUNCTION_REQUIRES(state, paletteIndex, signaturesIndex, "readcramcolor", LuaBindPaletteReadCramColor, "(palette, index)", KMOD_LUA_REQUIREMENT_GENESIS);
 	lua_pushvalue(state, signaturesIndex);
 	lua_setfield(state, paletteIndex, "signatures");
 	lua_pop(state, 1);

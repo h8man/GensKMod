@@ -110,18 +110,6 @@ BOOL lua_module_init(void)
 	return TRUE;
 }
 
-void lua_module_reset(void)
-{
-	if (lua_module_get_state() == LUA_MODULE_STATE_CLOSED)
-	{
-		lua_module_init();
-		return;
-	}
-
-	lua_module_close();
-	lua_module_init();
-}
-
 void lua_module_close(void)
 {
 	LuaRunRequest *pending;
@@ -146,7 +134,6 @@ void lua_module_close(void)
 	InterlockedExchange(&luaModuleState, LUA_MODULE_STATE_CLOSED);
 	lua_script_set_status(LUA_SCRIPT_STATUS_NO_ROM);
 }
-
 BOOL lua_module_run(const char *buff, const char *tag)
 {
 	LuaRunRequest *request;

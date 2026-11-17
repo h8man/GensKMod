@@ -965,10 +965,6 @@ int IPS_Patching(void)
 
 void Free_Rom(Rom *Rom_MD)
 {
-#ifdef GENS_KMOD
-	kmod_close();
-#endif
-
 	if (Game == NULL) return;
 	
 #ifdef CC_SUPPORT
@@ -999,4 +995,8 @@ void Free_Rom(Rom *Rom_MD)
 	if (Intro_Style == 3) Init_Genesis_Bios();
 	
 	SetWindowText(HWnd, "Gens - Idle");
+
+#ifdef GENS_KMOD
+	ResetDebug_KMod();
+#endif
 }

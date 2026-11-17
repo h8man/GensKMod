@@ -17,16 +17,6 @@ enum LuaVdpVramTable
 	LUA_VDP_OTHER_TABLE
 };
 
-static int LuaVdpIsAvailable(lua_State *state)
-{
-	if (!Genesis_Started)
-	{
-		luaL_error(state, "VDP is unavailable when Genesis is not running");
-		return 0;
-	}
-	return 1;
-}
-
 static enum LuaVdpVramTable LuaVdpGetVramTable(unsigned int address)
 {
 	unsigned int tableAStart = (VDP_Reg.Pat_ScrA_Adr & 0x38) << 10;
@@ -117,7 +107,6 @@ static int LuaBindVdpReadCell(lua_State *state)
 	lua_Integer i;
 	int readCount = 0;
 
-	LuaVdpIsAvailable(state);
 	if (requestedCount < -2000)
 		requestedCount = -2000;
 	if (requestedCount > 2000)
@@ -176,7 +165,6 @@ static int LuaBindVdpWriteCell(lua_State *state)
 	int count = 0;
 	int i;
 
-	LuaVdpIsAvailable(state);
 	if (!LuaVdpIsCellAddressValid(address))
 		return luaL_argerror(state, 1, "address must point to tile pattern data inside VRAM");
 	if (luaL_testudata(state, dataIndex, "kmod.tile"))
@@ -223,7 +211,6 @@ static int LuaBindVdpReadPalette(lua_State *state)
 	lua_Integer count;
 	lua_Integer i;
 
-	LuaVdpIsAvailable(state);
 	if (!lua_isnoneornil(state, 1))
 	{
 		lua_Integer line = luaL_checkinteger(state, 1);
@@ -281,7 +268,6 @@ static int LuaBindVdpWritePalette(lua_State *state)
 	int count = 0;
 	int i;
 
-	LuaVdpIsAvailable(state);
 	if (lua_isinteger(state, 1))
 	{
 		line = luaL_checkinteger(state, 1) - 1;
@@ -328,7 +314,6 @@ static int LuaBindVdpReadWordVram(lua_State *state)
 {
 	lua_Integer address = luaL_checkinteger(state, 1);
 	unsigned short value;
-	LuaVdpIsAvailable(state);
 	if (address < 0 || (unsigned long long)address + 2 > LUA_VDP_VRAM_SIZE)
 		return luaL_argerror(state, 1, "word address is outside VRAM");
 	memcpy(&value, VRam + address, sizeof(value));
@@ -340,7 +325,6 @@ static int LuaBindVdpReadWordVsram(lua_State *state)
 {
 	lua_Integer address = luaL_checkinteger(state, 1);
 	unsigned short value;
-	LuaVdpIsAvailable(state);
 	if (address < 0 || (unsigned long long)address + 2 > LUA_VDP_VSRAM_SIZE)
 		return luaL_argerror(state, 1, "word address is outside VSRAM");
 	memcpy(&value, VSRam + address, sizeof(value));
@@ -353,7 +337,6 @@ static int LuaBindVdpReadRegister(lua_State *state)
 	lua_Integer reg = luaL_checkinteger(state, 1);
 	unsigned int value;
 
-	LuaVdpIsAvailable(state);
 	if (reg < 0 || reg > 23)
 		return luaL_argerror(state, 1, "VDP register index must be between 0 and 23");
 
@@ -398,13 +381,13 @@ void lua_bind_vdp_register(lua_State *state)
 	vdpIndex = lua_absindex(state, -1);
 	lua_createtable(state, 0, 6);
 	signaturesIndex = lua_absindex(state, -1);
-	KMOD_LUA_BIND_FUNCTION(state, vdpIndex, signaturesIndex, "readcell", LuaBindVdpReadCell, "(address[, count])");
-	KMOD_LUA_BIND_FUNCTION(state, vdpIndex, signaturesIndex, "writecell", LuaBindVdpWriteCell, "(address[, tiles])");
-	KMOD_LUA_BIND_FUNCTION(state, vdpIndex, signaturesIndex, "readpalette", LuaBindVdpReadPalette, "([line][, count])");
-	KMOD_LUA_BIND_FUNCTION(state, vdpIndex, signaturesIndex, "writepalette", LuaBindVdpWritePalette, "([line,] palettes)");
-	KMOD_LUA_BIND_FUNCTION(state, vdpIndex, signaturesIndex, "readwordvram", LuaBindVdpReadWordVram, "(address)");
-	KMOD_LUA_BIND_FUNCTION(state, vdpIndex, signaturesIndex, "readwordvsram", LuaBindVdpReadWordVsram, "(address)");
-	KMOD_LUA_BIND_FUNCTION(state, vdpIndex, signaturesIndex, "readregister", LuaBindVdpReadRegister, "(register)");
+	KMOD_LUA_BIND_FUNCTION_REQUIRES(state, vdpIndex, signaturesIndex, "readcell", LuaBindVdpReadCell, "(address[, count])", KMOD_LUA_REQUIREMENT_GENESIS);
+	KMOD_LUA_BIND_FUNCTION_REQUIRES(state, vdpIndex, signaturesIndex, "writecell", LuaBindVdpWriteCell, "(address[, tiles])", KMOD_LUA_REQUIREMENT_GENESIS);
+	KMOD_LUA_BIND_FUNCTION_REQUIRES(state, vdpIndex, signaturesIndex, "readpalette", LuaBindVdpReadPalette, "([line][, count])", KMOD_LUA_REQUIREMENT_GENESIS);
+	KMOD_LUA_BIND_FUNCTION_REQUIRES(state, vdpIndex, signaturesIndex, "writepalette", LuaBindVdpWritePalette, "([line,] palettes)", KMOD_LUA_REQUIREMENT_GENESIS);
+	KMOD_LUA_BIND_FUNCTION_REQUIRES(state, vdpIndex, signaturesIndex, "readwordvram", LuaBindVdpReadWordVram, "(address)", KMOD_LUA_REQUIREMENT_GENESIS);
+	KMOD_LUA_BIND_FUNCTION_REQUIRES(state, vdpIndex, signaturesIndex, "readwordvsram", LuaBindVdpReadWordVsram, "(address)", KMOD_LUA_REQUIREMENT_GENESIS);
+	KMOD_LUA_BIND_FUNCTION_REQUIRES(state, vdpIndex, signaturesIndex, "readregister", LuaBindVdpReadRegister, "(register)", KMOD_LUA_REQUIREMENT_GENESIS);
 	lua_pushvalue(state, signaturesIndex);
 	lua_setfield(state, vdpIndex, "signatures");
 	lua_pop(state, 1);

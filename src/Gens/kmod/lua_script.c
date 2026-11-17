@@ -267,8 +267,8 @@ static void LuaScriptRun(HWND hwnd)
 	LuaModuleState moduleState = lua_module_get_state();
 	if (moduleState == LUA_MODULE_STATE_CLOSED)
 	{
-		LuaScriptSetStatus(hwnd, LUA_SCRIPT_STATUS_NO_ROM);
-		LuaScriptSetOutput(hwnd, "Load a ROM before running a script.");
+		LuaScriptSetStatus(hwnd, LUA_SCRIPT_STATUS_UNAVAILABLE);
+		LuaScriptSetOutput(hwnd, "Lua is unavailable. Restart the emulator and check the log.");
 		return;
 	}
 

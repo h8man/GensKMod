@@ -207,6 +207,7 @@ void Init_KMod( )
 	planes_composite_create(ghInstance, HWnd);
 
 	lua_script_create(ghInstance, HWnd);
+	lua_module_init();
    
 	//HandleWindow_KMod[0] = hM68K;
 	//HandleWindow_KMod[1] = hZ80;
@@ -232,6 +233,9 @@ void Init_KMod( )
 void Update_KMod( )
 {
 	lua_module_update();
+	if (!Genesis_Started && !SegaCD_Started && !_32X_Started)
+		return;
+
 	watchers_update();
 	message_update();
 //	layers_update(); //no update needed
@@ -283,28 +287,28 @@ void PreUpdate_KMod(void)
 	lua_module_pre_update();
 }
 
-void kmod_close()
+static void CloseKModWindows(BOOL keepLuaWindow)
 {
 	UCHAR mode;
-	lua_module_close();
 
 	for (mode = 0; mode < WIN_NUMBER; mode++)
 	{
-		if (OpenedWindow_KMod[mode] && mode != (DMODE_MSG - 1))
-		{
+		if (OpenedWindow_KMod[mode] && mode != (DMODE_MSG - 1) &&
+			(!keepLuaWindow || mode != (DMODE_LUASCRIPT - 1)))
 			CloseWindow_KMod((UCHAR)(mode + 1));
-		}
 	}
+}
 
-	//start_tiles = 0;
-
+void kmod_close()
+{
+	lua_module_close();
+	message_reset();
 	watchers_reset();
-	message_reset(); 
 	ym2612_reset();
 
+	CloseKModWindows(FALSE);
 
 	GMVStop_KMod();
-
 	AutoPause_KMod = 0;
 	AutoShot_KMod = 0;
 }
@@ -312,9 +316,21 @@ void kmod_close()
 //TODO rename kmod_resetOnLoad()
 void ResetDebug_KMod(  )
 {
-	lua_module_reset();
+	int systemRunning = Game != NULL || Genesis_Started || SegaCD_Started || _32X_Started;
+
+	if (!systemRunning)
+	{
+		CloseKModWindows(TRUE);
+		GMVStop_KMod();
+		AutoPause_KMod = 0;
+		AutoShot_KMod = 0;
+		return;
+	}
+
 	message_reset();
 	watchers_reset();
+	ym2612_reset();
+
 	layers_reset();
 	planes_reset();
 	planes_composite_reset();
@@ -324,7 +340,6 @@ void ResetDebug_KMod(  )
 	vdpdebug_reset();
 	vdpreg_reset();
 	sprites_reset();
-	ym2612_reset();
 	psg_reset();
 
 	s68kdebug_reset();

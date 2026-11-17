@@ -1,4 +1,5 @@
 #include "lauxlib.h"
+#include <string.h>
 
 #include "lua_bind.h"
 #include "../gens.h"
@@ -118,7 +119,7 @@ static int LuaBindReset(lua_State *state)
 
 static int LuaBindGetRomSize(lua_State *state)
 {
-	lua_pushinteger(state, (lua_Integer)Rom_Size);
+	lua_pushinteger(state, Game == NULL ? 0 : (lua_Integer)Rom_Size);
 	return 1;
 }
 
@@ -134,14 +135,32 @@ static int LuaBindGetSystems(lua_State *state)
 	return 1;
 }
 
+static int LuaBindLoadRom(lua_State *state)
+{
+	size_t pathLength;
+	const char *path = luaL_checklstring(state, 1, &pathLength);
+	BOOL loaded = FALSE;
+
+	if (!Kaillera_Client_Running && pathLength > 0 && pathLength < sizeof(Recent_Rom[0]) &&
+		memchr(path, '\0', pathLength) == NULL)
+	{
+		loaded = Pre_Load_Rom(HWnd, path) > 0;
+		if (!loaded)
+			kmod_lua_output("LUA", "Unable to load the ROM requested by the script.");
+	}
+
+	lua_pushboolean(state, loaded);
+	return 1;
+}
+
 void lua_bind_emu_register(lua_State *state)
 {
 	int apiIndex;
 	int signaturesIndex;
 
-	lua_createtable(state, 0, 13);
+	lua_createtable(state, 0, 14);
 	apiIndex = lua_absindex(state, -1);
-	lua_createtable(state, 0, 12);
+	lua_createtable(state, 0, 13);
 	signaturesIndex = lua_absindex(state, -1);
 	KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, "framecount", LuaBindFrameCount, "()");
 	KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, "ispaused", LuaBindIsPaused, "()");
@@ -155,6 +174,7 @@ void lua_bind_emu_register(lua_State *state)
 	KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, "getframeskip", LuaBindGetFrameSkip, "()");
 	KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, "getvisiblelines", LuaBindGetVisibleLines, "()");
 	KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, "getsystems", LuaBindGetSystems, "()");
+	KMOD_LUA_BIND_FUNCTION(state, apiIndex, signaturesIndex, "loadrom", LuaBindLoadRom, "(path)");
 	lua_pushvalue(state, signaturesIndex);
 	lua_setfield(state, apiIndex, "signatures");
 	lua_pop(state, 1);
