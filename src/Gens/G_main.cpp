@@ -3509,7 +3509,7 @@ HMENU Build_Main_Menu(void)
     MENU_L(CPUDebug, 3, Flags, ID_CPU_DEBUG_PLANEEXPLORER, "Plane Explorer", "\tShift+P", "Plane Explorer");
     MENU_L(CPUDebug, 4, Flags, ID_CPU_DEBUG_PLANECOMPOSITE, "Planes Composite", "", "Planes Composite");
 	MENU_L(CPUDebug, 5, Flags | MF_POPUP, (UINT)DebugMD, "Genesis", "", "Genesis");
-	MENU_L(CPUDebug, 6, Flags, ID_CPU_DEBUG_LUASCRIPT, "Lua Scripting", "", "Lua Scripting");
+	MENU_L(CPUDebug, 6, Flags, ID_CPU_DEBUG_LUASCRIPT, "Lua Scripting", "\tShift+L", "Lua Scripting");
 
 	MENU_L(DebugMD, 0, Flags, ID_CPU_DEBUG_GENESIS_68000, "Genesis - 68K", "\tShift+D", "Genesis - 68K");
 	MENU_L(DebugMD, 1, Flags, ID_CPU_DEBUG_GENESIS_Z80, "Z80", "", "Z80");
