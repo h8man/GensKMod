@@ -383,6 +383,7 @@ BOOL CALLBACK _32X_VDPDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 void vdp32x_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	h32X_VDP = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUG32X_VDP), hWndParent, _32X_VDPDlgProc);
+	HandleWindow_KMod[DMODE_32_VDP - 1] = h32X_VDP;
 }
 
 void vdp32x_show(BOOL visibility)

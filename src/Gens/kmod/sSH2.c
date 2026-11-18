@@ -383,6 +383,7 @@ BOOL CALLBACK SSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 void sSH2_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hSSH2 = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUG32X_SSH2), hWndParent, SSH2DlgProc);
+	HandleWindow_KMod[DMODE_32_SSH2 - 1] = hSSH2;
 }
 
 void sSH2_show(BOOL visibility)

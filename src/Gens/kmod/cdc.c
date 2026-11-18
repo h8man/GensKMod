@@ -265,6 +265,7 @@ BOOL CALLBACK CD_CDCDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 void cdcdebug_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hCD_CDC = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUGCD_CDC), hWndParent, CD_CDCDlgProc);
+	HandleWindow_KMod[DMODE_CD_CDC - 1] = hCD_CDC;
 }
 
 void cdcdebug_show(BOOL visibility)

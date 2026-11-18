@@ -129,6 +129,21 @@ BOOL SetKModWindowVisible(UCHAR mode, BOOL visible)
 	return TRUE;
 }
 
+BOOL SetKModWindowPosition(UCHAR mode, int x, int y)
+{
+	HWND hwnd;
+
+	if (mode < 1 || mode > WIN_NUMBER)
+		return FALSE;
+
+	hwnd = HandleWindow_KMod[mode - 1];
+	if (!IsWindow(hwnd))
+		return FALSE;
+
+	return SetWindowPos(hwnd, NULL, x, y, 0, 0,
+		SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
 void CloseWindow_KMod(UCHAR mode)
 {
 	SetKModWindowVisible(mode, FALSE);

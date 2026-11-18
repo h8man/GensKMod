@@ -688,6 +688,7 @@ BOOL CALLBACK VDPDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 void vdpdebug_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hVDP = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUGVDP), hWndParent, VDPDlgProc);
+	HandleWindow_KMod[DMODE_VDP - 1] = hVDP;
 }
 
 void vdpdebug_show(BOOL visibility)

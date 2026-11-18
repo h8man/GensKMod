@@ -78,6 +78,7 @@ BOOL CALLBACK LayersDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 void layers_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hLayers = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_LAYERS), hWndParent, LayersDlgProc);
+	HandleWindow_KMod[DMODE_LAYERS - 1] = hLayers;
 }
 
 void layers_show(BOOL visibility)

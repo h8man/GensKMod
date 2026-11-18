@@ -1,5 +1,6 @@
 #include "lauxlib.h"
 #include <windows.h>
+#include <limits.h>
 #include <string.h>
 
 #include "lua_bind.h"
@@ -59,26 +60,47 @@ static int LuaBindShouldStop(lua_State *state)
 	return 1;
 }
 
-static int LuaBindSetWindowVisible(lua_State *state)
+static UCHAR LuaBindWindowMode(lua_State *state, int index)
 {
 	size_t nameLength;
-	const char *name = luaL_checklstring(state, 1, &nameLength);
-	BOOL visible;
+	const char *name = luaL_checklstring(state, index, &nameLength);
 	size_t i;
 
-	luaL_checktype(state, 2, LUA_TBOOLEAN);
-	visible = lua_toboolean(state, 2);
 	for (i = 0; i < sizeof(kmodWindowNames) / sizeof(kmodWindowNames[0]); i++)
 	{
 		if (nameLength == strlen(kmodWindowNames[i].name) &&
 			memcmp(name, kmodWindowNames[i].name, nameLength) == 0)
-		{
-			lua_pushboolean(state, SetKModWindowVisible(kmodWindowNames[i].mode, visible));
-			return 1;
-		}
+			return kmodWindowNames[i].mode;
 	}
 
-	return luaL_argerror(state, 1, "unknown KMod window name");
+	luaL_argerror(state, index, "unknown KMod window name");
+	return 0;
+}
+
+static int LuaBindSetWindowVisible(lua_State *state)
+{
+	UCHAR mode = LuaBindWindowMode(state, 1);
+	BOOL visible;
+
+	luaL_checktype(state, 2, LUA_TBOOLEAN);
+	visible = lua_toboolean(state, 2);
+	lua_pushboolean(state, SetKModWindowVisible(mode, visible));
+	return 1;
+}
+
+static int LuaBindSetWindowPosition(lua_State *state)
+{
+	UCHAR mode = LuaBindWindowMode(state, 1);
+	lua_Integer x = luaL_checkinteger(state, 2);
+	lua_Integer y = luaL_checkinteger(state, 3);
+
+	if (x < INT_MIN || x > INT_MAX)
+		return luaL_argerror(state, 2, "x coordinate is outside the supported range");
+	if (y < INT_MIN || y > INT_MAX)
+		return luaL_argerror(state, 3, "y coordinate is outside the supported range");
+
+	lua_pushboolean(state, SetKModWindowPosition(mode, (int)x, (int)y));
+	return 1;
 }
 
 void lua_bind_kmod_register(lua_State *state)
@@ -86,14 +108,15 @@ void lua_bind_kmod_register(lua_State *state)
 	int kmodIndex;
 	int signaturesIndex;
 
-	lua_createtable(state, 0, 5);
+	lua_createtable(state, 0, 6);
 	kmodIndex = lua_absindex(state, -1);
-	lua_createtable(state, 0, 4);
+	lua_createtable(state, 0, 5);
 	signaturesIndex = lua_absindex(state, -1);
 	KMOD_LUA_BIND_FUNCTION(state, kmodIndex, signaturesIndex, "log", LuaBindLog, "(message)");
 	KMOD_LUA_BIND_FUNCTION(state, kmodIndex, signaturesIndex, "clearlog", LuaBindClearLog, "()");
 	KMOD_LUA_BIND_FUNCTION(state, kmodIndex, signaturesIndex, "should_stop", LuaBindShouldStop, "() -> boolean");
 	KMOD_LUA_BIND_FUNCTION(state, kmodIndex, signaturesIndex, "set_window_visible", LuaBindSetWindowVisible, "(name, visible) -> boolean");
+	KMOD_LUA_BIND_FUNCTION(state, kmodIndex, signaturesIndex, "set_window_position", LuaBindSetWindowPosition, "(name, x, y) -> boolean");
 	lua_pushvalue(state, signaturesIndex);
 	lua_setfield(state, kmodIndex, "signatures");
 	lua_pop(state, 1);

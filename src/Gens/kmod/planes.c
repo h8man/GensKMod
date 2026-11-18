@@ -413,6 +413,7 @@ BOOL CALLBACK PlaneExplorerDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LP
 void planes_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hPlaneExplorer = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUGPLANEEXPLORER), hWndParent, PlaneExplorerDialogProc);
+	HandleWindow_KMod[DMODE_PLANEEXPLORER - 1] = hPlaneExplorer;
 }
 
 void planes_show(BOOL visibility)

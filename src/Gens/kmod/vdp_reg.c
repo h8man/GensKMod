@@ -522,6 +522,7 @@ BOOL CALLBACK VDPRegDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 void vdpreg_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hRegister = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUGVDP_REG), hWndParent, VDPRegDlgProc);
+	HandleWindow_KMod[DMODE_VDP_REG - 1] = hRegister;
 }
 
 void vdpreg_show(BOOL visibility)

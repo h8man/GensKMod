@@ -600,6 +600,7 @@ BOOL CALLBACK SpritesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 void sprites_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hSprites = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUGSPRITES), hWndParent, SpritesDlgProc);
+	HandleWindow_KMod[DMODE_SPRITES - 1] = hSprites;
 }
 
 void sprites_show(BOOL visibility)

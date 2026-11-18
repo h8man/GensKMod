@@ -223,6 +223,7 @@ BOOL CALLBACK _32X_RegDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 void s32xreg_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	h32X_Reg = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUG32X_REG), hWndParent, _32X_RegDlgProc);
+	HandleWindow_KMod[DMODE_32_REG - 1] = h32X_Reg;
 }
 
 void s32xreg_show(BOOL visibility)

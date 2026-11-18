@@ -461,6 +461,7 @@ BOOL CALLBACK MSH2DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 void mSH2_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hMSH2 = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUG32X_MSH2), hWndParent, MSH2DlgProc);
+	HandleWindow_KMod[DMODE_32_MSH2 - 1] = hMSH2;
 }
 
 void mSH2_show(BOOL visibility)

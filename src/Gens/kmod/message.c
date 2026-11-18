@@ -232,6 +232,7 @@ BOOL CALLBACK MsgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 void message_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hDMsg = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUGMSG), hWndParent, MsgDlgProc);
+	HandleWindow_KMod[DMODE_MSG - 1] = hDMsg;
 }
 
 

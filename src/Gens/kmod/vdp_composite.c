@@ -358,6 +358,7 @@ BOOL CALLBACK PlaneCompositeDialogProc(HWND hwnd, UINT Message, WPARAM wParam, L
 void planes_composite_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hPlanesComposite = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUGPLANECOMPOSITE), hWndParent, PlaneCompositeDialogProc);
+	HandleWindow_KMod[DMODE_PLANECOMPOSITE - 1] = hPlanesComposite;
 }
 
 void planes_composite_show(BOOL visibility)

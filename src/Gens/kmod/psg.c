@@ -111,6 +111,7 @@ BOOL CALLBACK PSGDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 void psg_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hPSG = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUGPSG), hWndParent, PSGDlgProc);
+	HandleWindow_KMod[DMODE_PSG - 1] = hPSG;
 }
 
 void psg_show(BOOL visibility)

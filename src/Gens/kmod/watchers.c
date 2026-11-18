@@ -875,6 +875,7 @@ BOOL CALLBACK WatcherDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 void watchers_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hWatchers = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_WATCHERS), hWndParent, WatcherDlgProc);
+	HandleWindow_KMod[DMODE_WATCHERS - 1] = hWatchers;
 }
 void watchers_show(BOOL visibility)
 {

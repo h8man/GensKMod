@@ -460,6 +460,7 @@ BOOL CALLBACK CD_GFXDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 void cdgfx_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hCD_GFX = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUGCD_GFX), hWndParent, CD_GFXDlgProc);
+	HandleWindow_KMod[DMODE_CD_GFX - 1] = hCD_GFX;
 }
 
 void cdgfx_show(BOOL visibility)

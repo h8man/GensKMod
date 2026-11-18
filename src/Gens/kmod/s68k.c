@@ -395,6 +395,7 @@ BOOL CALLBACK CD_68KDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 void s68kdebug_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hCD_68K = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUGCD_68K), hWndParent, CD_68KDlgProc);
+	HandleWindow_KMod[DMODE_CD_68K - 1] = hCD_68K;
 }
 
 void s68kdebug_show(BOOL visibility)

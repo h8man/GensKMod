@@ -281,6 +281,7 @@ BOOL CALLBACK Z80DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 void z80debug_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hZ80 = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUGZ80), hWndParent, Z80DlgProc);
+	HandleWindow_KMod[DMODE_Z80 - 1] = hZ80;
 }
 
 void z80debug_show(BOOL visibility)

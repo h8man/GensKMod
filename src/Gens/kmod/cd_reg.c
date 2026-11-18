@@ -125,6 +125,7 @@ BOOL CALLBACK CD_RegDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 void cdreg_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hCD_Reg = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUGCD_REG), hWndParent, CD_RegDlgProc);
+	HandleWindow_KMod[DMODE_CD_REG - 1] = hCD_Reg;
 }
 
 void cdreg_show(BOOL visibility)

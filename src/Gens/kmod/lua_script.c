@@ -612,6 +612,7 @@ void lua_script_create(HINSTANCE hInstance, HWND hWndParent)
 	InitCommonControlsEx(&controls);
 
 	hLuaScript = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_LUASCRIPT), hWndParent, LuaScriptDlgProc);
+	HandleWindow_KMod[DMODE_LUASCRIPT - 1] = hLuaScript;
 	if (hLuaScript != NULL)
 	{
 		smallIcon = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_LUA_SCRIPT), IMAGE_ICON,

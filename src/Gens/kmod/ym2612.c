@@ -582,6 +582,7 @@ BOOL CALLBACK YM2612DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 void ym2612_create(HINSTANCE hInstance, HWND hWndParent)
 {
 	hYM2612 = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DEBUGYM2612), hWndParent, YM2612DlgProc);
+	HandleWindow_KMod[DMODE_YM2612 - 1] = hYM2612;
 }
 
 void ym2612_show(BOOL visibility)
