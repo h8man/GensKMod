@@ -213,6 +213,11 @@ static BOOL LuaScriptOpen(HWND hwnd, const char *path)
 	char message[MAX_PATH + 64];
 	long fileSize;
 	size_t bytesRead;
+	if (strlen(path) >= MAX_PATH)
+	{
+		LuaScriptSetOutput(hwnd, "Script path is too long.");
+		return FALSE;
+	}
 
 	file = fopen(path, "rb");
 	if (file == NULL)
@@ -624,4 +629,17 @@ void lua_script_show(BOOL visibility)
 {
 	if (hLuaScript != NULL)
 		ShowWindow(hLuaScript, visibility ? SW_SHOW : SW_HIDE);
+}
+
+BOOL lua_script_open_and_run(const char *path)
+{
+	if (hLuaScript == NULL || path == NULL || path[0] == '\0')
+		return FALSE;
+
+	OpenWindow_KMod(DMODE_LUASCRIPT);
+	if (!LuaScriptOpen(hLuaScript, path))
+		return FALSE;
+
+	LuaScriptRun(hLuaScript);
+	return TRUE;
 }

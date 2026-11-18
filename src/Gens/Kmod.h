@@ -16,6 +16,7 @@ extern "C" {
 #ifdef GENS_KMOD
 
 void Init_KMod( );
+BOOL RunLuaScript(const char *path);
 void ResetDebug_KMod( );
 void Update_KMod( );
 void PreUpdate_KMod(void);

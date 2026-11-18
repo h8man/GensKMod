@@ -175,6 +175,11 @@ void SpecialReg( unsigned char a, unsigned char b)
 
 
 /********************************** PUBLIC ****************************************/
+BOOL RunLuaScript(const char *path)
+{
+	return lua_script_open_and_run(path);
+}
+
 void Init_KMod( )
 {
 	LoadConfig_KMod( );

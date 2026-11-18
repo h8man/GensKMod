@@ -24,6 +24,7 @@ extern "C" {
 #endif
 
 void lua_script_create(HINSTANCE hInstance, HWND hWndParent);
+BOOL lua_script_open_and_run(const char *path);
 void lua_script_show(BOOL visibility);
 void lua_script_set_status(LuaScriptStatus status);
 void kmod_lua_output(const char *owner, const char *message);

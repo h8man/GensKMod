@@ -1687,6 +1687,7 @@ void End_All(void)
 void parseCommandLine(LPSTR lpCmdLine)
 {
 	int src;
+	int dest;
 
 #ifdef CC_SUPPORT
 	//		src = CC_Connect("CCGEN://Stef:gens@emu.consoleclassix.com/sonicthehedgehog2.gen", (char *) Rom_Data, CC_End_Callback);
@@ -1705,6 +1706,7 @@ void parseCommandLine(LPSTR lpCmdLine)
 	{
 #endif
 		src = 0;
+		dest = 0;
 
 		if (lpCmdLine[src] == '"')
 		{
@@ -1712,24 +1714,44 @@ void parseCommandLine(LPSTR lpCmdLine)
 
 			while ((lpCmdLine[src] != '"') && (lpCmdLine[src] != 0))
 			{
-				Str_Tmp[src - 1] = lpCmdLine[src];
+				if (dest >= sizeof(Str_Tmp) - 1)
+				{
+					MessageBox(NULL, "The command-line path is too long.", "Gens", MB_OK | MB_ICONERROR);
+					return;
+				}
+				Str_Tmp[dest++] = lpCmdLine[src];
 				src++;
 			}
 
-			Str_Tmp[src - 1] = 0;
+			Str_Tmp[dest] = 0;
 		}
 		else
 		{
 			while (lpCmdLine[src] != 0)
 			{
-				Str_Tmp[src] = lpCmdLine[src];
+				if (dest >= sizeof(Str_Tmp) - 1)
+				{
+					MessageBox(NULL, "The command-line path is too long.", "Gens", MB_OK | MB_ICONERROR);
+					return;
+				}
+				Str_Tmp[dest++] = lpCmdLine[src];
 				src++;
 			}
 
-			Str_Tmp[src] = 0;
+			Str_Tmp[dest] = 0;
 		}
 
+#ifdef GENS_KMOD
+		{
+			const char *extension = strrchr(Str_Tmp, '.');
+			if (extension != NULL && _stricmp(extension, ".lua") == 0)
+				RunLuaScript(Str_Tmp);
+			else
+				Pre_Load_Rom(HWnd, Str_Tmp);
+		}
+#else
 		Pre_Load_Rom(HWnd, Str_Tmp);
+#endif
 
 #ifdef CC_SUPPORT
 	}
