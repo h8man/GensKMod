@@ -17,6 +17,7 @@ void IncTimer_KMod(unsigned odom);
 //TODO rename
 void OpenWindow_KMod(UCHAR mode);
 void CloseWindow_KMod(UCHAR mode);
+BOOL SetKModWindowVisible(UCHAR mode, BOOL visible);
 
 
 #ifdef __cplusplus

@@ -20,7 +20,7 @@ This document compares Gens Re-Recording's Lua API with the API exposed by GensK
 | `palette` / `pal` | **Implemented:** create, color read/write, raw data. | `create`, color read/write, raw data | Script-owned palettes; live CRAM reads are read-only and require Genesis. |
 | Standard libraries | Base, package, table, I/O, OS, string, math, debug. | Base, package, table, I/O, OS, string, math, debug, coroutine, UTF-8 | Lua 5.5 standard libraries. |
 | Global helpers | `print`, `tostring`, `addressof`, `copytable`, legacy bit globals. | `print`, `tostring` | No Re-Recording-specific helpers. |
-| `kmod` | No direct equivalent. | `log` | KMod logging. |
+| `kmod` | No direct equivalent. | `log`, `clearlog`, `should_stop`, `set_window_visible` | `set_window_visible(name, visible)` controls a named window; system-specific windows require an active ROM to show. See `test_kmod_window_visibility.lua` for names and usage. |
 
 ## Deferred work and risks
 

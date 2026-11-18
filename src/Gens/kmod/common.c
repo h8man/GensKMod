@@ -45,152 +45,100 @@ UCHAR OpenedWindow_KMod[WIN_NUMBER]; /* 0: Window Closed, 1: Window Opened */
 //TODO remove
 HWND  HandleWindow_KMod[WIN_NUMBER];
 
-void CloseWindow_KMod(UCHAR mode)
+static void SetKModWindowVisibility(UCHAR mode, BOOL visible)
 {
-	if (mode < 1)	return;
-	if (mode > WIN_NUMBER)	return;
-
-	OpenedWindow_KMod[mode - 1] = 0;
-
 	switch (mode)
 	{
 	case DMODE_MSG:
-		message_show(FALSE);
+		message_show(visible);
 		break;
 	case DMODE_WATCHERS:
-		watchers_show(FALSE);
+		watchers_show(visible);
 		break;
 	case DMODE_LAYERS:
-		layers_show(FALSE);
+		layers_show(visible);
 		break;
 	case DMODE_PLANEEXPLORER:
-		planes_show(FALSE);
+		planes_show(visible);
 		break; 
 	case DMODE_PLANECOMPOSITE:
-		planes_composite_show(FALSE);
+		planes_composite_show(visible);
 		break; 
 	case DMODE_LUASCRIPT:
-		lua_script_show(FALSE);
+		lua_script_show(visible);
 		break;
 	case DMODE_68K:
-		m68kdebug_show(FALSE);
+		m68kdebug_show(visible);
 		break;
 	case DMODE_Z80:
-		z80debug_show(FALSE);
+		z80debug_show(visible);
 		break;
 	case DMODE_VDP:
-		vdpdebug_show(FALSE);
+		vdpdebug_show(visible);
 		break;
 	case DMODE_VDP_REG:
-		vdpreg_show(FALSE);
+		vdpreg_show(visible);
 		break;
 	case DMODE_SPRITES:
-		sprites_show(FALSE);
+		sprites_show(visible);
 		break;
 	case DMODE_YM2612:
-		ym2612_show(FALSE);
+		ym2612_show(visible);
 		break;
 	case DMODE_PSG:
-		psg_show(FALSE);
+		psg_show(visible);
 		break;
 	case DMODE_CD_68K:
-		s68kdebug_show(FALSE);
+		s68kdebug_show(visible);
 		break;
 	case DMODE_CD_CDC:
-		cdcdebug_show(FALSE);
+		cdcdebug_show(visible);
 		break;
 	case DMODE_CD_GFX:
-		cdgfx_show(FALSE);
+		cdgfx_show(visible);
 		break;
 	case DMODE_CD_REG:
-		cdreg_show(FALSE);
+		cdreg_show(visible);
+		break;
+	case DMODE_32_REG:
+		s32xreg_show(visible);
 		break;
 	case DMODE_32_MSH2:
-		mSH2_show(FALSE);
+		mSH2_show(visible);
 		break;
 	case DMODE_32_SSH2:
-		sSH2_show(FALSE);
+		sSH2_show(visible);
 		break;
 	case DMODE_32_VDP:
-		vdp32x_show(FALSE);
+		vdp32x_show(visible);
 		break;
 	default:
-		ShowWindow(HandleWindow_KMod[mode - 1], SW_HIDE);
+		ShowWindow(HandleWindow_KMod[mode - 1], visible ? SW_SHOW : SW_HIDE);
 	}
+}
+
+BOOL SetKModWindowVisible(UCHAR mode, BOOL visible)
+{
+	if (mode < 1 || mode > WIN_NUMBER)
+		return FALSE;
+	if (visible && !Game && mode != DMODE_MSG && mode != DMODE_LUASCRIPT)
+		return FALSE;
+
+	OpenedWindow_KMod[mode - 1] = visible != FALSE;
+	SetKModWindowVisibility(mode, visible);
+	return TRUE;
+}
+
+void CloseWindow_KMod(UCHAR mode)
+{
+	SetKModWindowVisible(mode, FALSE);
 }
 
 void OpenWindow_KMod(UCHAR mode)
 {
-	if (mode < 1)	return;
-	if (mode > WIN_NUMBER)	return;
-
-	OpenedWindow_KMod[mode - 1] = 1;
-
-	switch (mode)
-	{
-	case DMODE_MSG:
-		message_show(TRUE);
-		break;
-	case DMODE_WATCHERS:
-		watchers_show(TRUE);
-		break;
-	case DMODE_LAYERS:
-		layers_show(TRUE);
-		break;
-	case DMODE_PLANEEXPLORER:
-		planes_show(TRUE);
-		break;
-	case DMODE_PLANECOMPOSITE:
-		planes_composite_show(TRUE);
-		break;
-	case DMODE_LUASCRIPT:
-		lua_script_show(TRUE);
-		break;
-	case DMODE_68K:
-		m68kdebug_show(TRUE);
-		break;
-	case DMODE_Z80:
-		z80debug_show(TRUE);
-		break;
-	case DMODE_VDP:
-		vdpdebug_show(TRUE);
-		break;
-	case DMODE_VDP_REG:
-		vdpreg_show(TRUE);
-		break;
-	case DMODE_SPRITES:
-		sprites_show(TRUE);
-		break;
-	case DMODE_YM2612:
-		ym2612_show(TRUE);
-		break;
-	case DMODE_PSG:
-		psg_show(TRUE);
-		break;
-	case DMODE_CD_68K:
-		s68kdebug_show(TRUE);
-		break;
-	case DMODE_CD_CDC:
-		cdcdebug_show(TRUE);
-		break;
-	case DMODE_CD_GFX:
-		cdgfx_show(TRUE);
-		break;
-	case DMODE_CD_REG:
-		cdreg_show(TRUE);
-		break;
-	case DMODE_32_MSH2:
-		mSH2_show(TRUE);
-		break;
-	case DMODE_32_SSH2:
-		sSH2_show(TRUE);
-		break;
-	case DMODE_32_VDP:
-		vdp32x_show(TRUE);
-		break;
-	default:
-		ShowWindow(HandleWindow_KMod[mode - 1], SW_SHOW);
-	}
-
+	if (mode < 1 || mode > WIN_NUMBER)
+		return;
+	if (!SetKModWindowVisible(mode, TRUE))
+		return;
 	Update_KMod();
 }
